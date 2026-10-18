@@ -77,3 +77,9 @@
 @media (max-width:700px){.case-header .meta{gap:4px 10px}.case-header .meta .meta-item{white-space:normal}}
 
 .contact-blog{margin-top:4px}
+
+/* 작업 방식 목록 (2026-10-18) */
+.approach .how-list{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.approach .how-list li{position:relative;padding-left:16px;font-size:13px;line-height:1.85;color:var(--ink,#242923)}
+.approach .how-list li::before{content:"";position:absolute;left:0;top:.72em;width:7px;height:7px;border-radius:50%;background:var(--blue,#365b48)}
+.approach .how-list b{display:block;font-weight:600;color:var(--ink,#242923)}
