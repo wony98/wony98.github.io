@@ -179,7 +179,7 @@
         <dt>결과</dt><dd>당시 입력으로 계산한 근거를 보존해, 사후에 보강한 자료와 구분해 대조할 수 있게 했습니다.<small>변수별 기여도는 모델의 계산을 설명하며, 실제 경기 결과의 원인을 증명하지는 않습니다.</small></dd>
       </dl></section>
     </div></section>
-<div class="lesson" id="mlb-reflection"><span class="small-label">회고</span><p>경기별 입력과 중간 판단을 남겨 자료가 빠진 지점을 확인할 수 있었습니다. 다만 근거가 엇갈릴 때 무엇을 우선해야 새 경기에서도 승리 팀을 일관되게 고를 수 있는지는 끝내 해결하지 못했습니다.</p><p><strong>다음 작업에 적용할 기준</strong><br>선수 누적 기록에는 목표일 이전 경기만 포함하고, 예측 당시 입력과 근거를 함께 남기겠습니다. 판정 방식은 고정한 경기 사례에서 일치도를 먼저 확인한 뒤 비교 경기 수를 늘리겠습니다.</p></div>
+<div class="lesson" id="mlb-reflection"><span class="small-label">회고</span><p>경기별 입력과 중간 판단을 남겨 자료가 빠진 지점을 확인할 수 있었습니다. 다만 근거가 엇갈릴 때 무엇을 우선해야 새 경기에서도 승리 팀을 일관되게 고를 수 있는지는 끝내 해결하지 못했습니다.</p><p><strong>취한 조치와 검증 결과</strong><br>선발투수의 누적 기록을 계산할 때 현재 경기 기록을 빼도록 수정하고, 그 기록이 섞이면 실패하는 회귀 검사를 남겼습니다. 기존 검사 3종을 다시 실행해 첫 등판과 이후 등판에서 현재 경기 기록이 제외되는 것을 확인했습니다. <a href="https://github.com/wony98/mlb-prediction-error-analysis/blob/1ed4e673a734dd1495a81aa56d78e1c5a4c6d3bb/src/_mlb_sp_asof_clean.py#L26-L49" target="_blank" rel="noopener noreferrer">시점 계산 코드 ↗</a></p></div>
 
 <p class="fold-end"><button type="button" class="fold-close" data-case="mlb">MLB 개인 연구 접기 ↑</button></p>
 </div></details>
@@ -262,7 +262,7 @@
         <dt>결과</dt><dd>수정 후 사용자 재평가는 하지 못했습니다.</dd>
       </dl></section>
     </div></section>
-<div class="lesson" id="salon-reflection"><span class="small-label">회고</span><p>미용인 테스트에서 설정과 업로드 때문에 제작을 중단하는 경우를 확인하고, 프론트엔드 담당자와 기본값으로 먼저 생성하는 흐름을 반영했습니다. 업로드 경로도 보완했지만 수정 후 완주율이 나아졌는지는 확인하지 못했습니다. 기능이 동작하는지뿐 아니라 실제 사용자가 결과물을 완성하는지까지 검증할 시간을 초기에 확보해야 했습니다.</p><p><strong>다음 작업에 적용할 기준</strong><br>모바일 업로드와 기본값 생성 흐름을 먼저 점검하고, 가장자리 얼굴과 머리카락이 포함된 영상도 블러 검사에 넣겠습니다. 수정 전후에는 같은 제작 과제로 사용자가 끝까지 완료하는지 다시 확인하겠습니다.</p></div>
+<div class="lesson" id="salon-reflection"><span class="small-label">회고</span><p>미용인 테스트에서 설정과 업로드 때문에 제작을 중단하는 경우를 확인하고, 프론트엔드 담당자와 기본값으로 먼저 생성하는 흐름을 반영했습니다. 업로드 경로도 보완했지만 수정 후 완주율이 나아졌는지는 확인하지 못했습니다. 기능이 동작하는지뿐 아니라 실제 사용자가 결과물을 완성하는지까지 검증할 시간을 초기에 확보해야 했습니다.</p><p><strong>취한 조치와 검증 결과</strong><br>정상인 5초 편집 구간이 소수점 오차로 거부되지 않도록 길이 검사에 1e-6초 허용 오차와 경계 테스트를 추가했습니다. 검사 함수를 다시 실행해 시작 3.3초·끝 8.3초인 구간은 허용되고, 5.001초짜리 구간과 전체 길이 30초 초과 입력은 거부되는 것을 확인했습니다. <a href="https://github.com/qja0707/SalonCutAI/blob/491a647cd43864f58ac42fd03bd3039dad0cef22/backend/tests/ai_engine/video_gen/test_engine.py" target="_blank" rel="noopener noreferrer">경계 테스트 ↗</a></p></div>
 
 <p class="fold-end"><button type="button" class="fold-close" data-case="salon">SalonCutAI 접기 ↑</button></p>
 </div></details>
@@ -374,7 +374,7 @@
         <dt>결과</dt><dd>같은 52문항에서 원문 근거의 엄격 비교는 32문항이 통과했습니다. 표현 차이를 허용한 비교와 정규화 후 통과 후보는 각각 52문항이었습니다.<small>근거의 표기·매칭 기준별 집계입니다. 최종 답변 정확도는 별도입니다.</small></dd>
       </dl></section>
     </div></section>
-<div class="lesson" id="rfpilot-reflection"><span class="small-label">회고</span><p>평가셋을 원문과 대조해 고치면서 정답 기준도 검수해야 한다는 점을 배웠습니다. 비교 대상 문서와 답변용 근거를 함께 확보하도록 검색을 보완했지만, 제출서류 섹션을 혼동하거나 한쪽 문서의 세부 조건을 놓치는 경우는 남았습니다. 문서 검색과 필요한 근거의 회수, 최종 답변을 나눠 확인해야 실패 지점을 좁힐 수 있었습니다.</p><p><strong>다음 작업에 적용할 기준</strong><br>검색을 바꿀 때마다 기존 비교 질문으로 두 문서가 함께 잡히는지 확인하겠습니다. 정답지는 원문과 대조하고, 검색된 문서와 답변용 근거, 최종 답변을 구분해 평가하겠습니다.</p></div>
+<div class="lesson" id="rfpilot-reflection"><span class="small-label">회고</span><p>평가셋을 원문과 대조해 고치면서 정답 기준도 검수해야 한다는 점을 배웠습니다. 비교 대상 문서와 답변용 근거를 함께 확보하도록 검색을 보완했지만, 제출서류 섹션을 혼동하거나 한쪽 문서의 세부 조건을 놓치는 경우는 남았습니다. 문서 검색과 필요한 근거의 회수, 최종 답변을 나눠 확인해야 실패 지점을 좁힐 수 있었습니다.</p><p><strong>취한 조치와 검증 결과</strong><br>기관·사업명 단서를 보강하고 검색 결과를 문서별로 묶어, 비교 대상이 한 문서에만 몰리는 문제를 보완했습니다. 기존 비교형 40문항 평가 기록에서 두 문서가 함께 포함된 질문이 39개에서 40개로 늘었습니다(상위 20개 문서 후보 기준). 최종 답변 정확도를 뜻하지는 않습니다. <a href="rfp-evaluation.html">기존 평가 결과 ↗</a></p></div>
 
 <p class="fold-end"><button type="button" class="fold-close" data-case="rfpilot">RFPilot 접기 ↑</button></p>
 </div></details>
@@ -452,7 +452,7 @@
         <dt>선택</dt><dd>v4 실험 설정에서는 정답 수를 유지한 0.25를 선택했습니다.</dd>
       </dl></section>
     </div></section>
-<div class="lesson" id="healtheat-reflection"><span class="small-label">회고</span><p>손바닥 사진에서 손가락을 알약으로 찾는 오탐을 보고, 합성 사진과 학습 조건을 조정했습니다. 같은 평가 사진에서는 더 많은 알약을 맞혔지만, 여러 조건을 함께 바꿔 어떤 변경이 효과가 있었는지는 분리하지 못했습니다. 모델 선택과 평가에도 같은 사진을 사용해, 새로운 사진에서의 성능은 별도로 확인해야 할 과제로 남았습니다.</p><p><strong>다음 작업에 적용할 기준</strong><br>모델 선택용 사진과 최종 평가용 사진을 분리하고, 학습 조건은 하나씩 바꿔 효과를 비교하겠습니다. 탐지 점수 기준은 오탐이 줄어드는 정도와 정답 손실을 함께 보고 정하겠습니다.</p></div>
+<div class="lesson" id="healtheat-reflection"><span class="small-label">회고</span><p>손바닥 사진에서 손가락을 알약으로 찾는 오탐을 보고, 합성 사진과 학습 조건을 조정했습니다. 같은 평가 사진에서는 더 많은 알약을 맞혔지만, 여러 조건을 함께 바꿔 어떤 변경이 효과가 있었는지는 분리하지 못했습니다. 모델 선택과 평가에도 같은 사진을 사용해, 새로운 사진에서의 성능은 별도로 확인해야 할 과제로 남았습니다.</p><p><strong>취한 조치와 검증 결과</strong><br>불필요한 예측 박스를 줄이기 위해 v4 추론 코드의 탐지 점수 기준을 0.25로 설정했습니다. 기존의 같은 사진 33장·알약 47개 평가에서 정답 22개를 유지하면서 정답에 대응하지 않는 예측 박스가 84개에서 10개로 줄었습니다. v4 실험 결과이며 서비스에 배포한 성과는 아닙니다. <a href="https://github.com/ZerofZero/codeit10_pj1/blob/ae9bf694c34660a939849b045ed4698a7d6c098f/models/RTMDet/v4/inference_demo.py" target="_blank" rel="noopener noreferrer">추론 설정 ↗</a> · <a href="https://github.com/ZerofZero/codeit10_pj1/blob/ae9bf694c34660a939849b045ed4698a7d6c098f/docs/v4_analysis_summary.md" target="_blank" rel="noopener noreferrer">평가 기록 ↗</a></p></div>
 
 <p class="fold-end"><button type="button" class="fold-close" data-case="healtheat">HealthEat 접기 ↑</button></p>
 </div></details>
