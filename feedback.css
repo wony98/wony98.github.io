@@ -83,3 +83,5 @@
 .approach .how-list li{position:relative;padding-left:16px;font-size:13px;line-height:1.85;color:var(--ink,#242923)}
 .approach .how-list li::before{content:"";position:absolute;left:0;top:.72em;width:7px;height:7px;border-radius:50%;background:var(--blue,#365b48)}
 .approach .how-list b{display:block;font-weight:600;color:var(--ink,#242923)}
+
+.history-k{margin:14px 0 6px;font-size:12px;font-weight:600;color:var(--muted,#5a6358)}.details-body>.history-k:first-child{margin-top:0}
