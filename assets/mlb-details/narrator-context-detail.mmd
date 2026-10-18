@@ -1,0 +1,66 @@
+flowchart TD
+    PROBLEM["긴 입력과 근거 누락 문제<br/>자료 전달 · 실제 검토 · 최종 반영을 나눠 확인"]
+
+    subgraph INPUT_CHECK["1. 입력 도달 검사와 신호 카드 구현"]
+        SOURCE["사전 원장과 경기 자료<br/>선발 · 타순 · 선수별 신호 · 모델 근거"]
+        CARD["사전 신호 카드 구성<br/>분야별 지지·위험·근거 참조 정리"]
+        PROMPT["네레이터 입력에 자료·카드 배치"]
+        ARRIVAL["원장과 최종 프롬프트 대조<br/>선수명·섹션·카드가 빠졌는지 검사<br/>누락 경고를 기록하는 검사"]
+        SOURCE --> CARD --> PROMPT --> ARRIVAL
+        SOURCE --> ARRIVAL
+    end
+    PROBLEM --> INPUT_CHECK
+
+    subgraph GAME_REVIEW["2. 실제 사용 경로: 경기별 메모장과 격리 추론"]
+        FACTS["한 경기의 사실·플래그와<br/>상황이 비슷한 과거 판단 사례"]
+        NOTEPAD[("경기별 메모장 파일<br/>환경 · 양쪽 선발·타선·불펜 · 부상<br/>참고 사례와 출처")]
+        ISOLATE["경기별 LLM 입력 구성<br/>메모장 + 보조 근거 · 입력 해시<br/>하루 전체를 한 번에 판단하는 입력과 분리"]
+        FACTS --> NOTEPAD --> ISOLATE
+    end
+    PROBLEM --> GAME_REVIEW
+
+    subgraph POSITION["3. Lost in the Middle을 의심해 시험한 상단 배치"]
+        DIGEST["이미 있는 충돌·핵심 근거를<br/>프롬프트 앞부분에 다시 배치"]
+        TRIAL["강한 지시 / 약한 색인 방식 비교<br/>예측 방향 · 보류 · 실제 결과 대조"]
+        OFF["승패 선택 경기 수 감소, 적중 건수 동일<br/>상단 배치는 기본 꺼짐으로 유지"]
+        DIGEST --> TRIAL --> OFF
+    end
+    PROMPT -.->|"별도 배치 시험"| DIGEST
+
+    subgraph SEQUENTIAL["4. 실행 형태·비용 비교: 섹션별 중간 기록도 시험"]
+        INPUT["한 경기의 10개 사전정보 섹션<br/>선발 · 타선 · 불펜 · 좌우 상성 · 환경 등"]
+        ONE["한 섹션씩 양 팀 사실과 반론 비교<br/>메인 세션 / 지속 에이전트 방식을 비교<br/>이 단계에서는 최종 방향을 고르지 않음"]
+        MEMO[("섹션별 JSON 저장<br/>근거 ID · 지지/반대 · 불확실성<br/>필수조건 · 무효화 조건 · 우위 판단 이유")]
+        NEXT{"10개 섹션 기록 완료?"}
+        FINAL["LLM이 저장된 10개 결과를 다시 읽음<br/>타선 ↔ 상대 선발 · 접전 ↔ 불펜 연결<br/>반대편보다 우위로 본 이유 기록"]
+        SAVE[("최종 방향과 설명 저장<br/>섹션 우위의 개수를 세는 다수결은 아님")]
+        CHECK{"코드로 처리 내역 검사<br/>모든 입력 ID가 정확히 한 번 기록됐는가?<br/>섹션 · 경기 · 응답 구조가 맞는가?"}
+        FAIL["검사 실패 기록<br/>누락 · 중복 · 미등록 ID를 명시"]
+        FREEZE["출력과 검사 결과 고정<br/>그 뒤 경기 결과를 열어 비교"]
+        INPUT --> ONE --> MEMO --> NEXT
+        NEXT -->|"아니오: 다음 섹션"| ONE
+        NEXT -->|"예"| FINAL --> SAVE --> CHECK
+        CHECK -->|"미통과"| FAIL
+        CHECK -->|"통과"| FREEZE
+    end
+
+    subgraph OTHER["다른 구현 실험: 위 순차 검토에 모두 합친 단일 실행기는 아님"]
+        LAYER["단계별 판정<br/>근거 원장 → 기준 적용/무효 판정<br/>양쪽 경로 → 충돌 원장 → 축별 최종 판단"]
+        LEDGER[("각 단계의 JSON·검사 결과 저장<br/>다음 단계가 이전 결과를 명시적으로 읽음")]
+        AUDIT["근거 처리 감사<br/>고정 입력 목록과 LLM 처리 목록 대조<br/>필수 근거가 기록에서 사라졌는지 검사"]
+        LAYER --> LEDGER
+    end
+    %% Layout-only ordering: these invisible links are not data-flow edges.
+    ARRIVAL ~~~ FACTS
+    ISOLATE ~~~ DIGEST
+    OFF ~~~ INPUT
+    FREEZE ~~~ LAYER
+
+    LIMIT["도달 검사로 입력 누락을 찾았지만<br/>입력에 있던 근거의 판단 반영 문제는 남음<br/>파일·ID 검사와 의미 이해·예측력은 별도 검증"]
+    FREEZE --> LIMIT
+    LEDGER --> LIMIT
+    AUDIT --> LIMIT
+    ARRIVAL --> LIMIT
+    ISOLATE --> LIMIT
+    OFF --> LIMIT
+

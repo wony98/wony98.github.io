@@ -1,0 +1,80 @@
+flowchart TD
+    subgraph H["1. 종료 경기에서 선수별 근거를 쌓는 과정"]
+        PBP["원본 경기 자료<br/>PBP · 박스스코어 · Statcast"]
+        FORM["선수의 이전 기록<br/>해당 경기 전까지의 최근 폼 · 시즌 흐름"]
+        BUNDLE["경기 내용 전용 정독 입력<br/>플레이 흐름 · 선수 · 그날 환경<br/>피처 패킷과 예측은 넣지 않음"]
+        READ["LLM 경기 정독<br/>타석 · 투구 · 교체와 승패 원인 검토"]
+        SYNTH["LLM 회고 분리<br/>사전 근거 / 사후 사건 / 변동성"]
+        BANK[("회고 · 교훈 · 미스 기록<br/>경기 ID와 근거 참조 보존")]
+        PLAYER["선수별 지표 집계<br/>선발 · 타자 · 불펜 / 기간 · 상대 조건"]
+        PBP --> BUNDLE
+        FORM --> SYNTH
+        BUNDLE --> READ --> SYNTH --> BANK
+        PBP --> PLAYER
+    end
+
+    subgraph P["2. 목표 경기 전에 사용할 입력을 만드는 과정"]
+        CUT["목표일 이전 기록만 선별<br/>날짜 · 선수 연결 · 근거 종류 점검"]
+        TODAY["당일 사전자료<br/>선발 · 타순 · 환경 · 출전 뉴스"]
+        MODEL["통계 모델의 예측과 계산 근거<br/>참고 자료이며 강제 선택은 아님"]
+        FREEZE["경기별 입력 고정<br/>gamePk · 입력 SHA · 자료 버전"]
+        CONTEXT["경기별 근거 묶음<br/>선수 사실 · 누적 회고 · 양 팀 맥락"]
+        CASES[("종료 경기 PBP·당시 사전자료에서 추출한 판단 사례<br/>사전상황 · 판단 방법 · 출처<br/>별도 판단기준 추출 도식 참조")]
+        RETRIEVE["대상일 이전 유사 상황 검색<br/>승패·총득점 참고 사례를 따로 선택"]
+        NOTEPAD["경기별 메모장 구성<br/>해당 경기 사실 · 플래그 · 유사 사례<br/>프롬프트와 입력 해시에 연결"]
+        CUT --> FREEZE
+        TODAY --> FREEZE
+        MODEL --> CONTEXT
+        FREEZE --> CONTEXT
+        CASES --> RETRIEVE --> NOTEPAD
+        CONTEXT --> NOTEPAD
+    end
+    BANK --> CUT
+    PLAYER --> CUT
+
+    subgraph D["3. 추론을 실행하고 출력 계약을 확인하는 과정"]
+        REASON["경기별 격리 LLM 추론<br/>여러 경기의 긴 입력을 분리<br/>양 팀 근거 · 반론 / 승패 · 총득점 분리"]
+        CHECK{"코드 계약 검사<br/>경기 ID · 입력 해시 · 응답 구조"}
+        REPAIR["실패 경기만 재처리<br/>횟수 제한 후 재검사"]
+        MODE{"독립 LLM 교차검토 조건<br/>재처리 적용 또는 필수 옵션이면 필수"}
+        OPTIONAL["선택 교차검토<br/>경고 전용 모드"]
+        REQUIRED["필수 교차검토<br/>방향 변경 시 명시 승인도 확인"]
+        HOLD["검사 실패 상태 보존<br/>적용 보류 · 원인 기록"]
+        OUTPUT[("예측 · 설명 · 근거 참조 저장<br/>모델 결과와 별도 보관")]
+        REASON --> CHECK
+        CHECK -->|"통과"| MODE
+        CHECK -->|"재처리 가능"| REPAIR
+        REPAIR -->|"제한 횟수 안에서"| REASON
+        REPAIR -->|"소진 · 실패"| HOLD
+        MODE -->|"미사용"| OUTPUT
+        MODE -->|"선택"| OPTIONAL
+        MODE -->|"필수"| REQUIRED
+        OPTIONAL -->|"통과 또는 실패 경고 기록 후 계속"| OUTPUT
+        REQUIRED -->|"검토·승인 조건 충족"| OUTPUT
+        REQUIRED -->|"미충족·호출 실패"| HOLD
+    end
+    NOTEPAD --> REASON
+
+    subgraph AFTER["5. 경기 후 결과 대조"]
+        PREDS["예측 당시 저장본<br/>모델·네레이터 선택 · 입력·근거"]
+        RESULT["경기 종료 후 결과 대조<br/>맞음 · 틀림 · 모델과의 차이 회고<br/>차이 회고는 1번 회고 기록에 별도 보관"]
+        PREDS --> RESULT
+    end
+    OUTPUT --> PREDS
+    MODEL -.->|"모델 예측 저장본"| PREDS
+
+    subgraph STUDY["4. 긴 입력의 근거 누락에 대응한 별도 실험"]
+        LOST["Lost in the Middle 대응 과제<br/>입력에 있는 근거가 판단에서 묻히는 문제"]
+        SECTION["실행 형태·비용 비교 실험<br/>섹션 순차 검토 → 중간 JSON 저장<br/>메인 세션과 지속 에이전트 비교"]
+        LAYER["단계별 판정 실험<br/>근거 추출 → 조건 대조 → 양쪽 경로<br/>충돌 기록 → 최종 판정"]
+        ACCOUNT["근거 처리 감사 실험<br/>입력 ID와 응답 ID 대조<br/>누락 · 중복 · 모르는 ID 검출"]
+        BOUNDARY["구현과 실험 결과를 별도 보존<br/>검사 통과 ≠ 올바른 해석·선택<br/>상세 확대도와 코드 근거로 연결"]
+        LOST --> SECTION
+        LOST --> LAYER
+        LOST --> ACCOUNT
+        SECTION --> BOUNDARY
+        LAYER --> BOUNDARY
+        ACCOUNT --> BOUNDARY
+    end
+    CONTEXT -.->|"입력 사용 방식 개선 연구"| LOST
+

@@ -1,0 +1,61 @@
+flowchart TD
+    subgraph F["1. 경기 단위 학습 입력 구성"]
+        RAW["공식 경기 · 선수 기록<br/>Statcast · 타순 · 경기 결과"]
+        ENV["환경 · 시장 자료<br/>날씨 · 구장 · 사용 시점이 있는 가격"]
+        JOIN["경기·선수 연결과 정합성 점검<br/>ID / 날짜·팀 / 중복 · 결측 · 단위"]
+        ASOF["경기 이전 누적값 재구성<br/>현재 경기 제외 · 최근 기간 · 전 시즌 prior"]
+        MASTER[("경기별 학습 테이블<br/>수치 특성 · 승패/총득점 정답 분리")]
+        RAW --> JOIN
+        ENV --> JOIN
+        JOIN --> ASOF --> MASTER
+    end
+
+    subgraph E["2. 평가용 모델과 실험: 최종 재학습과 구분"]
+        SELECT["입력 특성 검토<br/>결과·ID·사후 누적값 제외 / 버전별 특성 구성"]
+        SPLIT["승패 시간순 분할<br/>학습 2021~2023 / 검증 2024 / 테스트 2025"]
+        FIT["LightGBM 평가용 학습<br/>검증셋 기준 early stopping · 특성 수 비교"]
+        METRIC["승패 평가 기록<br/>정확도 · AUC · log loss · 평가 경기 수"]
+        TOTAL_EVAL["총득점 회귀 연구 평가<br/>이전 시즌으로 학습 → 다음 시즌 평가"]
+        TOTAL_METRIC["총득점 평가 기록<br/>점수 오차 · 상관 / 기준점 대비 방향"]
+        SELECT --> SPLIT --> FIT --> METRIC
+        SELECT --> TOTAL_EVAL --> TOTAL_METRIC
+    end
+    MASTER --> SELECT
+
+    subgraph T["3. 후기 최종 모델 저장: 2021~2025 재학습 기록"]
+        TRAIN["선택한 구성으로 재학습<br/>저장 메타데이터: 12,149경기"]
+        WIN["승패 분류기<br/>LightGBMClassifier / 202개 특성<br/>마감 시장가격·변화량 포함"]
+        TOTAL["총득점 회귀기<br/>LightGBMRegressor / 190개 특성<br/>이 경로는 마감 시장 관련 특성 제외"]
+        WIN_FILE[("승패 모델 + 특성 메타데이터<br/>특성 이름·순서 · 시즌 · 파라미터")]
+        TOTAL_FILE[("총득점 모델 + 특성 메타데이터<br/>특성 이름·순서 · bias · 시즌")]
+        TRAIN --> WIN --> WIN_FILE
+        TRAIN --> TOTAL --> TOTAL_FILE
+    end
+    SELECT --> TRAIN
+    METRIC -.->|"구성 검토 / 자동 적용 아님"| TRAIN
+    TOTAL_METRIC -.->|"구성 검토"| TRAIN
+
+    subgraph I["4. 목표 경기 예측과 사용 근거 보존"]
+        CURRENT["목표 경기의 사전 입력<br/>선수·기간·시장 시점 / 동결 스냅샷"]
+        ALIGN["학습 특성 순서로 입력 재구성<br/>정의 · 결측 · 고정 자료 연결"]
+        PWIN["승패 추론<br/>홈 승리 확률 / 시장 확률과 비교"]
+        PTOTAL["총득점 추론<br/>예상 총점 − 기준점 − bias<br/>이 차이는 확률이 아님"]
+        SAVE[("모델 예측 저장<br/>승패 입력·기여도 스냅샷 · 해시")]
+        AFTER["경기 후 결과 대조<br/>승패 · 총점 / 네레이터와 차이 추적"]
+        CURRENT --> ALIGN
+        ALIGN --> PWIN
+        ALIGN --> PTOTAL
+        PWIN --> SAVE
+        PTOTAL --> SAVE
+        SAVE --> AFTER
+    end
+    WIN_FILE --> PWIN
+    TOTAL_FILE --> PTOTAL
+
+    HISTORY["초기 비교 이력<br/>규칙 계산 · LR/XGBoost/LightGBM · 앙상블<br/>후기 최종 모델과 다른 실험"]
+    HISTORY -.-> SELECT
+    LIMIT["평가와 최종 모델을 구분<br/>2025 승패 2,416경기 / 56.6%는 별도 평가 결과<br/>최종 재학습·네레이터 성능으로 전용하지 않음"]
+    MARKET_LIMIT["시장 자료의 시점·비독립성<br/>마감 특성 사용 결과를 최초 가격 시점 성과로 보지 않음<br/>모델과 시장의 일치를 독립적인 두 근거로 세지 않음"]
+    METRIC -.-> LIMIT
+    WIN -.-> MARKET_LIMIT
+

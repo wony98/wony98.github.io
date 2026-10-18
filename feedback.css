@@ -1,0 +1,41 @@
+.hero { padding-top: 44px; padding-bottom: 34px; }
+.contact-email { margin-top: 18px; font-size: 13px; color: var(--blue); }
+.contact-email + .hero-links { margin-top: 16px; }
+.intro-context { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.25fr); gap: 44px; border-top: 1px solid var(--line); padding: 28px 0; }
+.intro-context .approach, .skills { padding: 0; }
+.intro-context .approach .eyebrow, .skills .eyebrow { margin: 0 0 10px; font: 12px/1.8 ui-monospace, monospace; letter-spacing: .08em; color: var(--accent); }
+.intro-context h2 { font-size: 23px; margin: 0; }
+.intro-context .approach-grid { grid-template-columns: 1fr; gap: 10px; margin-top: 15px; font-size: 13px; line-height: 1.9; }
+.skills .tool-rows { margin-top: 10px; }
+.skills .tool-rows > div { grid-template-columns: 112px minmax(0, 1fr); gap: 18px; padding: 11px 0; }
+.skills .tool-rows h3, .skills .tool-rows p { font-size: 12px; line-height: 1.85; }
+.intro-context + .timeline { margin-bottom: 28px; }
+.facts > .role-fact { background: var(--wash); border: 1px solid var(--line); border-left: 2px solid var(--ink); }
+.facts > .role-fact dt { color: var(--ink); }
+.facts > .solo-fact { border-left-width: 2px; }
+.research-artifact { background: #f0f0e9; }
+#mlb .mlb-featured { margin: 24px 0 32px; }
+#mlb .mlb-featured > .details-body { padding: 0; }
+#mlb .mlb-featured .mlb-doc-links { margin: 0 0 14px; }
+#mlb .mlb-featured .mlb-diagram-gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+#mlb .mlb-featured .mlb-diagram-gallery img { height: 260px; }
+.background { padding-top: 40px; }
+@media (max-width: 1000px) {
+  .intro-context { gap: 28px; }
+  .skills .tool-rows > div { grid-template-columns: 1fr; gap: 4px; }
+  #mlb .mlb-featured .mlb-diagram-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .intro-context { grid-template-columns: 1fr; gap: 24px; padding: 24px 0; }
+  .hero { padding-top: 30px; padding-bottom: 28px; }
+  .skills .tool-rows > div { grid-template-columns: 118px minmax(0, 1fr); gap: 12px; }
+}
+@media (max-width: 450px) {
+  .project-list { grid-template-columns: 1fr; }
+  .project-list > a, .project-list > a:nth-child(3) { padding: 14px 0; border-left: 0; }
+  .skills .tool-rows > div { grid-template-columns: 1fr; gap: 4px; }
+  #mlb .mlb-featured .mlb-diagram-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  #mlb .mlb-featured .mlb-diagram-gallery img { height: 200px; }
+}
+
+.project-guide{font-size:.92rem;line-height:1.7;margin:0 0 1rem;color:#4c584f}.project-guide a{text-decoration:underline;text-underline-offset:3px}

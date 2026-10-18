@@ -1,0 +1,5 @@
+"arm","question_count","top_k_documents","both_documents_found","all_hit_at_20"
+"baseline","40","20","39","0.975"
+"doc_agg","40","20","39","0.975"
+"p02_hybrid_space_rrf20_bw0_5_doc_agg","40","20","39","0.975"
+"p03_entity_boost_space_rrf20_bw0_5_doc_agg","40","20","40","1.0"
