@@ -75,3 +75,5 @@
 .case-header .tags{align-items:center}
 .case-header .tags .chips-k{background:none;border:0;padding:0;color:var(--muted,#5a6358);font-size:11px}
 @media (max-width:700px){.case-header .meta{gap:4px 10px}.case-header .meta .meta-item{white-space:normal}}
+
+.contact-blog{margin-top:4px}
