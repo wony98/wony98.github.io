@@ -31,7 +31,7 @@ function syncFoldAll() {
   const folds = allFolds();
   const allOpen = folds.length > 0 && folds.every(d => d.open);
   btn.dataset.mode = allOpen ? 'close' : 'open';
-  btn.textContent = allOpen ? '네 프로젝트 모두 접기' : '네 프로젝트 모두 펼치기';
+  btn.textContent = allOpen ? '모든 프로젝트 접기' : '모든 프로젝트 펼치기';
 }
 
 function setupFolds() {

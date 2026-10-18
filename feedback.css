@@ -64,3 +64,14 @@
 .fold-close:hover{border-color:var(--ink,#242923);color:var(--ink,#242923)}
 @media (max-width:700px){.case-fold>summary{padding:12px 13px;font-size:13px}.fold-hint{font-size:11.5px}}
 @media print{.fold-controls,.fold-end,.case-fold>summary{display:none !important}.case-fold::details-content{display:block !important;content-visibility:visible !important}}
+
+/* 역할 표시·메타 라벨 (2026-10-18 친구 피드백 반영) */
+.case-header .meta{display:flex;flex-wrap:wrap;gap:4px 14px}
+.case-header .meta .meta-item{white-space:nowrap}
+.case-header .meta .meta-k{font-weight:600;color:var(--muted,#5a6358);margin-right:5px}
+.case-header .role-line.role-chips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;line-height:1.3;color:var(--ink,#242923);font-weight:400}
+.role-chips .chip{background:var(--blue,#365b48);color:#fff;border-radius:2px;padding:5px 9px;font-weight:600;font-size:12px;line-height:1.3}
+.chips-k{font-size:11px;letter-spacing:.04em;color:var(--muted,#5a6358);font-weight:600;margin-right:3px;white-space:nowrap}
+.case-header .tags{align-items:center}
+.case-header .tags .chips-k{background:none;border:0;padding:0;color:var(--muted,#5a6358);font-size:11px}
+@media (max-width:700px){.case-header .meta{gap:4px 10px}.case-header .meta .meta-item{white-space:normal}}
