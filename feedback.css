@@ -85,3 +85,8 @@
 .approach .how-list b{display:block;font-weight:600;color:var(--ink,#242923)}
 
 .history-k{margin:14px 0 6px;font-size:12px;font-weight:600;color:var(--muted,#5a6358)}.details-body>.history-k:first-child{margin-top:0}
+
+/* 문제 해결 기록: 프로젝트 펼침 시 바로 보이게 (2026-10-18) */
+.troubleshoot{margin:28px 0 0}
+.troubleshoot .ts-sub{margin:-4px 0 12px;font-size:13px;color:var(--muted,#5a6358)}
+.troubleshoot .troubles{gap:14px}
