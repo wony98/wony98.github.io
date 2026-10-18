@@ -39,3 +39,28 @@
 }
 
 .project-guide{font-size:.92rem;line-height:1.7;margin:0 0 1rem;color:#4c584f}.project-guide a{text-decoration:underline;text-underline-offset:3px}
+
+/* 프로젝트별 접기/펼치기 (2026-10-18) */
+.fold-controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0 0 12px}
+.fold-all{font:inherit;font-size:13px;line-height:1.4;padding:7px 12px;border:1px solid var(--ink,#242923);background:var(--ink,#242923);color:#fff;cursor:pointer;border-radius:2px}
+.fold-all:hover{opacity:.9}
+.fold-all:focus-visible,.case-fold>summary:focus-visible,.fold-close:focus-visible{outline:2px solid var(--accent,#365b48);outline-offset:2px}
+.fold-note{font-size:12px;line-height:1.7;color:var(--muted,#5b6157)}
+.case-fold{margin-top:16px}
+.case-fold>summary{list-style:none;cursor:pointer;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding:13px 16px;border:1px solid var(--line,#d7d9cf);background:var(--wash,#f3f4ef);border-radius:2px;font-size:14px;line-height:1.6}
+.case-fold>summary::-webkit-details-marker{display:none}
+.case-fold>summary::before{content:"+";flex:none;width:14px;font:600 17px/1 ui-monospace,monospace;color:var(--blue,#365b48)}
+.case-fold[open]>summary::before{content:"\2212"}
+.case-fold>summary:hover{border-color:var(--ink,#242923)}
+.fold-label{font-weight:600;color:var(--ink,#242923)}
+.fold-when-open{display:none}
+.case-fold[open] .fold-when-closed{display:none}
+.case-fold[open] .fold-when-open{display:inline}
+.fold-hint{font-size:12px;color:var(--muted,#5b6157)}
+.case-fold[open]>summary .fold-hint{display:none}
+.case-fold-body{padding-top:14px}
+.fold-end{margin:22px 0 0}
+.fold-close{font:inherit;font-size:13px;line-height:1.4;padding:7px 12px;border:1px solid var(--line,#d7d9cf);background:#fff;color:var(--muted,#5b6157);cursor:pointer;border-radius:2px}
+.fold-close:hover{border-color:var(--ink,#242923);color:var(--ink,#242923)}
+@media (max-width:700px){.case-fold>summary{padding:12px 13px;font-size:13px}.fold-hint{font-size:11.5px}}
+@media print{.fold-controls,.fold-end,.case-fold>summary{display:none !important}.case-fold::details-content{display:block !important;content-visibility:visible !important}}
