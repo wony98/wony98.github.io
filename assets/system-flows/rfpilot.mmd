@@ -1,0 +1,15 @@
+flowchart TD
+  DOC["공공 입찰 문서<br/>PDF/HWP"] --> PRE["파싱 · 청킹<br/>메타데이터"]
+  PRE --> DB["Chroma · 문서 색인"]
+  UI["챗봇 화면<br/>질문 입력"] --> SCOPE["질문 유형<br/>문서 범위 지정"]
+  DB --> SEARCH["Dense + BM25/Kiwi 검색<br/>RRF 결합"]
+  SCOPE --> SEARCH
+  SEARCH --> EV["문서별 근거 구성<br/>출처 정규화"]
+  EV --> CHECK["전달 데이터 형식 검사"]
+  CHECK --> GEN["생성 경로 선택<br/>근거 기반 답변"]
+  GEN --> GUARD["답변·출처 확인"]
+  GUARD --> OUT["챗봇 화면<br/>답변과 원문 출처"]
+  GOLD["원문 대조 평가셋"] -.-> SEARCH
+  GOLD -.-> GUARD
+  classDef focus fill:#e7efff,stroke:#315790,stroke-width:2px,color:#172c4b;
+  class SCOPE,SEARCH,EV,CHECK focus;

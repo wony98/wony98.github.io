@@ -1,0 +1,16 @@
+flowchart TD
+  U["미용인<br/>시술 자료와 정보"] --> UI["Next.js 웹 화면"]
+  UI --> API["FastAPI<br/>기능별 요청 처리"]
+  API --> I["사진 · 얼굴 변경"]
+  API --> B["매장·시술 정보<br/>블로그 생성"]
+  API --> V["영상 클립 · 숏폼 편집"]
+  I --> IE["얼굴 합성 · 이미지 결과"]
+  B --> BE["LLM 글 작성·검수"]
+  V --> VE["자막 생성 · 얼굴 블러<br/>FFmpeg 편집"]
+  IE --> OUT["결과 미리보기 · 수정 · 저장"]
+  BE --> OUT
+  VE --> OUT
+  API -.-> STORE["사용자·작업 정보<br/>결과 파일"]
+  ENV["당시 배포 환경<br/>GCP L4 · Caddy · systemd"] -.-> API
+  classDef focus fill:#e7efff,stroke:#315790,stroke-width:2px,color:#172c4b;
+  class V,VE,ENV focus;

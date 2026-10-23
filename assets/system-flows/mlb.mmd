@@ -1,0 +1,12 @@
+flowchart TD
+  DATA["공식 경기 자료<br/>PBP · 선수 지표"] --> JOIN["경기·선수 ID 연결<br/>시점 점검"]
+  JOIN --> FIX["경기 전 입력 고정"]
+  FIX --> ML["통계 모델<br/>승패 확률·예상 총득점"]
+  FIX --> LLM["LLM 네레이터<br/>양 팀 근거와 반론"]
+  ML --> LLM
+  ML --> SAVE["예측 당시<br/>입력·출력·근거 보관"]
+  LLM --> SAVE
+  SAVE --> REVIEW["경기 종료 후<br/>예측과 실제 플레이 대조"]
+  ACTUAL["종료 경기<br/>PBP · 박스스코어"] --> REVIEW
+  REVIEW --> NEXT["사전정보·사후 사건 구분<br/>누적 기록"]
+  NEXT -. "다음 목표일 이전 자료만" .-> FIX

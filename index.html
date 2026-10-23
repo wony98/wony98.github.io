@@ -1,157 +1,138 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="ko">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="신입 AI 엔지니어 노승원의 포트폴리오. 숏폼 편집 서비스, 공공문서 검색, 야구 개인 연구, 알약 탐지 모델 실험의 작업물과 개발 경험입니다.">
-  <title>노승원 | AI 엔지니어 포트폴리오</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="design.css"><link rel="stylesheet" href="feedback.css">
-  <script src="view.js" defer></script>
-</head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="신입 AI 엔지니어 노승원의 포트폴리오. 숏폼 편집 서비스, 공공문서 검색, 야구 개인 연구, 알약 탐지 모델 실험의 작업물과 개발 경험입니다." name="description"/>
+<title>노승원 | AI 엔지니어 포트폴리오</title>
+<link href="styles.css" rel="stylesheet"/>
+<link href="design.css" rel="stylesheet"/><link href="feedback.css" rel="stylesheet"/>
+<script defer="" src="view.js"></script>
+<link href="mentor.css" rel="stylesheet"/></head>
 <body class="editorial-design">
 <a class="skip" href="#main">본문으로 이동</a>
-<header class="site-header"><a class="identity" href="#main">노승원<span>AI Engineer</span></a><nav aria-label="주 메뉴"><a href="#projects">프로젝트</a><a href="#approach">작업 방식</a><a href="#skills">사용 기술</a><a href="https://github.com/wony98" target="_blank" rel="noopener noreferrer">GitHub ↗</a></nav></header>
+<header class="site-header"><a class="identity" href="#main">노승원<span>AI Engineer</span></a><nav aria-label="주 메뉴"><a href="#projects">프로젝트</a><a href="#approach">작업 방식</a><a href="#skills">사용 기술</a><a href="https://github.com/wony98" rel="noopener noreferrer" target="_blank">GitHub ↗</a></nav></header>
 <main id="main">
-<section class="hero" aria-labelledby="intro-title">
-    <div>
-      
-      <div class="hero-byline"><figure class="hero-portrait"><img src="assets/noh-seungwon-portrait.png" alt="노승원 증명사진" width="1106" height="1422" decoding="async"></figure><p class="eyebrow">포트폴리오 2026</p></div><h1 id="intro-title">문제를 해결하는 방법을 탐구하고,<br>배운 것을 구현으로 옮기는<br><span>신입 AI 엔지니어 노승원입니다.</span></h1><p class="intro">해결하기 어려운 문제에 직면하면 필요한 내용을 배우고, 여러 방법을 시험해 봅니다. 예상과 다른 결과가 나오면 원본 자료와 판단 근거를 다시 살펴보며 다음 실험을 정합니다. 동료와 함께 고민하고 각자의 강점을 살려, 실제로 쓸 수 있는 결과물을 완성하는 개발을 지향합니다.</p><p class="contact-email"><a href="mailto:pagestone98@gmail.com">pagestone98@gmail.com</a></p><p class="contact-email contact-blog"><a href="https://nohseungwon98.tistory.com/" target="_blank" rel="noopener noreferrer">nohseungwon98.tistory.com ↗</a></p></div>
-    <div class="hero-side">
-      <aside class="hero-note"><span class="note-label">주요 개발 경험</span><p><strong>문서 검색과 근거 구성</strong><br>질문에 맞는 문서를 찾고, 출처가 붙은 답변용 근거로 정리했습니다.</p><p><strong>모델 실험과 평가</strong><br>실사용 사진과 경기 이전 데이터를 바탕으로 모델을 비교·평가했습니다.</p><p><strong>API 개발과 팀 협업</strong><br>편집 API를 배포하고 모바일(iOS) 업로드 오류까지 고치며, 기능별 요청·응답 계약을 팀과 맞췄습니다.</p><div class="tags"><span>FastAPI</span><span>Python</span><span>PyTorch</span><span>RAG</span></div></aside>
-    </div>
-  </section>
-<div class="intro-context"><section class="approach" id="approach" aria-labelledby="approach-title"><h2 id="approach-title">작업 방식</h2><div class="approach-grid"><ul class="how-list">
+<section aria-labelledby="intro-title" class="hero">
+<div>
+<div class="hero-byline"><figure class="hero-portrait"><img alt="노승원 증명사진" decoding="async" height="1422" src="assets/noh-seungwon-portrait.png" width="1106"/></figure><p class="eyebrow">포트폴리오 2026</p></div><h1 id="intro-title">문제를 푸는 방법을 탐구하고,<br/>아이디어를 구현으로 옮기는<br/><span>AI 엔지니어 노승원입니다.</span></h1><p class="intro">쉽게 풀리지 않는 문제를 만나면 관련 자료와 사례를 찾아보고, 여러 방법을 시도하며 해결책을 찾습니다. 예상과 다른 결과가 나오면 원본 자료와 판단 근거를 다시 살펴보며 다음 실험을 정합니다. 동료와 함께 고민하고 각자의 강점을 살려, 실제로 쓸 수 있는 결과물을 완성하는 개발을 지향합니다.</p><p class="contact-email"><a href="mailto:pagestone98@gmail.com">pagestone98@gmail.com</a></p><p class="contact-email contact-blog"><a href="https://nohseungwon98.tistory.com/" rel="noopener noreferrer" target="_blank">nohseungwon98.tistory.com ↗</a></p></div>
+<div class="hero-side">
+<aside class="hero-note"><span class="note-label">주요 개발 경험</span><p><strong>문서 검색과 근거 구성</strong><br/>질문에 맞는 문서를 찾고, 출처가 붙은 답변용 근거로 정리했습니다.</p><p><strong>모델 실험과 평가</strong><br/>실사용 사진과 경기 이전 데이터를 바탕으로 모델을 비교·평가했습니다.</p><p><strong>API 개발과 팀 협업</strong><br/>편집 API를 배포하고 모바일(iOS) 업로드 오류까지 고치며, 기능별 요청·응답 계약을 팀과 맞췄습니다.</p><div class="tags"><span>FastAPI</span><span>Python</span><span>PyTorch</span><span>RAG</span></div></aside>
+</div>
+</section>
+<div class="intro-context"><section aria-labelledby="approach-title" class="approach" id="approach"><h2 id="approach-title">작업 방식</h2><div class="approach-grid"><ul class="how-list">
 <li><b>프로젝트 시작 전에 형식과 평가 기준을 먼저 정합니다.</b>화면과 API, 검색과 답변 생성처럼 나눠 만들 부분의 요청·응답 데이터 형식과 작업 순서, 결과를 어떤 평가셋과 기준으로 판정할지 팀과 합의합니다.</li>
 <li><b>조건을 바꿔 가며 같은 기준으로 비교합니다.</b>모델 설정이나 검색 방식을 바꾸면 같은 평가셋으로 결과를 다시 재고, 기준에 못 미치면 확장을 멈춥니다.</li>
 <li><b>결과가 예상과 다르면 원문과 원자료로 돌아갑니다.</b>자동 평가 결과나 모델 출력이 예상과 다르면 정답지·원문·입력 자료를 직접 대조합니다. 최종 판단은 사람이 근거를 확인한 뒤 내립니다.</li>
 <li><b>같은 문제가 다시 생겼을 때 바로 풀 수 있게 기록합니다.</b>예측 당시의 입력과 설정, 실패 사례를 남겨 관련 작업이나 재발 시 원인 추적에 드는 시간을 줄입니다.</li>
-</ul></div></section><section class="skills" id="skills" aria-labelledby="skills-title"><h2 id="skills-title">사용한 기술</h2><div class="tool-rows"><div><h3>모델과 데이터</h3><p>Albumentations, LightGBM, MMDetection, NumPy, pandas, Python, PyTorch</p></div><div><h3>검색과 서비스</h3><p>BM25, Caddy, Chroma, FastAPI, FFmpeg, GCP, Kiwi, Linux, OpenAI API, RRF</p></div><div><h3>화면·API 연동</h3><p>React, TypeScript</p></div><div><h3>협업 규칙</h3><p>SalonCutAI에서는 팀원들과 feat, fix, docs 등의 커밋 메시지 규칙을 정해 변경 내용을 구분했습니다.</p></div><div><h3>코드 관리</h3><p>기능별 브랜치에서 작업하고, Pull Request로 통합 브랜치에 합친 뒤 최종 변경 사항을 main에 반영했습니다. SalonCutAI에서는 dev를 통합 브랜치로 사용했습니다.</p></div><div><h3>배포 확인</h3><p>SalonCutAI에서는 CI/CD 배포 실패 시 GitHub 이슈가 자동으로 생성되도록 구성된 알림을 통해 실패 내역을 확인했습니다.</p></div><div><h3>개발과 학습에 사용한 도구</h3><p>Claude, Codex, Docker, Docker Compose, Git, GitHub, Hugging Face Transformers, LangChain, LangGraph, ONNX, PEFT/LoRA, scikit-learn, Streamlit</p></div></div></section></div>
-<section class="timeline" aria-labelledby="tl-title">
-    <div class="tl-head"><p class="eyebrow" id="tl-title">2026년 타임라인</p></div>
-    <div class="tl-months" aria-hidden="true"><span>3월</span><span>4월</span><span>5월</span><span>6월</span><span>7월</span><span>8월</span><span>9월</span></div>
-    <div class="tl-rows">
-      <a href="#mlb" class="solo" style="grid-column:1/8;grid-row:1" aria-label="MLB 개인 연구, 2026년 3월부터 9월">MLB 개인 연구 <small>2026.03–09</small></a>
-      <a href="#healtheat" style="grid-column:2/4;grid-row:2" aria-label="HealthEat, 2026년 4월부터 5월">HealthEat <small>04–05</small></a>
-      <a href="#rfpilot" style="grid-column:4/6;grid-row:2" aria-label="RFPilot, 2026년 6월부터 7월">RFPilot <small>06–07</small></a>
-      <a href="#salon" style="grid-column:6/7;grid-row:2" aria-label="SalonCutAI, 2026년 8월"><span class="tl-full">SalonCutAI</span><span class="tl-short">Salon</span> <small>08</small></a>
-    </div>
-  </section>
-<section class="project-index" id="projects" aria-labelledby="projects-title">
-    <div class="section-heading"><div><h2 id="projects-title">프로젝트</h2></div><p>팀 프로젝트 3개와 개인 연구 1개</p></div>
-    <p class="fold-controls"><button type="button" class="fold-all" data-mode="open">모든 프로젝트 펼치기</button></p>
-    <nav class="project-list" aria-label="프로젝트 바로가기"><a href="#mlb"><span class="index-number">01</span><span><strong>MLB</strong><small>개인 연구 · 경기 데이터 분석·예측</small></span><span class="index-kind">개인 연구</span><span aria-hidden="true">↘</span></a>
+</ul></div></section><section aria-labelledby="skills-title" class="skills" id="skills"><h2 id="skills-title">사용한 기술</h2><div class="tool-rows"><div><h3>모델과 데이터</h3><p>Albumentations, LightGBM, MMDetection, NumPy, pandas, Python, PyTorch</p></div><div><h3>검색과 서비스</h3><p>BM25, Caddy, Chroma, FastAPI, FFmpeg, GCP, Kiwi, Linux, OpenAI API, RRF</p></div><div><h3>화면·API 연동</h3><p>React, TypeScript</p></div><div><h3>협업 규칙</h3><p>SalonCutAI에서는 팀원들과 feat, fix, docs 등의 커밋 메시지 규칙을 정해 변경 내용을 구분했습니다.</p></div><div><h3>코드 관리</h3><p>기능별 브랜치에서 작업하고, Pull Request로 통합 브랜치에 합친 뒤 최종 변경 사항을 main에 반영했습니다. SalonCutAI에서는 dev를 통합 브랜치로 사용했습니다.</p></div><div><h3>배포 확인</h3><p>SalonCutAI에서는 CI/CD 배포 실패 시 GitHub 이슈가 자동으로 생성되도록 구성된 알림을 통해 실패 내역을 확인했습니다.</p></div><div><h3>개발과 학습에 사용한 도구</h3><p>Claude, Codex, Docker, Docker Compose, Git, GitHub, Hugging Face Transformers, LangChain, LangGraph, MLflow, ONNX, PEFT/LoRA, scikit-learn, Streamlit</p></div></div></section></div>
+<section aria-labelledby="tl-title" class="timeline">
+<div class="tl-head"><p class="eyebrow" id="tl-title">2026년 타임라인</p></div>
+<div aria-hidden="true" class="tl-months"><span>3월</span><span>4월</span><span>5월</span><span>6월</span><span>7월</span><span>8월</span><span>9월</span></div>
+<div class="tl-rows">
+<a aria-label="MLB 개인 연구, 2026년 3월부터 9월" class="solo" href="#mlb" style="grid-column:1/8;grid-row:1">MLB 개인 연구 <small>2026.03–09</small></a>
+<a aria-label="HealthEat, 2026년 4월부터 5월" href="#healtheat" style="grid-column:2/4;grid-row:2">HealthEat <small>04–05</small></a>
+<a aria-label="RFPilot, 2026년 6월부터 7월" href="#rfpilot" style="grid-column:4/6;grid-row:2">RFPilot <small>06–07</small></a>
+<a aria-label="SalonCutAI, 2026년 8월" href="#salon" style="grid-column:6/7;grid-row:2"><span class="tl-full">SalonCutAI</span><span class="tl-short">Salon</span> <small>08</small></a>
+</div>
+</section>
+<section aria-labelledby="projects-title" class="project-index" id="projects">
+<div class="section-heading"><div><h2 id="projects-title">프로젝트</h2></div><p>팀 프로젝트 3개와 개인 연구 1개</p></div>
+<p class="fold-controls"><button class="fold-all" data-mode="open" type="button">모든 프로젝트 펼치기</button></p>
+<nav aria-label="프로젝트 바로가기" class="project-list"><a href="#mlb"><span class="index-number">01</span><span><strong>MLB</strong><small>개인 연구 · 경기 데이터 분석·예측</small></span><span class="index-kind">개인 연구</span><span aria-hidden="true">↘</span></a>
 <a href="#salon"><span class="index-number">02</span><span><strong>SalonCutAI</strong><small>미용실 홍보 콘텐츠 제작</small></span><span class="index-kind">팀 / API·서빙·PM</span><span aria-hidden="true">↘</span></a>
 <a href="#rfpilot"><span class="index-number">03</span><span><strong>RFPilot</strong><small>공공 입찰 문서 질의응답</small></span><span class="index-kind">팀 / Retrieval</span><span aria-hidden="true">↘</span></a>
 <a href="#healtheat"><span class="index-number">04</span><span><strong>HealthEat</strong><small>사진 기반 알약 탐지·식별</small></span><span class="index-kind">팀 / 모델 실험</span><span aria-hidden="true">↘</span></a></nav>
-  </section>
-<article class="case" id="mlb" aria-labelledby="mlb-title">
-    <header class="case-header"><p class="eyebrow">01</p><h2 id="mlb-title">MLB</h2><p class="case-purpose">경기 데이터 분석·예측 시스템 연구</p><p class="case-lead">야구 경기가 시작되기 전에 공개된 정보만으로 어느 팀이 유리한지 예측하고, 경기가 끝난 뒤 그 예측과 근거가 맞았는지 되짚어 보는 개인 연구입니다. 팀 성적 같은 집계 숫자만 쓰는 통계 모델(LightGBM)은 선수 개개인의 플레이나 경기 흐름을 반영하지 못합니다. 그래서 끝난 경기의 플레이별 기록(PBP)과 선발 투수·불펜·타자의 누적 기록을 LLM에게 읽혀 경기를 분석하게 하는 ‘네레이터’를 더했습니다. 예측에 쓴 자료와 판단 근거를 그대로 저장해 두었다가 실제 경기 결과와 비교해, 어디서 판단이 틀렸는지 찾는 것이 목표입니다.</p><p class="meta"><span class="meta-item"><b class="meta-k">기간</b>2026.03–09</span><span class="meta-item"><b class="meta-k">형태</b>개인 연구 / 연구 종료</span><span class="meta-item"><b class="meta-k">역할</b>기획, 목표·검증 기준과 적용 판단</span></p><div class="tags"><span class="chips-k">사용 도구</span><span>JSONL</span><span>LightGBM</span><span>LLM</span><span>Python / pandas</span></div><div class="role-line role-chips" aria-label="맡은 역할"><span class="chips-k">맡은 역할</span><span class="chip">개인 연구 · 1인</span><span class="chip">자료 수집·입력 구성</span><span class="chip">모델·네레이터 실험</span><span class="chip">평가와 적용·중단 판단</span></div></header>
-<details class="case-fold" id="mlb-fold"><summary aria-label="MLB 개인 연구 상세 내용 펼치기"><span class="fold-label"><span class="fold-when-closed">자세히 보기</span><span class="fold-when-open">접기</span></span><span class="fold-hint">연구 구조도 · 연구 작업 · 평가 결과와 조건 · 네레이터 분석 · 문제 해결 · 회고</span></summary><div class="case-fold-body"><section class="mlb-originals mlb-featured" id="mlb-diagrams"><h3 class="block-label">연구 구조도와 구현 문서</h3><div class="details-body">
-      <div class="mlb-doc-links">
-        <a href="https://github.com/wony98/mlb-prediction-error-analysis/blob/1ed4e673a734dd1495a81aa56d78e1c5a4c6d3bb/docs/NARRATOR_ARCHITECTURE.md" target="_blank" rel="noopener noreferrer">네레이터와 긴 입력 대응 ↗</a>
-        <a href="https://github.com/wony98/mlb-prediction-error-analysis/blob/1ed4e673a734dd1495a81aa56d78e1c5a4c6d3bb/docs/JUDGMENT_CRITERIA.md" target="_blank" rel="noopener noreferrer">판단기준 추출과 적용 ↗</a>
-        <a href="https://github.com/wony98/mlb-prediction-error-analysis/blob/1ed4e673a734dd1495a81aa56d78e1c5a4c6d3bb/docs/ML_ARCHITECTURE.md" target="_blank" rel="noopener noreferrer">머신러닝 학습과 예측 ↗</a>
-      </div>
-      <div class="mlb-diagram-gallery">
-        <figure><a href="assets/mlb-details/narrator-detail.svg" target="_blank" rel="noopener noreferrer"><img src="assets/mlb-details/narrator-detail.svg" alt="네레이터의 과거 경기 기록 누적, 경기 전 입력 구성, 경기별 추론과 결과 대조 구조" width="2576" height="4425" loading="lazy"></a><figcaption><b>네레이터 전체 구조</b><a href="assets/mlb-details/narrator-detail.svg" target="_blank" rel="noopener noreferrer">SVG 확대 ↗</a> · <a href="assets/mlb-details/narrator-detail.mmd" target="_blank" rel="noopener noreferrer">Mermaid 원문 ↗</a></figcaption></figure>
-        <figure><a href="assets/mlb-details/narrator-context-detail.svg" target="_blank" rel="noopener noreferrer"><img src="assets/mlb-details/narrator-context-detail.svg" alt="입력 도달 검사, 경기별 메모장, 상단 배치 실험과 섹션별 중간 기록을 나눠 보여주는 구조" width="1657" height="5251" loading="lazy"></a><figcaption><b>긴 입력 대응 방법</b><a href="assets/mlb-details/narrator-context-detail.svg" target="_blank" rel="noopener noreferrer">SVG 확대 ↗</a> · <a href="assets/mlb-details/narrator-context-detail.mmd" target="_blank" rel="noopener noreferrer">Mermaid 원문 ↗</a></figcaption></figure>
-        <figure><a href="assets/mlb-details/criterion-extraction.svg" target="_blank" rel="noopener noreferrer"><img src="assets/mlb-details/criterion-extraction.svg" alt="종료 경기의 플레이와 사전자료에서 판단 방법, 필수조건과 무효화 조건을 추출하는 과정" width="1757" height="2566" loading="lazy"></a><figcaption><b>판단기준 추출</b><a href="assets/mlb-details/criterion-extraction.svg" target="_blank" rel="noopener noreferrer">SVG 확대 ↗</a> · <a href="assets/mlb-details/criterion-extraction.mmd" target="_blank" rel="noopener noreferrer">Mermaid 원문 ↗</a></figcaption></figure>
-        <figure><a href="assets/mlb-details/criterion-application.svg" target="_blank" rel="noopener noreferrer"><img src="assets/mlb-details/criterion-application.svg" alt="과거 참고 사례 사용, 날짜를 제한한 기준 검색, 별도 조건 대조와 양 팀 경로 비교 실험" width="2486" height="2111" loading="lazy"></a><figcaption><b>판단기준 검색과 적용</b><a href="assets/mlb-details/criterion-application.svg" target="_blank" rel="noopener noreferrer">SVG 확대 ↗</a> · <a href="assets/mlb-details/criterion-application.mmd" target="_blank" rel="noopener noreferrer">Mermaid 원문 ↗</a></figcaption></figure>
-        <figure><a href="assets/mlb-details/ml-detail.svg" target="_blank" rel="noopener noreferrer"><img src="assets/mlb-details/ml-detail.svg" alt="경기 이전 학습 입력 구성, 시간순 평가, 별도의 최종 재학습과 예측 입력 보존 과정" width="1800" height="3231" loading="lazy"></a><figcaption><b>머신러닝 학습과 예측</b><a href="assets/mlb-details/ml-detail.svg" target="_blank" rel="noopener noreferrer">SVG 확대 ↗</a> · <a href="assets/mlb-details/ml-detail.mmd" target="_blank" rel="noopener noreferrer">Mermaid 원문 ↗</a></figcaption></figure>
-      </div>
-    </div></section>
+</section>
+<article aria-labelledby="mlb-title" class="case" id="mlb">
+<header class="case-header"><p class="eyebrow">01</p><h2 id="mlb-title">MLB</h2><p class="case-purpose">경기 데이터 분석·예측 시스템 연구</p><p class="case-lead">경기 전 자료로 승패와 총득점을 예측하고, 경기 후 실제 플레이 기록과 대조해 오류를 찾은 개인 연구입니다. 통계 모델과 선수별 경기 내용을 읽는 LLM 네레이터를 함께 실험했습니다.</p><p class="meta"><span class="meta-item"><b class="meta-k">기간</b>2026.03–09</span><span class="meta-item"><b class="meta-k">형태</b>개인 연구 / 연구 종료</span></p><div class="tags"><span class="chips-k">사용 도구</span><span>JSONL</span><span>LightGBM</span><span>LLM</span><span>Python / pandas</span></div></header><section aria-label="MLB 문제와 접근" class="project-overview"><div><h3>어떤 문제에서 시작했나요?</h3><p>경기 전 기록으로 승패와 총득점을 예측할 때, 선수별 경기 내용을 읽는 LLM이 통계 모델의 판단을 보완할 수 있는지 알아보려 했습니다. 예측이 빗나간 원인을 추적할 수 있도록 당시의 입력 자료와 판단 근거를 함께 남겼습니다.</p></div><div><h3>어떻게 만들었나요?</h3><p>공식 경기·투구·타구 자료와 경기 환경을 경기·선수 ID로 연결하고, 경기 전 시점에 사용할 수 있는 입력을 구성했습니다. Logistic Regression, XGBoost, LightGBM을 비교했고 후기 모델은 승패 분류와 총득점 회귀로 나눴습니다.</p><p>LLM 네레이터는 경기별 자료에서 양 팀의 근거와 반론을 비교하도록 구성했습니다. 긴 입력에서 근거가 묻히는 문제에 대응해 경기별 분리와 섹션별 메모를 시험했습니다. 경기 종료 후에는 저장한 판단을 실제 플레이 기록(PBP)과 박스스코어에 대조했습니다.</p></div></section>
+<details class="case-fold" id="mlb-fold"><summary aria-label="MLB 개인 연구 상세 내용 펼치기"><span class="fold-label"><span class="fold-when-closed">자세히 보기</span><span class="fold-when-open">접기</span></span><span class="fold-hint">전체 화면 · 시스템 흐름 · 담당 기능 · 문제 해결 · 결과</span></summary><div class="case-fold-body">
+<h3 class="block-label">연구 결과물</h3>
+<div class="service-output">
+<div class="stack">
+<div class="research-artifact" style="margin-bottom:0"><div class="artifact-heading"><span class="small-label">데이터 수집부터 경기 후 결과 대조까지</span><a href="https://github.com/wony98/mlb-prediction-error-analysis/blob/1ed4e673a734dd1495a81aa56d78e1c5a4c6d3bb/docs/RESEARCH_REPORT.md" rel="noopener noreferrer" target="_blank">보고서 원문 ↗</a></div><div class="research-steps"><div><span>01 / 데이터</span><h3>경기 전 시점으로 맞추기</h3><p>투수 누적 기록에서 당일 결과를 제외하고, 미래 정보를 보지 않는 시간순 평가로 구성</p></div><div><span>02 / 분석</span><h3>플레이의 맥락 읽기</h3><p>끝난 경기의 PBP를 읽고, 선발·불펜·타자 누적 지표와 연결하는 네레이터 추가</p></div><div><span>03 / 결과 대조</span><h3>입력과 판단을 대조하기</h3><p>예측 당시 입력을 남겨 경기 후 실제 플레이와 비교하고, 판단이 달라지는 이유 조사</p></div></div></div>
+<div class="minitable"><table class="plain"><caption>승패 모델의 시간순 평가 설계 (공개용 사본 기준)</caption><thead><tr><th scope="col">구간</th><th scope="col">용도</th><th scope="col">규모</th></tr></thead><tbody><tr><td>2021~2023</td><td>학습</td><td>—</td></tr><tr><td>2024</td><td>검증</td><td>—</td></tr><tr><td>2025</td><td>테스트</td><td>2,416경기</td></tr></tbody></table></div>
+</div>
 
-    
-<h3 class="block-label">연구 산출물 <span>보고서와 평가 설계 · CLI·파일 기반</span></h3>
-    <div class="what">
-      <div class="stack">
-        <div class="research-artifact" style="margin-bottom:0"><div class="artifact-heading"><span class="small-label">데이터 수집부터 경기 후 결과 대조까지</span><a href="https://github.com/wony98/mlb-prediction-error-analysis/blob/1ed4e673a734dd1495a81aa56d78e1c5a4c6d3bb/docs/RESEARCH_REPORT.md" target="_blank" rel="noopener noreferrer">보고서 원문 ↗</a></div><div class="research-steps"><div><span>01 / 데이터</span><h3>경기 전 시점으로 맞추기</h3><p>투수 누적 기록에서 당일 결과를 제외하고, 미래 정보를 보지 않는 시간순 평가로 구성</p></div><div><span>02 / 분석</span><h3>플레이의 맥락 읽기</h3><p>끝난 경기의 PBP를 읽고, 선발·불펜·타자 누적 지표와 연결하는 네레이터 추가</p></div><div><span>03 / 결과 대조</span><h3>입력과 판단을 대조하기</h3><p>예측 당시 입력을 남겨 경기 후 실제 플레이와 비교하고, 판단이 달라지는 이유 조사</p></div></div></div>
-        
-        <div class="minitable"><table class="plain"><caption>승패 모델의 시간순 평가 설계 (공개용 사본 기준)</caption><thead><tr><th scope="col">구간</th><th scope="col">용도</th><th scope="col">규모</th></tr></thead><tbody><tr><td>2021~2023</td><td>학습</td><td>—</td></tr><tr><td>2024</td><td>검증</td><td>—</td></tr><tr><td>2025</td><td>테스트</td><td>2,416경기</td></tr></tbody></table></div>
-      </div>
-      <dl class="facts">
-        <div><dt>목적</dt><dd>경기 시작 전 정보만으로 유리한 팀을 예측하고, 그 근거를 경기 후에 검증할 수 있게 기록하기. 집계 숫자만 보는 통계 모델이 놓치는 선수별 플레이와 경기 흐름은 LLM 분석기로 읽기</dd></div>
-        <div><dt>입력 → 출력</dt><dd>공식 자료·PBP·누적 지표 → 예측과 근거 기록 → 경기 후 실제 결과와 대조</dd></div>
-        <div class="role-fact solo-fact"><dt>개인 연구</dt><dd>자료 수집, 모델 실험, 네레이터 분석과 경기 후 결과 대조를 개인 연구로 진행했습니다.<small>선수별 비교에 필요한 자료 범위와 경기 전 검증 순서를 정하고, 평가 결과를 보고 적용·중단을 판단했습니다.</small></dd></div>
-      </dl>
-    </div>
-
-    
-<h3 class="block-label">연구 작업</h3>
-    <div class="features">
-      <div><h4>자료 연결과 점검</h4><p>경기와 선수 ID를 연결한 뒤 조인 중복, 단위, 결측을 확인했습니다. 예측에 쓸 투수 기록은 당일 결과를 제외한 값으로 구분했습니다.</p></div>
-      <div><h4>경기별 입력과 추론 분리</h4><p>경기별 메모장과 관련 자료를 나눠 한 경기씩 분석하도록 했습니다. 수집한 선수 자료가 최종 입력에서 빠졌는지도 대조했습니다.</p></div>
-      <div><h4>예측 당시 기록 보관</h4><p>경기 후 틀린 판단을 조사할 수 있도록, 입력과 모델 정보, 해시, 변수별 기여도를 예측 직후 함께 남기는 방식을 채택했습니다.</p></div>
-      <div><h4>판정 방식 비교와 확장 여부 결정</h4><p>같은 근거를 두 LLM이 읽은 결과를 비교했습니다. 일치도가 기준에 못 미친 판정 방식은 확장하지 않기로 했습니다.</p></div>
-    </div>
-
-    
-
-<section class="outcome" aria-labelledby="mlb-evidence-title">
-      <h3 class="block-label">평가 결과와 조건</h3>
-      <div class="nums">
-        <div><span class="small-label">2025년 시간순 테스트</span><p class="n">2,416<span>경기</span></p><p>2021~2023년 학습, 2024년 검증을 거친 승패 모델의 테스트 규모입니다. 이후 전체 기간 재학습 모델과 구분했습니다.</p></div>
-        <div><span class="small-label">두 LLM의 판단 일치도</span><p class="n">0.524 <span>/ 이번 실험 통과 기준 0.60</span></p><p>같은 경기 자료를 보고 ‘예측할 만큼 근거가 충분한지’를 두 LLM이 각각 판단했습니다. 우연히 답이 같을 가능성을 보정한 일치도입니다(Cohen's kappa).</p></div>
-        <div><span class="small-label">판단 비교에 사용한 경기와 실행 횟수</span><p class="n">24<span>회 판단 / 5경기</span></p><p>고정한 경기 사례로 두 LLM의 판단을 비교한 규모입니다. 일치도 기준을 충족하지 못해 계획했던 96경기 비교는 진행하지 않았습니다.</p></div>
-      </div>
-      <div class="evidence" id="mlb-evidence"><h3 id="mlb-evidence-title">자료와 코드</h3><div class="evidence-links"><a href="https://github.com/wony98/mlb-prediction-error-analysis/blob/1ed4e673a734dd1495a81aa56d78e1c5a4c6d3bb/docs/RESEARCH_REPORT.md" target="_blank" rel="noopener noreferrer"><span>개인 연구</span>연구 보고서 ↗</a><a href="https://github.com/wony98/mlb-prediction-error-analysis/blob/1ed4e673a734dd1495a81aa56d78e1c5a4c6d3bb/src/_mlb_sp_asof_clean.py#L26-L49" target="_blank" rel="noopener noreferrer"><span>데이터 시점 수정</span>당일 기록 제외 코드 ↗</a><a href="https://github.com/wony98/mlb-prediction-error-analysis/blob/1ed4e673a734dd1495a81aa56d78e1c5a4c6d3bb/docs/RESEARCH_REPORT.md#%ED%8C%90%EB%8B%A8-%EC%9D%BC%EA%B4%80%EC%84%B1%EA%B3%BC-%EB%B3%B4%EB%A5%98%EB%8F%84-%EB%B3%84%EB%8F%84%EB%A1%9C-%EC%8B%9C%ED%97%98%ED%96%88%EB%8B%A4" target="_blank" rel="noopener noreferrer"><span>기준과 결과</span>판단 일치도와 실험 중단 기록 ↗</a><a href="https://github.com/wony98/mlb-prediction-error-analysis/blob/1ed4e673a734dd1495a81aa56d78e1c5a4c6d3bb/src/README.md" target="_blank" rel="noopener noreferrer"><span>발췌 소스 안내</span>소스 위치와 포함 범위 ↗</a></div><a class="repo-link" href="https://github.com/wony98/mlb-prediction-error-analysis" target="_blank" rel="noopener noreferrer">MLB GitHub ↗</a></div>
-      
-    </section>
-<div class="case-depth-body mlb-visible-body" id="mlb-details">
+</div><section class="whole-pipeline" id="mlb-system"><h3 class="block-label">전체 파이프라인</h3><figure><a href="assets/system-flows/mlb.svg" rel="noopener noreferrer" target="_blank"><img alt="MLB 입력부터 출력까지 전체 파이프라인" loading="lazy" src="assets/system-flows/mlb.svg"/></a><figcaption>수집부터 경기 후 검증까지의 연구 흐름입니다. 세부 모델·네레이터 구현은 시기별로 달라, 아래 상세 자료에서 각 실험을 나눠 설명합니다. <a href="assets/system-flows/mlb.svg" rel="noopener noreferrer" target="_blank">확대 보기 ↗</a> · <a href="assets/system-flows/mlb.mmd">Mermaid 원문</a></figcaption></figure></section><section class="contribution-intro"><h3 class="block-label">담당한 기능</h3><p>자료 수집 범위와 실험 목표, 검증 기준을 정하고 결과를 확인해 적용·중단 여부를 결정했습니다. 모델 입력 시점, 경기별 네레이터 구성과 오류 분석을 개인 연구로 진행했습니다.</p><div aria-label="맡은 역할" class="role-line role-chips"><span class="chips-k">맡은 역할</span><span class="chip">개인 연구 · 1인</span><span class="chip">자료 수집·입력 구성</span><span class="chip">모델·네레이터 실험</span><span class="chip">평가와 적용·중단 판단</span></div></section>
+<h3 class="block-label">구현과 실험</h3>
+<div class="features">
+<div><h4>자료 연결과 점검</h4><p>경기와 선수 ID를 연결한 뒤 조인 중복, 단위, 결측을 확인했습니다. 예측에 쓸 투수 기록은 당일 결과를 제외한 값으로 구분했습니다.</p></div>
+<div><h4>경기별 입력과 추론 분리</h4><p>경기별 메모장과 관련 자료를 나눠 한 경기씩 분석하도록 했습니다. 수집한 선수 자료가 최종 입력에서 빠졌는지도 대조했습니다.</p></div>
+<div><h4>예측 당시 기록 보관</h4><p>경기 후 틀린 판단을 조사할 수 있도록, 입력과 모델 정보, 해시, 변수별 기여도를 예측 직후 함께 남기는 방식을 채택했습니다.</p></div>
+<div><h4>판정 방식 비교와 확장 여부 결정</h4><p>같은 근거를 두 LLM이 읽은 결과를 비교했습니다. 일치도가 기준에 못 미친 판정 방식은 확장하지 않기로 했습니다.</p></div>
+</div>
+<section class="project-result"><h3 class="block-label">프로젝트 결과</h3><p>예측 당시 입력과 경기 후 자료를 구분해 오류를 조사할 수 있게 했습니다. 다만 서로 충돌하는 근거를 종합해 새 경기의 승리 팀을 일관되게 판단하는 기준은 해결하지 못했습니다.</p><p>종료 후 재실험에서 기존 누수 판정 규칙으로 선별한 피처 세트를 같은 분할에서 비교하고 실행 설정과 결과를 MLflow로 추적했습니다. 규칙 탐지 열을 뺀 모델은 이 분할에서 시장가격 환산 확률과 같은 수준(test AUC 0.58)이었습니다.</p></section><section aria-labelledby="mlb-evidence-title" class="outcome">
+<h3 class="block-label">평가 결과와 조건</h3>
+<div class="nums">
+<div><span class="small-label">2025년 시간순 테스트</span><p class="n">2,416<span>경기</span></p><p>2021~2023년 학습, 2024년 검증을 거친 승패 모델의 테스트 규모입니다. 이후 전체 기간 재학습 모델과 구분했습니다.</p></div>
+<div><span class="small-label">두 LLM의 판단 일치도</span><p class="n">0.524 <span>/ 이번 실험 통과 기준 0.60</span></p><p>같은 경기 자료를 보고 ‘예측할 만큼 근거가 충분한지’를 두 LLM이 각각 판단했습니다. 우연히 답이 같을 가능성을 보정한 일치도입니다(Cohen's kappa).</p></div>
+<div><span class="small-label">판단 비교에 사용한 경기와 실행 횟수</span><p class="n">24<span>회 판단 / 5경기</span></p><p>고정한 경기 사례로 두 LLM의 판단을 비교한 규모입니다. 일치도 기준을 충족하지 못해 계획했던 96경기 비교는 진행하지 않았습니다.</p></div>
+</div>
+<div class="evidence" id="mlb-evidence"><h3 id="mlb-evidence-title">자료와 코드</h3><div class="evidence-links"><a href="https://github.com/wony98/mlb-prediction-error-analysis/blob/1ed4e673a734dd1495a81aa56d78e1c5a4c6d3bb/docs/RESEARCH_REPORT.md" rel="noopener noreferrer" target="_blank"><span>개인 연구</span>연구 보고서 ↗</a><a href="https://github.com/wony98/mlb-prediction-error-analysis/blob/1ed4e673a734dd1495a81aa56d78e1c5a4c6d3bb/src/_mlb_sp_asof_clean.py#L26-L49" rel="noopener noreferrer" target="_blank"><span>데이터 시점 수정</span>당일 기록 제외 코드 ↗</a><a href="https://github.com/wony98/mlb-prediction-error-analysis/blob/1ed4e673a734dd1495a81aa56d78e1c5a4c6d3bb/docs/RESEARCH_REPORT.md#%ED%8C%90%EB%8B%A8-%EC%9D%BC%EA%B4%80%EC%84%B1%EA%B3%BC-%EB%B3%B4%EB%A5%98%EB%8F%84-%EB%B3%84%EB%8F%84%EB%A1%9C-%EC%8B%9C%ED%97%98%ED%96%88%EB%8B%A4" rel="noopener noreferrer" target="_blank"><span>기준과 결과</span>판단 일치도와 실험 중단 기록 ↗</a><a href="https://github.com/wony98/mlb-prediction-error-analysis/blob/1ed4e673a734dd1495a81aa56d78e1c5a4c6d3bb/src/README.md" rel="noopener noreferrer" target="_blank"><span>발췌 소스 안내</span>소스 위치와 포함 범위 ↗</a><a href="https://github.com/wony98/mlb-prediction-error-analysis/blob/28c7e79188ab0613f762be5e9f08194358999c2a/docs/mlflow_leakage_experiment.md" rel="noopener noreferrer" target="_blank"><span>종료 후 재실험</span>MLflow 추적 기록 ↗</a></div><a class="repo-link" href="https://github.com/wony98/mlb-prediction-error-analysis" rel="noopener noreferrer" target="_blank">MLB GitHub ↗</a></div>
+</section><section class="project-effect" aria-labelledby="mlb-effect-title"><h3 class="block-label" id="mlb-effect-title">기대 효과</h3><p>경기별 자료를 수작업으로 모으고 비교하는 부담을 줄이고, 예측 근거와 실제 플레이를 대조하며 분석 기준을 검증·개선하는 후속 연구에 활용할 수 있을 것으로 기대합니다.</p></section>
+<div class="case-depth-body mlb-visible-body" id="mlb-details"><section class="mlb-originals mlb-featured" id="mlb-diagrams"><h3 class="block-label">연구 구조도와 구현 문서</h3><div class="details-body">
+<div class="mlb-doc-links">
+<a href="https://github.com/wony98/mlb-prediction-error-analysis/blob/1ed4e673a734dd1495a81aa56d78e1c5a4c6d3bb/docs/NARRATOR_ARCHITECTURE.md" rel="noopener noreferrer" target="_blank">네레이터와 긴 입력 대응 ↗</a>
+<a href="https://github.com/wony98/mlb-prediction-error-analysis/blob/1ed4e673a734dd1495a81aa56d78e1c5a4c6d3bb/docs/JUDGMENT_CRITERIA.md" rel="noopener noreferrer" target="_blank">판단기준 추출과 적용 ↗</a>
+<a href="https://github.com/wony98/mlb-prediction-error-analysis/blob/1ed4e673a734dd1495a81aa56d78e1c5a4c6d3bb/docs/ML_ARCHITECTURE.md" rel="noopener noreferrer" target="_blank">머신러닝 학습과 예측 ↗</a>
+</div>
+<div class="mlb-diagram-gallery">
+<figure><a href="assets/mlb-details/narrator-detail.svg" rel="noopener noreferrer" target="_blank"><img alt="네레이터의 과거 경기 기록 누적, 경기 전 입력 구성, 경기별 추론과 결과 대조 구조" height="4425" loading="lazy" src="assets/mlb-details/narrator-detail.svg" width="2576"/></a><figcaption><b>네레이터 전체 구조</b><a href="assets/mlb-details/narrator-detail.svg" rel="noopener noreferrer" target="_blank">SVG 확대 ↗</a> · <a href="assets/mlb-details/narrator-detail.mmd" rel="noopener noreferrer" target="_blank">Mermaid 원문 ↗</a></figcaption></figure>
+<figure><a href="assets/mlb-details/narrator-context-detail.svg" rel="noopener noreferrer" target="_blank"><img alt="입력 도달 검사, 경기별 메모장, 상단 배치 실험과 섹션별 중간 기록을 나눠 보여주는 구조" height="5251" loading="lazy" src="assets/mlb-details/narrator-context-detail.svg" width="1657"/></a><figcaption><b>긴 입력 대응 방법</b><a href="assets/mlb-details/narrator-context-detail.svg" rel="noopener noreferrer" target="_blank">SVG 확대 ↗</a> · <a href="assets/mlb-details/narrator-context-detail.mmd" rel="noopener noreferrer" target="_blank">Mermaid 원문 ↗</a></figcaption></figure>
+<figure><a href="assets/mlb-details/criterion-extraction.svg" rel="noopener noreferrer" target="_blank"><img alt="종료 경기의 플레이와 사전자료에서 판단 방법, 필수조건과 무효화 조건을 추출하는 과정" height="2566" loading="lazy" src="assets/mlb-details/criterion-extraction.svg" width="1757"/></a><figcaption><b>판단기준 추출</b><a href="assets/mlb-details/criterion-extraction.svg" rel="noopener noreferrer" target="_blank">SVG 확대 ↗</a> · <a href="assets/mlb-details/criterion-extraction.mmd" rel="noopener noreferrer" target="_blank">Mermaid 원문 ↗</a></figcaption></figure>
+<figure><a href="assets/mlb-details/criterion-application.svg" rel="noopener noreferrer" target="_blank"><img alt="과거 참고 사례 사용, 날짜를 제한한 기준 검색, 별도 조건 대조와 양 팀 경로 비교 실험" height="2111" loading="lazy" src="assets/mlb-details/criterion-application.svg" width="2486"/></a><figcaption><b>판단기준 검색과 적용</b><a href="assets/mlb-details/criterion-application.svg" rel="noopener noreferrer" target="_blank">SVG 확대 ↗</a> · <a href="assets/mlb-details/criterion-application.mmd" rel="noopener noreferrer" target="_blank">Mermaid 원문 ↗</a></figcaption></figure>
+<figure><a href="assets/mlb-details/ml-detail.svg" rel="noopener noreferrer" target="_blank"><img alt="경기 이전 학습 입력 구성, 시간순 평가, 별도의 최종 재학습과 예측 입력 보존 과정" height="3231" loading="lazy" src="assets/mlb-details/ml-detail.svg" width="1800"/></a><figcaption><b>머신러닝 학습과 예측</b><a href="assets/mlb-details/ml-detail.svg" rel="noopener noreferrer" target="_blank">SVG 확대 ↗</a> · <a href="assets/mlb-details/ml-detail.mmd" rel="noopener noreferrer" target="_blank">Mermaid 원문 ↗</a></figcaption></figure>
+</div>
+</div></section>
 <h3 class="block-label" id="mlb-narrator-title">네레이터 분석 구조</h3>
-    <figure class="dg narrator-map" id="mlb-narrator" aria-labelledby="mlb-narrator-title">
-      <div class="narrator-inputs">
-        <div class="narrator-card"><span class="small-label">미리 쌓아 둔 기록</span><h4>과거 경기 내용과 선수별 기록</h4><p>종료 경기의 플레이 기록(PBP)을 읽고, 선수별 지표와 대조해 사전에 알 수 있던 근거와 사후 사건을 나눠 보관</p></div>
-        <div class="narrator-card"><span class="small-label">이번 경기 자료</span><h4>양 팀의 선수와 경기 조건</h4><p>선발·타순·불펜 사용량과 최근 기록<br>부상·날씨·구장 정보</p></div>
-      </div>
-      <div class="narrator-connector" aria-hidden="true">↓</div>
-      <div class="narrator-stage"><span class="small-label">01 / 입력 구성</span><h4>경기별 메모장으로 묶기</h4><p>목표일 이전 기록과 당일 사전자료를 연결합니다. 상황이 비슷한 과거 판단 사례를 참고로 붙이고, 입력 파일의 식별값(해시)을 함께 남깁니다.</p></div>
-      <div class="narrator-connector" aria-hidden="true">↓</div>
-      <div class="narrator-comparison">
-        <div class="narrator-stage"><span class="small-label">02 / 경기별 분석</span><h4>양 팀 근거와 반론 비교</h4><p>각 경기를 독립적으로 분석합니다. 선발·타선·불펜·환경을 비교하고, 모델의 계산 근거도 참고해 승패와 총득점을 따로 판단합니다.</p></div>
-        <div class="narrator-feed-arrow" aria-hidden="true">←</div>
-        <div class="narrator-card narrator-model"><span class="small-label">별도 통계 모델 · LightGBM</span><h4>승패 확률과 예상 총득점</h4><p>예측 당시 입력과 변수별 기여도<br>모델의 선택은 비교할 참고 자료</p></div>
-      </div>
-      <div class="narrator-connector" aria-hidden="true">↓</div>
-      <div class="narrator-result"><span class="small-label">03 / 결과 기록</span><div class="narrator-outputs"><div><b>승패 방향</b><p>양 팀 중 근거가 우세한 쪽</p></div><div><b>총득점 방향</b><p>기준점보다 많을지 적을지</p></div><div><b>근거와 반론</b><p>선택을 지지하거나 약화하는 자료</p></div><div><b>판단 보류</b><p>결론을 정하기 어려운 경우</p></div></div></div>
-      <div class="narrator-connector" aria-hidden="true">↓</div>
-      <div class="narrator-storage"><b>경기별 JSON 저장 → 결과 취합·검사</b><p>경기 ID, 입력 해시와 응답 형식을 코드로 검사하고 실패한 경기만 제한적으로 다시 처리합니다. 독립 LLM 검토는 실행 조건에 따라 별도로 적용합니다.</p></div>
-      <div class="loop"><b>경기 종료 후</b>: 저장한 예측과 근거를 실제 플레이 기록과 대조하고, 사전정보와 사후 사건을 나눠 다음 분석에 참고합니다.</div>
-      <figcaption><a href="assets/mlb-details/narrator-detail.svg" target="_blank" rel="noopener noreferrer">네레이터 상세 구조 크게 보기 ↗</a> · <a href="assets/mlb-architecture.png" target="_blank" rel="noopener noreferrer">전체 연구 구조 ↗</a></figcaption>
-    </figure>
-
-    <section class="mlb-development" id="mlb-input-design" aria-labelledby="mlb-input-title">
-      <h3 class="block-label" id="mlb-input-title">긴 입력에서 근거가 빠지는 문제</h3>
-      <p class="mlb-section-intro">수집한 선수 자료가 최종 입력에 빠지거나, 전달한 반대 근거를 최종 판단에서 다루지 않는 경우가 있었습니다. 긴 문맥 중간의 정보를 놓치는 Lost in the Middle을 의식해 입력 구성과 검토 방식을 바꿨습니다.</p>
-      <p class="mlb-group-label">도입한 구조</p>
-      <div class="mlb-method-grid">
-        <div><h4>원본 자료와 최종 입력 대조</h4><p>경기·선발·타순·선수별 자료 목록과 프롬프트를 비교해, 자료를 모은 뒤 전달 과정에서 빠진 항목을 찾았습니다.</p></div>
-        <div><h4>경기별 메모장과 독립 추론</h4><p>여러 경기를 한 번에 판단하던 입력을 나눴습니다. 한 경기의 사실과 참고 사례를 메모장으로 묶고, 경기마다 따로 분석하게 했습니다.</p></div>
-      </div>
-      <p class="mlb-group-label">추가로 시험한 방법</p>
-      <div class="mlb-method-grid mlb-trials">
-        <div><h4>핵심 근거를 앞부분에 재배치</h4><p>충돌하는 근거를 입력 앞에 다시 배치해 비교했습니다. 적중 건수가 늘지 않아 기본 적용은 보류했습니다.</p></div>
-        <div><h4>분야별 중간 판단 저장</h4><p>선발·타선·불펜 등 10개 섹션을 차례로 읽고, 근거와 반론을 JSON으로 저장했습니다. 최종 단계가 이 기록을 다시 읽고 비교하도록 시험했습니다.</p></div>
-      </div>
-      <div class="mlb-result-note"><p>입력에서 빠진 자료와 판단 기록에서 빠진 근거를 나눠 확인할 수 있게 됐습니다. 근거 ID의 기록 여부는 검사했지만, 그 의미를 정확히 이해하고 판단에 반영했는지는 별도 문제로 남았습니다.</p></div>
-    </section>
-
-    <section class="mlb-development" id="mlb-criteria" aria-labelledby="mlb-criteria-title">
-      <h3 class="block-label" id="mlb-criteria-title">어떤 근거를 우선해 판단할 것인가</h3>
-      <p class="mlb-section-intro">사전자료를 전달해도 종합 성적에 치우치거나, 근거가 부족하다며 판단을 과도하게 보류했습니다. 과거 경기에서 판단 방법을 뽑아 참고 사례로 연결했고, 다음 연구에서는 조건과 반론을 더 자세히 기록했습니다.</p>
-      <ol class="mlb-criteria-studies">
-        <li><span class="small-label">기준 추출 연구</span><h4>과거 경기에서 판단 방법 정리</h4><p>실제 플레이와 당시 사전정보를 대조했습니다. 어떤 조건을 함께 봐야 했는지, 어떤 반대 근거가 그 판단을 무효화하는지 남겼습니다. 경기 후에야 알게 된 사건은 사전 조건에서 제외했습니다.</p></li>
-        <li><span class="small-label">검색 연구</span><h4>다른 경기의 당일 조건과 연결</h4><p>대상 경기보다 이전 사례만 검색했습니다. 과거 선수의 수치나 근거 번호를 그대로 쓰지 않고, 오늘 경기에서 대응하는 값과 출처에 다시 연결했습니다.</p></li>
-        <li><span class="small-label">단계별 판정 실험</span><h4>양 팀의 승리 경로와 반론 비교</h4><p>필수조건 충족 여부와 기준을 무효화하는 조건을 따로 판단했습니다. 양 팀의 승리 경로, 서로 충돌하는 근거, 최종 선택 이유를 단계별로 저장했습니다.</p></li>
-      </ol>
-      <p class="mlb-study-note">판단기준 추출·검색·단계별 판정은 각각 별도 연구로 진행했습니다.</p>
-      <div class="mlb-result-note"><p>참고 기준을 찾았는지뿐 아니라, 오늘 경기에서 그 기준을 적용하거나 배제한 이유까지 추적할 수 있게 했습니다.</p></div>
-    </section>
-
-    
-
-    
+<figure aria-labelledby="mlb-narrator-title" class="dg narrator-map" id="mlb-narrator">
+<div class="narrator-inputs">
+<div class="narrator-card"><span class="small-label">미리 쌓아 둔 기록</span><h4>과거 경기 내용과 선수별 기록</h4><p>종료 경기의 플레이 기록(PBP)을 읽고, 선수별 지표와 대조해 사전에 알 수 있던 근거와 사후 사건을 나눠 보관</p></div>
+<div class="narrator-card"><span class="small-label">이번 경기 자료</span><h4>양 팀의 선수와 경기 조건</h4><p>선발·타순·불펜 사용량과 최근 기록<br/>부상·날씨·구장 정보</p></div>
+</div>
+<div aria-hidden="true" class="narrator-connector">↓</div>
+<div class="narrator-stage"><span class="small-label">01 / 입력 구성</span><h4>경기별 메모장으로 묶기</h4><p>목표일 이전 기록과 당일 사전자료를 연결합니다. 상황이 비슷한 과거 판단 사례를 참고로 붙이고, 입력 파일의 식별값(해시)을 함께 남깁니다.</p></div>
+<div aria-hidden="true" class="narrator-connector">↓</div>
+<div class="narrator-comparison">
+<div class="narrator-stage"><span class="small-label">02 / 경기별 분석</span><h4>양 팀 근거와 반론 비교</h4><p>각 경기를 독립적으로 분석합니다. 선발·타선·불펜·환경을 비교하고, 모델의 계산 근거도 참고해 승패와 총득점을 따로 판단합니다.</p></div>
+<div aria-hidden="true" class="narrator-feed-arrow">←</div>
+<div class="narrator-card narrator-model"><span class="small-label">별도 통계 모델 · LightGBM</span><h4>승패 확률과 예상 총득점</h4><p>예측 당시 입력과 변수별 기여도<br/>모델의 선택은 비교할 참고 자료</p></div>
+</div>
+<div aria-hidden="true" class="narrator-connector">↓</div>
+<div class="narrator-result"><span class="small-label">03 / 결과 기록</span><div class="narrator-outputs"><div><b>승패 방향</b><p>양 팀 중 근거가 우세한 쪽</p></div><div><b>총득점 방향</b><p>기준점보다 많을지 적을지</p></div><div><b>근거와 반론</b><p>선택을 지지하거나 약화하는 자료</p></div><div><b>판단 보류</b><p>결론을 정하기 어려운 경우</p></div></div></div>
+<div aria-hidden="true" class="narrator-connector">↓</div>
+<div class="narrator-storage"><b>경기별 JSON 저장 → 결과 취합·검사</b><p>경기 ID, 입력 해시와 응답 형식을 코드로 검사하고 실패한 경기만 제한적으로 다시 처리합니다. 독립 LLM 검토는 실행 조건에 따라 별도로 적용합니다.</p></div>
+<div class="loop"><b>경기 종료 후</b>: 저장한 예측과 근거를 실제 플레이 기록과 대조하고, 사전정보와 사후 사건을 나눠 다음 분석에 참고합니다.</div>
+<figcaption><a href="assets/mlb-details/narrator-detail.svg" rel="noopener noreferrer" target="_blank">네레이터 상세 구조 크게 보기 ↗</a> · <a href="assets/mlb-architecture.png" rel="noopener noreferrer" target="_blank">전체 연구 구조 ↗</a></figcaption>
+</figure>
+<section aria-labelledby="mlb-input-title" class="mlb-development" id="mlb-input-design">
+<h3 class="block-label" id="mlb-input-title">긴 입력에서 근거가 빠지는 문제</h3>
+<p class="mlb-section-intro">수집한 선수 자료가 최종 입력에 빠지거나, 전달한 반대 근거를 최종 판단에서 다루지 않는 경우가 있었습니다. 긴 문맥 중간의 정보를 놓치는 Lost in the Middle을 의식해 입력 구성과 검토 방식을 바꿨습니다.</p>
+<p class="mlb-group-label">도입한 구조</p>
+<div class="mlb-method-grid">
+<div><h4>원본 자료와 최종 입력 대조</h4><p>경기·선발·타순·선수별 자료 목록과 프롬프트를 비교해, 자료를 모은 뒤 전달 과정에서 빠진 항목을 찾았습니다.</p></div>
+<div><h4>경기별 메모장과 독립 추론</h4><p>여러 경기를 한 번에 판단하던 입력을 나눴습니다. 한 경기의 사실과 참고 사례를 메모장으로 묶고, 경기마다 따로 분석하게 했습니다.</p></div>
+</div>
+<p class="mlb-group-label">추가로 시험한 방법</p>
+<div class="mlb-method-grid mlb-trials">
+<div><h4>핵심 근거를 앞부분에 재배치</h4><p>충돌하는 근거를 입력 앞에 다시 배치해 비교했습니다. 적중 건수가 늘지 않아 기본 적용은 보류했습니다.</p></div>
+<div><h4>분야별 중간 판단 저장</h4><p>선발·타선·불펜 등 10개 섹션을 차례로 읽고, 근거와 반론을 JSON으로 저장했습니다. 최종 단계가 이 기록을 다시 읽고 비교하도록 시험했습니다.</p></div>
+</div>
+<div class="mlb-result-note"><p>입력에서 빠진 자료와 판단 기록에서 빠진 근거를 나눠 확인할 수 있게 됐습니다. 근거 ID의 기록 여부는 검사했지만, 그 의미를 정확히 이해하고 판단에 반영했는지는 별도 문제로 남았습니다.</p></div>
+</section>
+<section aria-labelledby="mlb-criteria-title" class="mlb-development" id="mlb-criteria">
+<h3 class="block-label" id="mlb-criteria-title">어떤 근거를 우선해 판단할 것인가</h3>
+<p class="mlb-section-intro">사전자료를 전달해도 종합 성적에 치우치거나, 근거가 부족하다며 판단을 과도하게 보류했습니다. 과거 경기에서 판단 방법을 뽑아 참고 사례로 연결했고, 다음 연구에서는 조건과 반론을 더 자세히 기록했습니다.</p>
+<ol class="mlb-criteria-studies">
+<li><span class="small-label">기준 추출 연구</span><h4>과거 경기에서 판단 방법 정리</h4><p>실제 플레이와 당시 사전정보를 대조했습니다. 어떤 조건을 함께 봐야 했는지, 어떤 반대 근거가 그 판단을 무효화하는지 남겼습니다. 경기 후에야 알게 된 사건은 사전 조건에서 제외했습니다.</p></li>
+<li><span class="small-label">검색 연구</span><h4>다른 경기의 당일 조건과 연결</h4><p>대상 경기보다 이전 사례만 검색했습니다. 과거 선수의 수치나 근거 번호를 그대로 쓰지 않고, 오늘 경기에서 대응하는 값과 출처에 다시 연결했습니다.</p></li>
+<li><span class="small-label">단계별 판정 실험</span><h4>양 팀의 승리 경로와 반론 비교</h4><p>필수조건 충족 여부와 기준을 무효화하는 조건을 따로 판단했습니다. 양 팀의 승리 경로, 서로 충돌하는 근거, 최종 선택 이유를 단계별로 저장했습니다.</p></li>
+</ol>
+<p class="mlb-study-note">판단기준 추출·검색·단계별 판정은 각각 별도 연구로 진행했습니다.</p>
+<div class="mlb-result-note"><p>참고 기준을 찾았는지뿐 아니라, 오늘 경기에서 그 기준을 적용하거나 배제한 이유까지 추적할 수 있게 했습니다.</p></div>
+</section>
 <details class="technical"><summary>경기 이전 투수 기록 구성 코드</summary><div class="details-body"><div><p class="code-label">공개 소스 <code>src/_mlb_sp_asof_clean.py</code> 26~49행 중 일부입니다. 투수의 누적합에서 현재 경기 값을 빼는 부분을 발췌했습니다.</p><pre class="codebox">def asof_sp_full(g):
     """게임레벨 박스(g) → per-(gamePk,side) as-of-prior SP스탯. 순수함수(테스트).
     핵심 누수0 불변: c_X = sp_id별 시간순 cumsum − 현재경기 (현재경기 자신 제외)."""
@@ -164,173 +145,144 @@
     sp["nprior"] = gr.cumcount()</pre></div></div></details>
 <details class="technical"><summary>공개 소스의 범위와 사용한 도구</summary><div class="details-body"><p>공개 저장소는 연구 소스 발췌본입니다. 원천 데이터와 일부 의존 모듈을 포함하지 않아, 전체 파이프라인을 즉시 실행할 수 있는 패키지는 아닙니다.</p><p class="detail-tools">Google Drive API, JSONL, LightGBM, pandas, Python</p></div></details>
 </div>
-
-<section class="troubleshoot" aria-labelledby="mlb-ts-title"><h3 class="block-label" id="mlb-ts-title">문제 해결 기록 <span>문제 → 원인 → 조치 → 결과</span></h3><p class="ts-sub">입력 시점 오류와 예측 기록 보관</p><div class="troubles">
-      <section class="trouble" aria-labelledby="mlb-t1"><h4 id="mlb-t1">기간은 나눠 평가했는데, 누적값에 당일 결과가 섞였습니다.</h4><dl>
-        <dt>문제</dt><dd>학습/검증 기간을 분리해도 입력 시점 오류는 사라지지 않았습니다.</dd>
-        <dt>원인</dt><dd>투수의 누적 비율 지표에 예측 대상 경기의 결과가 포함돼 있었습니다.</dd>
-        <dt>조치</dt><dd>투수 ID별로 기록을 시간순으로 정렬하고, 누적합에서 현재 경기 값을 뺐습니다.</dd>
-        <dt>결과</dt><dd>투수의 경기 이전 기록으로 입력을 다시 만들었습니다.</dd>
-      </dl></section>
-      <section class="trouble" aria-labelledby="mlb-t2"><h4 id="mlb-t2">사후 CSV로는 그때의 판단을 설명하기 어려웠습니다.</h4><dl>
-        <dt>문제</dt><dd>그때 어떤 입력으로 예측했는지 알아야 틀린 판단을 조사할 수 있었습니다.</dd>
-        <dt>원인</dt><dd>예측 후 값을 합치거나 보강한 CSV로 기여도를 다시 계산하면, 원래 예측에 쓴 입력을 설명하지 못할 수 있었습니다.</dd>
-        <dt>조치</dt><dd>예측 직후의 입력과 모델 정보, 해시, 변수별 기여도를 별도 파일에 함께 저장했습니다.</dd>
-        <dt>결과</dt><dd>당시 입력으로 계산한 근거를 보존해, 사후에 보강한 자료와 구분해 대조할 수 있게 했습니다.<small>변수별 기여도는 모델의 계산을 설명하며, 실제 경기 결과의 원인을 증명하지는 않습니다.</small></dd>
-      </dl></section>
-    </div></section>
-<div class="lesson" id="mlb-reflection"><span class="small-label">회고</span><p>경기별 입력과 중간 판단을 남겨 자료가 빠진 지점을 확인할 수 있었습니다. 다만 근거가 엇갈릴 때 무엇을 우선해야 새 경기에서도 승리 팀을 일관되게 고를 수 있는지는 끝내 해결하지 못했습니다.</p><p><strong>취한 조치와 검증 결과</strong><br>선발투수의 누적 기록을 계산할 때 현재 경기 기록을 빼도록 수정하고, 그 기록이 섞이면 실패하는 회귀 검사를 남겼습니다. 기존 검사 3종을 다시 실행해 첫 등판과 이후 등판에서 현재 경기 기록이 제외되는 것을 확인했습니다. <a href="https://github.com/wony98/mlb-prediction-error-analysis/blob/1ed4e673a734dd1495a81aa56d78e1c5a4c6d3bb/src/_mlb_sp_asof_clean.py#L26-L49" target="_blank" rel="noopener noreferrer">시점 계산 코드 ↗</a></p></div>
-
-<p class="fold-end"><button type="button" class="fold-close" data-case="mlb">MLB 개인 연구 접기 ↑</button></p>
+<section aria-labelledby="mlb-ts-title" class="troubleshoot"><h3 class="block-label" id="mlb-ts-title">문제 해결 기록 <span>문제 → 원인 → 조치 → 결과</span></h3><p class="ts-sub">입력 시점 오류와 예측 기록 보관</p><div class="troubles">
+<section aria-labelledby="mlb-t1" class="trouble"><h4 id="mlb-t1">기간은 나눠 평가했는데, 누적값에 당일 결과가 섞였습니다.</h4><dl>
+<dt>문제</dt><dd>학습/검증 기간을 분리해도 입력 시점 오류는 사라지지 않았습니다.</dd>
+<dt>원인</dt><dd>투수의 누적 비율 지표에 예측 대상 경기의 결과가 포함돼 있었습니다.</dd>
+<dt>조치</dt><dd>투수 ID별로 기록을 시간순으로 정렬하고, 누적합에서 현재 경기 값을 뺐습니다.</dd>
+<dt>결과</dt><dd>투수의 경기 이전 기록으로 입력을 다시 만들었습니다.</dd>
+</dl></section>
+<section aria-labelledby="mlb-t2" class="trouble"><h4 id="mlb-t2">사후 CSV로는 그때의 판단을 설명하기 어려웠습니다.</h4><dl>
+<dt>문제</dt><dd>그때 어떤 입력으로 예측했는지 알아야 틀린 판단을 조사할 수 있었습니다.</dd>
+<dt>원인</dt><dd>예측 후 값을 합치거나 보강한 CSV로 기여도를 다시 계산하면, 원래 예측에 쓴 입력을 설명하지 못할 수 있었습니다.</dd>
+<dt>조치</dt><dd>예측 직후의 입력과 모델 정보, 해시, 변수별 기여도를 별도 파일에 함께 저장했습니다.</dd>
+<dt>결과</dt><dd>당시 입력으로 계산한 근거를 보존해, 사후에 보강한 자료와 구분해 대조할 수 있게 했습니다.<small>변수별 기여도는 모델의 계산을 설명하며, 실제 경기 결과의 원인을 증명하지는 않습니다.</small></dd>
+</dl></section>
+</div></section>
+<details class="technical preserved-verification"><summary>추가 검증 기록</summary><div class="details-body"><p><strong>취한 조치와 검증 결과</strong><br/>선발투수의 누적 기록을 계산할 때 현재 경기 기록을 빼도록 수정하고, 그 기록이 섞이면 실패하는 회귀 검사를 남겼습니다. 기존 검사 3종을 다시 실행해 첫 등판과 이후 등판에서 현재 경기 기록이 제외되는 것을 확인했습니다. <a href="https://github.com/wony98/mlb-prediction-error-analysis/blob/1ed4e673a734dd1495a81aa56d78e1c5a4c6d3bb/src/_mlb_sp_asof_clean.py#L26-L49" rel="noopener noreferrer" target="_blank">시점 계산 코드 ↗</a></p></div></details><div class="lesson" id="mlb-reflection"><span class="small-label">회고</span><p>입력과 판단 기록을 함께 남겨야 오류의 원인을 좁힐 수 있었습니다. 근거를 빠짐없이 전달하는 것과 그 근거로 승리 팀을 일관되게 고르는 것은 다른 문제로 남았습니다.</p></div>
+<p class="fold-end"><button class="fold-close" data-case="mlb" type="button">MLB 개인 연구 접기 ↑</button></p>
 </div></details>
 </article>
-<article class="case" id="salon" aria-labelledby="salon-title">
-    <header class="case-header"><p class="eyebrow">02</p><h2 id="salon-title">SalonCutAI</h2><p class="case-purpose">미용실 홍보 콘텐츠 제작 서비스</p><p class="case-lead">미용인이 홍보에 쓸 얼굴 변경 이미지, 블로그 글, 숏폼을 만드는 팀 서비스입니다. 제가 맡은 부분은 숏폼 편집 엔진과 API, 텍스트 자막 API, 서빙 인프라이며, 팀장·PM으로 기능 통합을 조율했습니다. 모바일(iOS)에서 실패하던 영상 업로드와 복잡한 조정 화면도 고쳐 휴대폰 사용 흐름을 다듬었습니다.</p><p class="meta"><span class="meta-item"><b class="meta-k">기간</b>2026.08.04–08.31</span><span class="meta-item"><b class="meta-k">인원</b>4명</span><span class="meta-item"><b class="meta-k">역할</b>팀장·PM, 숏폼 편집 API와 서빙 인프라</span></p><div class="tags"><span class="chips-k">사용 도구</span><span>FastAPI</span><span>FFmpeg</span><span>GCP</span><span>YuNet</span></div><div class="role-line role-chips" aria-label="맡은 역할"><span class="chips-k">맡은 역할</span><span class="chip">팀장·PM</span><span class="chip">숏폼 편집 엔진·API</span><span class="chip">텍스트 자막 API</span><span class="chip">서빙 인프라</span><span class="chip">모바일 웹 대응(업로드·조정 화면)</span></div></header>
-<details class="case-fold" id="salon-fold"><summary aria-label="SalonCutAI 상세 내용 펼치기"><span class="fold-label"><span class="fold-when-closed">자세히 보기</span><span class="fold-when-open">접기</span></span><span class="fold-hint">서비스 결과물 · 구현한 기능 · 평가 결과와 조건 · 구현 구조 · 블러·모바일 업로드 개선 · 회고</span></summary><div class="case-fold-body">
+<article aria-labelledby="salon-title" class="case" id="salon">
+<header class="case-header"><p class="eyebrow">02</p><h2 id="salon-title">SalonCutAI</h2><p class="case-purpose">미용실 홍보 콘텐츠 제작 서비스</p><p class="case-lead">미용실의 시술 사진·영상과 시술 정보를 홍보 이미지, 블로그 글, 숏폼 영상으로 만드는 웹서비스입니다. 얼굴 변경, 글 생성, 영상 편집을 한 화면 흐름으로 연결했습니다.</p><p class="meta"><span class="meta-item"><b class="meta-k">기간</b>2026.08.04–08.31</span><span class="meta-item"><b class="meta-k">인원</b>4명</span></p><div class="tags"><span class="chips-k">사용 도구</span><span>FastAPI</span><span>FFmpeg</span><span>GCP</span><span>YuNet</span></div></header><section aria-label="SalonCutAI 문제와 접근" class="project-overview"><div><h3>어떤 문제에서 시작했나요?</h3><p>시술 사진을 홍보에 쓰려면 고객의 얼굴 노출을 고려해야 하고, 글을 쓰거나 영상을 편집하는 작업도 필요합니다. 시술과 매장 운영을 함께 하는 미용인이 촬영해 둔 자료로 콘텐츠를 만들 수 있도록 제작 과정을 묶었습니다.</p></div><div><h3>어떻게 만들었나요?</h3><p>팀은 얼굴 변경에 InstantID와 RealVisXL을 사용하고, 문장으로 얼굴을 수정하는 경로에는 gpt-image-2를 연결했습니다. 생성 결과를 원본에 합성해 헤어와 배경을 보존하도록 구성했습니다.</p><p>팀은 블로그 생성 프롬프트에 현업 스타일리스트의 지식을 반영했습니다. GPT-5.4 Nano로 초안을 만들고 GPT-5.4로 검수하는 2단계 구성도 실험했습니다.</p><p>숏폼은 주제와 컷 설명으로 자막을 만들고, YuNet 얼굴 검출과 FFmpeg 편집으로 세로 영상을 구성했습니다. 미용인 테스트에서 확인한 제작 중단 문제에 대응해 기본값 생성과 모바일 수정 흐름을 보완했습니다.</p></div></section>
+<details class="case-fold" id="salon-fold"><summary aria-label="SalonCutAI 상세 내용 펼치기"><span class="fold-label"><span class="fold-when-closed">자세히 보기</span><span class="fold-when-open">접기</span></span><span class="fold-hint">전체 화면 · 시스템 흐름 · 담당 기능 · 문제 해결 · 결과</span></summary><div class="case-fold-body">
+<h3 class="block-label">서비스 화면</h3>
+<div class="service-output">
 
-    
-<h3 class="block-label">서비스 결과물 <span>영상 선택부터 완성까지</span></h3>
-    <div class="what">
-      <div class="shots">
-        <figure><span class="step">1</span><a href="assets/salon-01-upload.png" target="_blank" rel="noopener noreferrer"><img src="assets/salon-01-upload.png" alt="SalonCutAI 영상 고르기 화면. 시술 전·과정·완성 클립을 선택해 숏폼 제작을 시작하는 단계" width="751" height="825" loading="lazy"></a><figcaption>시술 전·과정·완성 클립을 골라 숏폼 제작을 시작하는 화면</figcaption></figure>
-        <figure><span class="step">2</span><a href="assets/salon-02-settings.png" target="_blank" rel="noopener noreferrer"><img src="assets/salon-02-settings.png" alt="SalonCutAI 자동 편집 설정 화면. 주제·분위기와 선택 영상을 확인하고 필요한 경우만 세부 조정하는 단계" width="605" height="766" loading="lazy"></a><figcaption>주제·분위기와 선택 영상을 확인하고, 필요한 경우만 세부 조정</figcaption></figure>
-        <figure><span class="step">3</span><a href="assets/salon-result.png" target="_blank" rel="noopener noreferrer"><img src="assets/salon-result.png" alt="SalonCutAI 숏폼 완성 화면. 자막이 들어간 영상과 저장·수정 버튼이 표시되어 있습니다." width="572" height="608" loading="lazy"></a><figcaption>완성 영상을 저장하거나 수정하는 화면 캡처</figcaption></figure>
-      </div>
-      <dl class="facts">
-        <div><dt>사용자</dt><dd>시술과 홍보 콘텐츠 제작을 함께 맡는 미용인</dd></div>
-        <div><dt>입력 → 출력</dt><dd>시술 클립과 주제, 컷 설명 → 자막과 얼굴 블러가 들어간 9:16 숏폼</dd></div>
-        <div><dt>편집 화면 기여</dt><dd>TypeScript·React로 자동 초안과 구간·순서·음성 조정 UI를 만들고, 선택값이 API 요청에 실리도록 타입과 직렬화를 수정했습니다(<a href="https://github.com/qja0707/SalonCutAI/pull/180" target="_blank" rel="noopener noreferrer">PR #180</a>).</dd></div>
-      </dl>
-    </div>
 
-    
-<h3 class="block-label">구현한 기능</h3>
-    <div class="features">
-      <div><h4>편집 요청 검증</h4><p>클립 2~8개를 받고, 편집 구간은 클립당 5초, 전체 30초로 제한했습니다. 소수점 경계값도 테스트했습니다.</p></div>
-      <div><h4>기본값으로 생성, 필요하면 조정</h4><p>옵션 없이도 클립당 2초, 기본 순서, 무음으로 만들 수 있습니다. 시작·끝 시간과 순서, 원본 소리는 사용자가 바꿀 수 있습니다.</p></div>
-      <div><h4>자막 수정과 얼굴 블러</h4><p>생성된 자막은 사용자가 수정할 수 있습니다. 블러는 가장 큰 얼굴 1명에 적용하며, 다중 얼굴 블러와 TTS는 MVP에서 완성하지 못했습니다.</p></div>
-      <div><h4>서비스 통합과 배포</h4><p>PM으로서 기능별 요청·응답 계약을 팀과 먼저 합의하고, 역할별 병렬·순차 작업을 구분해 통합 순서를 설계했습니다.</p><p>변경된 서버만 재시작하고, 배포 실패는 GitHub 이슈로 알리도록 구성했습니다.</p></div>
-    </div>
-
-    
-
-<section class="outcome" aria-labelledby="salon-evidence-title">
-      <h3 class="block-label">평가 결과와 조건</h3>
-      <div class="nums">
-        <div><span class="small-label">엔진/API 격리 테스트</span><p class="n">92<span>건</span></p><p>8월 22일의 구현 검증 기록입니다. 사용자 테스트(8월 18~19일) 이후의 수치입니다.</p></div>
-        <div><span class="small-label">공개 주소에서 전체 흐름 1회 실행(E2E)</span><p class="n">약 37.9<span>초</span></p><p>8월 28일, 3클립 입력에서 자막·영상 생성 각 1회. 한 번 측정한 처리 시간입니다.</p></div>
-        <div><span class="small-label">사용자 테스트 후 바로 고친 것</span><p class="n">3<span>건</span></p><p>미용인 사용자 테스트(8월 18~19일)에서 나온 중단 원인을 기본값 생성, iOS 업로드, 조정 화면 3가지로 수정했습니다.</p></div>
-      </div>
-      <div class="evidence" id="salon-evidence"><h3 id="salon-evidence-title">자료와 코드</h3><div class="evidence-links"><a href="https://github.com/qja0707/SalonCutAI/blob/491a647cd43864f58ac42fd03bd3039dad0cef22/docs/final/1%ED%8C%80_SalonCutAI_%EC%B5%9C%EC%A2%85%EB%B3%B4%EA%B3%A0%EC%84%9C.pdf" target="_blank" rel="noopener noreferrer"><span>서비스 소개</span>최종 보고서 PDF ↗</a><a href="https://github.com/qja0707/SalonCutAI/blob/491a647cd43864f58ac42fd03bd3039dad0cef22/backend/src/api/video_captions.py" target="_blank" rel="noopener noreferrer"><span>구현 코드</span>텍스트 자막 API ↗</a><a href="https://github.com/qja0707/SalonCutAI/blob/491a647cd43864f58ac42fd03bd3039dad0cef22/backend/tests/api/test_video_captions.py" target="_blank" rel="noopener noreferrer"><span>입력과 오류 처리</span>API 계약 테스트 ↗</a><a href="https://github.com/qja0707/SalonCutAI/blob/491a647cd43864f58ac42fd03bd3039dad0cef22/backend/tests/ai_engine/video_gen/test_engine.py#L83-L148" target="_blank" rel="noopener noreferrer"><span>소수점 편집 구간</span>경계 테스트 ↗</a></div><a class="repo-link" href="https://github.com/qja0707/SalonCutAI" target="_blank" rel="noopener noreferrer">SalonCutAI GitHub ↗</a></div>
-      
-    </section>
-<details class="case-depth" id="salon-details"><summary><span>숏폼 처리 구조와 업로드·배포 문제</span><span class="depth-icon" aria-hidden="true">+</span></summary><div class="case-depth-body">
+<div class="whole-service-gallery"><figure class="service-shot"><a href="assets/salon-face.png" rel="noopener noreferrer" target="_blank"><img alt="얼굴 변경 이미지" loading="lazy" src="assets/salon-face.png"/></a><figcaption><strong>얼굴 변경 이미지</strong><p>시술 사진의 얼굴을 가상 인물로 바꾸고 결과를 확인합니다.</p><a href="assets/salon-face.png" rel="noopener noreferrer" target="_blank">원본 화면 보기 ↗</a></figcaption></figure><figure class="service-shot"><a href="assets/salon-blog.png" rel="noopener noreferrer" target="_blank"><img alt="블로그 글" loading="lazy" src="assets/salon-blog.png"/></a><figcaption><strong>블로그 글</strong><p>매장·시술 정보로 만든 글을 확인하고 복사합니다.</p><a href="assets/salon-blog.png" rel="noopener noreferrer" target="_blank">원본 화면 보기 ↗</a></figcaption></figure><figure class="service-shot"><a href="assets/salon-result.png" rel="noopener noreferrer" target="_blank"><img alt="숏폼 영상" loading="lazy" src="assets/salon-result.png"/></a><figcaption><strong>숏폼 영상</strong><p>여러 클립을 편집한 영상을 저장하거나 수정합니다.</p><a href="assets/salon-result.png" rel="noopener noreferrer" target="_blank">원본 화면 보기 ↗</a></figcaption></figure></div><details class="technical"><summary>숏폼 제작 순서 보기</summary><div class="details-body"><div class="shots">
+<figure><span class="step">1</span><a href="assets/salon-01-upload.png" rel="noopener noreferrer" target="_blank"><img alt="SalonCutAI 영상 고르기 화면. 시술 전·과정·완성 클립을 선택해 숏폼 제작을 시작하는 단계" height="825" loading="lazy" src="assets/salon-01-upload.png" width="751"/></a><figcaption>시술 전·과정·완성 클립을 골라 숏폼 제작을 시작하는 화면</figcaption></figure>
+<figure><span class="step">2</span><a href="assets/salon-02-settings.png" rel="noopener noreferrer" target="_blank"><img alt="SalonCutAI 자동 편집 설정 화면. 주제·분위기와 선택 영상을 확인하고 필요한 경우만 세부 조정하는 단계" height="766" loading="lazy" src="assets/salon-02-settings.png" width="605"/></a><figcaption>주제·분위기와 선택 영상을 확인하고, 필요한 경우만 세부 조정</figcaption></figure>
+<figure><span class="step">3</span><a href="assets/salon-result.png" rel="noopener noreferrer" target="_blank"><img alt="SalonCutAI 숏폼 완성 화면. 자막이 들어간 영상과 저장·수정 버튼이 표시되어 있습니다." height="608" loading="lazy" src="assets/salon-result.png" width="572"/></a><figcaption>완성 영상을 저장하거나 수정하는 화면 캡처</figcaption></figure>
+</div></div></details></div><section class="whole-pipeline" id="salon-system"><h3 class="block-label">전체 파이프라인</h3><figure><a href="assets/system-flows/salon.svg" rel="noopener noreferrer" target="_blank"><img alt="SalonCutAI 입력부터 출력까지 전체 파이프라인" loading="lazy" src="assets/system-flows/salon.svg"/></a><figcaption>얼굴 변경·블로그·숏폼의 전체 서비스 흐름입니다. GCP는 프로젝트 당시의 배포 환경이며, 부트캠프 종료 후 서버가 정리됐습니다. <a href="assets/system-flows/salon.svg" rel="noopener noreferrer" target="_blank">확대 보기 ↗</a> · <a href="assets/system-flows/salon.mmd">Mermaid 원문</a></figcaption></figure><p class="flow-key"><span aria-hidden="true"></span>파란 상자는 담당했던 기능과 연결된 부분입니다. 구체적인 작업은 아래에 설명했습니다.</p></section><section class="contribution-intro"><h3 class="block-label">담당한 기능</h3><p>팀장·PM으로 기능별 요청·응답 형식과 통합 순서를 조율했습니다. 숏폼 편집 엔진과 API, 텍스트 자막 API, 서빙 인프라를 맡았고, 모바일 편집 화면은 프론트엔드 담당자와 함께 수정했습니다.</p><div aria-label="맡은 역할" class="role-line role-chips"><span class="chips-k">맡은 역할</span><span class="chip">팀장·PM</span><span class="chip">숏폼 편집 엔진·API</span><span class="chip">텍스트 자막 API</span><span class="chip">서빙 인프라</span><span class="chip">모바일 웹 대응(업로드·조정 화면)</span></div></section>
+<h3 class="block-label">구현과 실험</h3>
+<div class="features">
+<div><h4>편집 요청 검증</h4><p>클립 2~8개를 받고, 편집 구간은 클립당 5초, 전체 30초로 제한했습니다. 소수점 경계값도 테스트했습니다.</p></div>
+<div><h4>기본값으로 생성, 필요하면 조정</h4><p>옵션 없이도 클립당 2초, 기본 순서, 무음으로 만들 수 있습니다. 시작·끝 시간과 순서, 원본 소리는 사용자가 바꿀 수 있습니다.</p></div>
+<div><h4>자막 수정과 얼굴 블러</h4><p>생성된 자막은 사용자가 수정할 수 있습니다. 블러는 가장 큰 얼굴 1명에 적용하며, 다중 얼굴 블러와 TTS는 MVP에서 완성하지 못했습니다.</p></div>
+<div><h4>서비스 통합과 배포</h4><p>PM으로서 기능별 요청·응답 계약을 팀과 먼저 합의하고, 역할별 병렬·순차 작업을 구분해 통합 순서를 설계했습니다.</p><p>변경된 서버만 재시작하고, 배포 실패는 GitHub 이슈로 알리도록 구성했습니다.</p></div>
+</div>
+<section class="project-result"><h3 class="block-label">프로젝트 결과</h3><p>세 기능을 웹서비스로 통합해 GCP에서 실행하고 미용인 사용자 테스트를 진행했습니다. 설정과 업로드 때문에 숏폼 제작을 중단하는 문제를 확인해 기본값 생성과 모바일 사용 흐름을 보완했습니다. 수정 후 완주율은 다시 측정하지 못했습니다.</p><p>블로그의 2단계 작성·검수 실험은 10개 시술 시나리오의 LLM 내부 평가에서 80.6점에서 94.5점으로 높아졌습니다(100점 만점). 사용자 만족도나 실제 제작 시간의 개선을 측정한 점수는 아닙니다.</p></section><section aria-labelledby="salon-evidence-title" class="outcome">
+<h3 class="block-label">평가 결과와 조건</h3>
+<div class="nums">
+<div><span class="small-label">엔진/API 격리 테스트</span><p class="n">92<span>건</span></p><p>8월 22일의 구현 검증 기록입니다. 사용자 테스트(8월 18~19일) 이후의 수치입니다.</p></div>
+<div><span class="small-label">공개 주소에서 전체 흐름 1회 실행(E2E)</span><p class="n">약 37.9<span>초</span></p><p>8월 28일, 3클립 입력에서 자막·영상 생성 각 1회. 한 번 측정한 처리 시간입니다.</p></div>
+<div><span class="small-label">사용자 테스트 후 바로 고친 것</span><p class="n">3<span>건</span></p><p>미용인 사용자 테스트(8월 18~19일)에서 나온 중단 원인을 기본값 생성, iOS 업로드, 조정 화면 3가지로 수정했습니다.</p></div>
+</div>
+<div class="evidence" id="salon-evidence"><h3 id="salon-evidence-title">자료와 코드</h3><div class="evidence-links"><a href="https://github.com/qja0707/SalonCutAI/blob/491a647cd43864f58ac42fd03bd3039dad0cef22/docs/final/1%ED%8C%80_SalonCutAI_%EC%B5%9C%EC%A2%85%EB%B3%B4%EA%B3%A0%EC%84%9C.pdf" rel="noopener noreferrer" target="_blank"><span>서비스 소개</span>최종 보고서 PDF ↗</a><a href="https://github.com/qja0707/SalonCutAI/blob/491a647cd43864f58ac42fd03bd3039dad0cef22/backend/src/api/video_captions.py" rel="noopener noreferrer" target="_blank"><span>구현 코드</span>텍스트 자막 API ↗</a><a href="https://github.com/qja0707/SalonCutAI/blob/491a647cd43864f58ac42fd03bd3039dad0cef22/backend/tests/api/test_video_captions.py" rel="noopener noreferrer" target="_blank"><span>입력과 오류 처리</span>API 계약 테스트 ↗</a><a href="https://github.com/qja0707/SalonCutAI/blob/491a647cd43864f58ac42fd03bd3039dad0cef22/backend/tests/ai_engine/video_gen/test_engine.py#L83-L148" rel="noopener noreferrer" target="_blank"><span>소수점 편집 구간</span>경계 테스트 ↗</a></div><a class="repo-link" href="https://github.com/qja0707/SalonCutAI" rel="noopener noreferrer" target="_blank">SalonCutAI GitHub ↗</a></div>
+</section><section class="project-effect" aria-labelledby="salon-effect-title"><h3 class="block-label" id="salon-effect-title">기대 효과</h3><p>미용인이 시술 자료를 홍보 이미지·글·영상으로 재사용해 콘텐츠 제작에 드는 시간과 외주 부담을 줄이고, 시술과 매장 운영에 더 집중할 수 있을 것으로 기대합니다.</p></section>
+<details class="case-depth" id="salon-details"><summary><span>숏폼 처리 구조와 업로드·배포 문제</span><span aria-hidden="true" class="depth-icon">+</span></summary><div class="case-depth-body">
 <h3 class="block-label">구현 구조</h3>
-    <div class="dg">
-      <span class="lane-title">숏폼 처리 구조</span>
-      <div class="flow">
-        <div class="node"><b>Next.js 화면</b><small>영상 선택 → 설정 → 저장. 편집 화면 일부 기여(PR #180)</small></div>
-        <span class="arrow" aria-hidden="true">→</span>
-        <div class="node mine"><b>FastAPI 숏폼 API</b><small>입력 검증 → 비동기 편집 작업 → 상태 조회</small></div>
-        <span class="arrow" aria-hidden="true">→</span>
-        <div style="flex:3 1 420px" class="branch">
-          <div class="node mine"><b>① 텍스트 자막 생성</b><small>시술 주제·컷 설명(텍스트) → gpt-4o-mini → 입력 밖 사실 제한, 사용자 직접 수정. 영상·대표 프레임·사용 구간은 자막 요청에 전송되지 않음</small></div>
-          <div class="node mine"><b>② 영상 처리</b><small>YuNet 얼굴 검출(5프레임 간격·보간) → 얼굴 피부 분할 블러(가장 큰 얼굴 1명) → FFmpeg 구간 절단·순서·9:16·자막 합성</small></div>
-        </div>
-        <span class="arrow" aria-hidden="true">→</span>
-        <div class="node io"><b>결과 화면</b><small>이대로 저장 · 조금 수정하기 · 새 영상 만들기</small></div>
-      </div>
-      <div class="band env" style="margin-top:14px"><span><b>실행 환경</b></span><span class="chip">GCP L4 VM</span><span class="chip">systemd</span><span class="chip">Caddy · HTTPS(DuckDNS)</span><span class="chip">5분 타이머 배포 · 변경 범위별 재시작</span><span class="chip">실패 시 GitHub 이슈 알림</span></div>
-    </div>
-
-    
-
+<div class="dg">
+<span class="lane-title">숏폼 처리 구조</span>
+<div class="flow">
+<div class="node"><b>Next.js 화면</b><small>영상 선택 → 설정 → 저장. 편집 화면 일부 기여(PR #180)</small></div>
+<span aria-hidden="true" class="arrow">→</span>
+<div class="node mine"><b>FastAPI 숏폼 API</b><small>입력 검증 → 비동기 편집 작업 → 상태 조회</small></div>
+<span aria-hidden="true" class="arrow">→</span>
+<div class="branch" style="flex:3 1 420px">
+<div class="node mine"><b>① 텍스트 자막 생성</b><small>시술 주제·컷 설명(텍스트) → gpt-4o-mini → 입력 밖 사실 제한, 사용자 직접 수정. 영상·대표 프레임·사용 구간은 자막 요청에 전송되지 않음</small></div>
+<div class="node mine"><b>② 영상 처리</b><small>YuNet 얼굴 검출(5프레임 간격·보간) → 얼굴 피부 분할 블러(가장 큰 얼굴 1명) → FFmpeg 구간 절단·순서·9:16·자막 합성</small></div>
+</div>
+<span aria-hidden="true" class="arrow">→</span>
+<div class="node io"><b>결과 화면</b><small>이대로 저장 · 조금 수정하기 · 새 영상 만들기</small></div>
+</div>
+<div class="band env" style="margin-top:14px"><span><b>실행 환경</b></span><span class="chip">GCP L4 VM</span><span class="chip">systemd</span><span class="chip">Caddy · HTTPS(DuckDNS)</span><span class="chip">5분 타이머 배포 · 변경 범위별 재시작</span><span class="chip">실패 시 GitHub 이슈 알림</span></div>
+</div>
 <details class="technical"><summary>업로드 오류와 배포 문제</summary><div class="details-body"><p>공개 주소에서 영상 업로드와 복사가 실패했습니다. 원인 중 하나는 HTTPS가 필요한 브라우저 API였습니다. 폴백을 보완하고 DuckDNS, Caddy, Let's Encrypt로 HTTPS를 구성했습니다.</p><p>5초 이내 요청이 부동소수점 오차로 거부되는 문제에는 1e-6초 허용 오차를 뒀습니다. 한국어 자막이 네모로 표시되던 서버에는 글꼴을 추가했습니다.</p><p>문서만 바꿔도 모델을 약 3분간 다시 적재하던 배포 경로도 손봤습니다.</p><p class="detail-tools">Caddy, DuckDNS, FastAPI, FFmpeg, GCP L4, OpenAI API, Python, systemd, YuNet</p></div></details>
 </div></details>
-
-<section class="troubleshoot" aria-labelledby="salon-ts-title"><h3 class="block-label" id="salon-ts-title">문제 해결 기록 <span>문제 → 원인 → 조치 → 결과</span></h3><p class="ts-sub">얼굴 블러와 모바일 업로드 개선 과정</p><div class="troubles">
-      <section class="trouble" aria-labelledby="salon-t1"><h4 id="salon-t1">수치 검사는 통과했는데 머리카락이 가려졌습니다.</h4><dl>
-        <dt>문제</dt><dd>규격·처리 시간·블러 적용 프레임이 정상이어도 블러가 머리카락을 덮고, 화면 가장자리 일부 얼굴은 노출됐습니다.</dd>
-        <dt>원인</dt><dd>블러 영역이 머리카락까지 덮었습니다. 가장자리 얼굴 후보의 점수는 0.332~0.699였는데, 후단 임계값이 0.75여서 후보에서 빠졌습니다.</dd>
-        <dt>조치</dt><dd>같은 조건에서 블러 방식 4안을 비교해 얼굴 피부 분할을 선택하고, 임계값 0.60과 보간을 적용한 뒤 결과 영상을 육안 확인했습니다.</dd>
-        <dt>결과</dt><dd>검사한 8개 구간에서는 모두 블러가 적용됐습니다. 머리카락 보존을 우선하자 최종 처리 시간은 약 64초(63.840/64.068초)로 목표 60초를 넘었습니다.<small>새로운 영상에서도 얼굴이 모두 가려지는지는 추가 검증이 필요합니다.</small></dd>
-      </dl></section>
-      <section class="trouble" aria-labelledby="salon-t2"><h4 id="salon-t2">테스트 참여자 대부분이 숏폼을 끝까지 만들지 못했습니다.</h4><dl>
-        <dt>문제</dt><dd>미용인 대상 사용자 테스트(8월 18~19일)에서 숏폼을 끝까지 만든 참여자는 소수였고, 대부분은 중간에 멈췄습니다.<small>중단 사유는 사용법과 업로드 문제였고, 한 사람이 두 가지를 모두 꼽기도 했습니다.</small></dd>
-        <dt>원인</dt><dd>세부 설정을 다 이해해야 생성할 수 있었고, 모바일(iOS) 업로드가 실패했으며, 조정 화면이 복잡했습니다.</dd>
-        <dt>조치</dt><dd>세부 설정 없이 기본값으로 먼저 영상을 만들 수 있게 바꿨습니다. iOS 영상 선택 필터와 파일당 160MiB 업로드 상한, 요청 스트리밍도 고쳤습니다. 조정 화면은 프론트엔드 담당자와 함께 모바일 3단계로 다시 나눴습니다.</dd>
-        <dt>결과</dt><dd>수정 후 사용자 재평가는 하지 못했습니다.</dd>
-      </dl></section>
-    </div></section>
-<div class="lesson" id="salon-reflection"><span class="small-label">회고</span><p>미용인 테스트에서 설정과 업로드 때문에 제작을 중단하는 경우를 확인하고, 프론트엔드 담당자와 기본값으로 먼저 생성하는 흐름을 반영했습니다. 업로드 경로도 보완했지만 수정 후 완주율이 나아졌는지는 확인하지 못했습니다. 기능이 동작하는지뿐 아니라 실제 사용자가 결과물을 완성하는지까지 검증할 시간을 초기에 확보해야 했습니다.</p><p><strong>취한 조치와 검증 결과</strong><br>정상인 5초 편집 구간이 소수점 오차로 거부되지 않도록 길이 검사에 1e-6초 허용 오차와 경계 테스트를 추가했습니다. 검사 함수를 다시 실행해 시작 3.3초·끝 8.3초인 구간은 허용되고, 5.001초짜리 구간과 전체 길이 30초 초과 입력은 거부되는 것을 확인했습니다. <a href="https://github.com/qja0707/SalonCutAI/blob/491a647cd43864f58ac42fd03bd3039dad0cef22/backend/tests/ai_engine/video_gen/test_engine.py" target="_blank" rel="noopener noreferrer">경계 테스트 ↗</a></p></div>
-
-<p class="fold-end"><button type="button" class="fold-close" data-case="salon">SalonCutAI 접기 ↑</button></p>
+<section aria-labelledby="salon-ts-title" class="troubleshoot"><h3 class="block-label" id="salon-ts-title">문제 해결 기록 <span>문제 → 원인 → 조치 → 결과</span></h3><p class="ts-sub">얼굴 블러와 모바일 업로드 개선 과정</p><div class="troubles">
+<section aria-labelledby="salon-t1" class="trouble"><h4 id="salon-t1">수치 검사는 통과했는데 머리카락이 가려졌습니다.</h4><dl>
+<dt>문제</dt><dd>규격·처리 시간·블러 적용 프레임이 정상이어도 블러가 머리카락을 덮고, 화면 가장자리 일부 얼굴은 노출됐습니다.</dd>
+<dt>원인</dt><dd>블러 영역이 머리카락까지 덮었습니다. 가장자리 얼굴 후보의 점수는 0.332~0.699였는데, 후단 임계값이 0.75여서 후보에서 빠졌습니다.</dd>
+<dt>조치</dt><dd>같은 조건에서 블러 방식 4안을 비교해 얼굴 피부 분할을 선택하고, 임계값 0.60과 보간을 적용한 뒤 결과 영상을 육안 확인했습니다.</dd>
+<dt>결과</dt><dd>검사한 8개 구간에서는 모두 블러가 적용됐습니다. 머리카락 보존을 우선하자 최종 처리 시간은 약 64초(63.840/64.068초)로 목표 60초를 넘었습니다.<small>새로운 영상에서도 얼굴이 모두 가려지는지는 추가 검증이 필요합니다.</small></dd>
+</dl></section>
+<section aria-labelledby="salon-t2" class="trouble"><h4 id="salon-t2">테스트 참여자 대부분이 숏폼을 끝까지 만들지 못했습니다.</h4><dl>
+<dt>문제</dt><dd>미용인 대상 사용자 테스트(8월 18~19일)에서 숏폼을 끝까지 만든 참여자는 소수였고, 대부분은 중간에 멈췄습니다.<small>중단 사유는 사용법과 업로드 문제였고, 한 사람이 두 가지를 모두 꼽기도 했습니다.</small></dd>
+<dt>원인</dt><dd>세부 설정을 다 이해해야 생성할 수 있었고, 모바일(iOS) 업로드가 실패했으며, 조정 화면이 복잡했습니다.</dd>
+<dt>조치</dt><dd>세부 설정 없이 기본값으로 먼저 영상을 만들 수 있게 바꿨습니다. iOS 영상 선택 필터와 파일당 160MiB 업로드 상한, 요청 스트리밍도 고쳤습니다. 조정 화면은 프론트엔드 담당자와 함께 모바일 3단계로 다시 나눴습니다.</dd>
+<dt>결과</dt><dd>수정 후 사용자 재평가는 하지 못했습니다.</dd>
+</dl></section>
+</div></section>
+<details class="technical preserved-verification"><summary>추가 검증 기록</summary><div class="details-body"><p><strong>취한 조치와 검증 결과</strong><br/>정상인 5초 편집 구간이 소수점 오차로 거부되지 않도록 길이 검사에 1e-6초 허용 오차와 경계 테스트를 추가했습니다. 검사 함수를 다시 실행해 시작 3.3초·끝 8.3초인 구간은 허용되고, 5.001초짜리 구간과 전체 길이 30초 초과 입력은 거부되는 것을 확인했습니다. <a href="https://github.com/qja0707/SalonCutAI/blob/491a647cd43864f58ac42fd03bd3039dad0cef22/backend/tests/ai_engine/video_gen/test_engine.py" rel="noopener noreferrer" target="_blank">경계 테스트 ↗</a></p></div></details><div class="lesson" id="salon-reflection"><span class="small-label">회고</span><p>사용자 테스트에서 설정과 업로드 때문에 제작이 중단되는 것을 보고 기본값 생성과 모바일 흐름을 보완했습니다. 수정 후에도 실제로 끝까지 만들 수 있는지 다시 확인할 시간을 확보했어야 했습니다.</p></div>
+<p class="fold-end"><button class="fold-close" data-case="salon" type="button">SalonCutAI 접기 ↑</button></p>
 </div></details>
 </article>
-<article class="case" id="rfpilot" aria-labelledby="rfpilot-title">
-    <header class="case-header"><p class="eyebrow">03</p><h2 id="rfpilot-title">RFPilot</h2><p class="case-purpose">공공 입찰 문서 질의응답 챗봇</p><p class="case-lead">공공 입찰 문서에서 예산과 제출 조건을 찾고, 두 사업을 비교하는 챗봇입니다. 문서를 먼저 검색한 뒤 그 근거를 붙여 답하는 RAG 방식입니다. 제가 맡은 부분은 검색(Retrieval) 단계로, 질문에 맞는 문서를 찾고 답변에 쓸 근거와 원문 출처를 생성 단계에 전달하는 기능입니다.</p><p class="meta"><span class="meta-item"><b class="meta-k">기간</b>2026.06–07</span><span class="meta-item"><b class="meta-k">인원</b>5명</span><span class="meta-item"><b class="meta-k">역할</b>Retrieval 검색과 근거 구성</span></p><div class="tags"><span class="chips-k">사용 도구</span><span>BM25 / Kiwi</span><span>Chroma</span><span>JSON 검증</span><span>RRF</span></div><div class="role-line role-chips" aria-label="맡은 역할"><span class="chips-k">맡은 역할</span><span class="chip">Retrieval(검색) 담당</span><span class="chip">답변용 근거 구성</span><span class="chip">검색 평가·원문 검수</span></div></header>
-<details class="case-fold" id="rfpilot-fold"><summary aria-label="RFPilot 상세 내용 펼치기"><span class="fold-label"><span class="fold-when-closed">자세히 보기</span><span class="fold-when-open">접기</span></span><span class="fold-hint">서비스 화면 · 구현한 기능 · 평가 결과와 조건 · 검색 구조와 평가 개선 · 회고</span></summary><div class="case-fold-body">
+<article aria-labelledby="rfpilot-title" class="case" id="rfpilot">
+<header class="case-header"><p class="eyebrow">03</p><h2 id="rfpilot-title">RFPilot</h2><p class="case-purpose">공공 입찰 문서 질의응답 챗봇</p><p class="case-lead">공공 입찰 제안요청서에서 예산·제출 조건을 묻고, 여러 사업의 조건을 비교하는 챗봇입니다. 질문에 맞는 문서를 검색하고 답변과 함께 원문 출처를 제공합니다.</p><p class="meta"><span class="meta-item"><b class="meta-k">기간</b>2026.06–07</span><span class="meta-item"><b class="meta-k">인원</b>5명</span></p><div class="tags"><span class="chips-k">사용 도구</span><span>BM25 / Kiwi</span><span>Chroma</span><span>JSON 검증</span><span>RRF</span></div></header><section aria-label="RFPilot 문제와 접근" class="project-overview"><div><h3>어떤 문제에서 시작했나요?</h3><p>입찰을 검토할 때는 문서마다 예산, 일정, 제출서류를 찾아야 합니다. 여러 사업을 비교하면 서로 다른 문서의 조건을 함께 확인해야 하므로, 질문에서 필요한 본문을 찾아 근거와 함께 답하는 기능을 만들었습니다.</p></div><div><h3>어떻게 만들었나요?</h3><p>팀은 공공 RFP 100건(HWP 95건, PDF 5건)을 정제하고, embeddinggemma-300m과 Chroma로 본문과 표의 색인을 분리했습니다.</p><p>의미 기반 검색(Dense)과 BM25/Kiwi 키워드 검색을 RRF로 결합했습니다. 여러 문서를 비교하는 질문에서는 한 문서에 근거가 쏠리지 않도록 문서 범위와 후보 배치를 조정했습니다.</p><p>답변 생성에는 질문 유형에 따라 GPT-5 mini, MiniMax-M3, Nemotron-3-Ultra를 선택하도록 구성했습니다. 프롬프트에 근거와 출처 규칙을 두고, 확정값은 템플릿으로 처리하며 모호한 질문은 문서 후보를 되묻게 했습니다.</p></div></section>
+<details class="case-fold" id="rfpilot-fold"><summary aria-label="RFPilot 상세 내용 펼치기"><span class="fold-label"><span class="fold-when-closed">자세히 보기</span><span class="fold-when-open">접기</span></span><span class="fold-hint">전체 화면 · 시스템 흐름 · 담당 기능 · 문제 해결 · 결과</span></summary><div class="case-fold-body">
+<h3 class="block-label">서비스 화면</h3>
+<div class="service-output" id="rfpilot-screens">
+<div class="stack">
+<div class="shots one"><figure><a href="assets/rfp-home.jpg" rel="noopener noreferrer" target="_blank"><img alt="RFPilot 챗봇의 문서 탐색 및 질문 화면" height="1927" loading="lazy" src="assets/rfp-home.jpg" width="3777"/></a><figcaption>질문을 입력하고 문서를 탐색하는 시작 화면입니다. 답변 생성 모델도 이 화면에서 선택합니다.</figcaption></figure></div>
+<div class="rfpilot-ui-gallery">
+<figure class="rfpilot-ui-shot rfpilot-archive"><a href="assets/rfp-document-archive.png" rel="noopener noreferrer" target="_blank"><img alt="RFPilot 문서 보관함의 사업명 검색, 발주기관·분야·예산 필터와 공고 목록" height="1857" loading="lazy" src="assets/rfp-document-archive.png" width="3750"/></a><figcaption><h4>문서 보관함</h4><p>사업명이나 발주기관으로 문서를 검색하고, 분야·예산·마감 상태로 범위를 좁힙니다. 목록에서 예산과 마감일을 비교하고 원문을 내려받을 수 있습니다.</p><a href="assets/rfp-document-archive.png" rel="noopener noreferrer" target="_blank">문서 보관함 확대 보기 ↗</a></figcaption></figure>
+<figure class="rfpilot-ui-shot rfpilot-history"><a href="assets/rfp-chat-history.jpeg" rel="noopener noreferrer" target="_blank"><img alt="새 대화와 최근 대화 목록을 보여주는 RFPilot 채팅 이력 사이드바" height="670" loading="lazy" src="assets/rfp-chat-history.jpeg" width="557"/></a><figcaption><h4>채팅 이력</h4><p>최근 대화를 목록으로 보여줍니다. 새 대화를 만들거나 이전 대화를 선택해 이어서 질문할 수 있습니다.</p><a href="assets/rfp-chat-history.jpeg" rel="noopener noreferrer" target="_blank">채팅 이력 확대 보기 ↗</a></figcaption></figure>
+</div>
+</div>
 
-    
-<h3 class="block-label">서비스 화면 <span>챗봇 화면</span></h3>
-    <div class="what">
-      <div class="stack">
-        <div class="shots one"><figure><a href="assets/rfp-home.jpg" target="_blank" rel="noopener noreferrer"><img src="assets/rfp-home.jpg" alt="RFPilot 챗봇의 문서 탐색 및 질문 화면" width="3777" height="1927" loading="lazy"></a></figure></div>
-        
-      </div>
-      <dl class="facts">
-        <div><dt>사용자</dt><dd>공공 입찰 제안요청서의 예산·기간·제출서류·평가기준을 묻고, 두 사업을 비교하려는 사람</dd></div>
-        <div><dt>입력 → 출력</dt><dd>질문 → 문서·청크 ID와 출처가 붙은 근거(evidence_units)<small>답변 생성에 쓸 본문과 출처 정보를 함께 넘기는 데이터입니다.</small></dd></div>
-      </dl>
-    </div>
-
-    
-<h3 class="block-label">구현한 기능</h3>
-    <div class="features">
-      <div><h4>질문에 맞는 검색 범위</h4><p>기관명과 사업명, 문서 ID로 범위를 좁혔습니다. 예산이나 제출서류처럼 질문 유형에 맞는 섹션을 후보로 모았습니다.</p></div>
-      <div><h4>두 검색 결과 결합</h4><p>문장 의미를 비교하는 Dense 검색과 키워드 중심의 BM25/Kiwi 검색을 함께 썼습니다. 두 검색의 순위는 RRF 방식으로 합쳤습니다.</p></div>
-      <div><h4>출처 정보 정규화</h4><p>문서·청크 ID와 출처를 기존 메타데이터와 매핑에서 채웠습니다. 찾지 못한 ID는 지어내지 않고 빈 값으로 남겨, 필수 필드 오류로 기록했습니다.</p></div>
-      <div><h4>검색 평가와 원문 검수</h4><p>문서를 못 찾은 경우와 근거 표기가 달라 실패한 경우를 나눠 살폈습니다. 원문을 클릭해 대조할 수 있는 검수 도구도 마련했습니다.</p></div>
-    </div>
-
-    
-
-<section class="outcome" aria-labelledby="rfpilot-evidence-title">
-      <h3 class="block-label">평가 결과와 조건</h3>
-      <div class="nums">
-        <div><span class="small-label">비교형 문서 후보 동시 포함</span><p class="n">39/40 <span>→</span> 40/40</p><p>동일한 내부 비교형 40문항, 상위 20개 문서 후보 기준. 최종 답변 정확도는 별도입니다.</p></div>
-        <div><span class="small-label">검색 평가에 사용한 질문</span><p class="n">52 <span>+</span> 40</p><p>한 문서에서 내용을 찾는 질문과 두 문서를 비교하는 질문으로 나눠 검색 결과를 확인했습니다.</p></div>
-        <div><span class="small-label">답변 생성에 넘기는 근거</span><p>검색한 내용에 문서·청크 ID와 원문 출처를 붙였습니다. 필수 정보 누락은 오류로, 비교 대상 문서의 근거 부족은 경고로 나눠 기록했습니다.</p></div>
-      </div>
-      <div class="evidence" id="rfpilot-evidence"><h3 id="rfpilot-evidence-title">자료와 코드</h3><div class="evidence-links"><a href="https://github.com/jaeheonki/rfp-rag-chatbot/blob/cb4a0778ef84f2ce8fa751982b6a00d8e9aeb2c9/docs/RFPilot_%EB%B0%9C%ED%91%9C%EB%8D%B1.pdf" target="_blank" rel="noopener noreferrer"><span>서비스 소개</span>발표덱 PDF ↗</a><a href="rfp-evaluation.html"><span>기존 CSV에서 발췌</span>다중문서 검색 평가 ↗</a><a href="https://github.com/jaeheonki/rfp-rag-chatbot/blob/cb4a0778ef84f2ce8fa751982b6a00d8e9aeb2c9/src/retrieval/evidence_units.py#L221-L301" target="_blank" rel="noopener noreferrer"><span>구현 코드</span>문서·출처 ID 정규화 ↗</a><a href="https://github.com/jaeheonki/rfp-rag-chatbot/blob/cb4a0778ef84f2ce8fa751982b6a00d8e9aeb2c9/src/retrieval/run_multi_doc_golden_eval.py#L550-L619" target="_blank" rel="noopener noreferrer"><span>동시 검색 포함 계산</span>다중문서 평가 코드 ↗</a></div><a class="repo-link" href="https://github.com/jaeheonki/rfp-rag-chatbot" target="_blank" rel="noopener noreferrer">RFPilot GitHub ↗</a></div>
-      
-    </section>
-<details class="case-depth" id="rfpilot-details"><summary><span>검색 구조와 다중문서·근거 회수 개선</span><span class="depth-icon" aria-hidden="true">+</span></summary><div class="case-depth-body">
+</div><section class="whole-pipeline" id="rfpilot-system"><h3 class="block-label">전체 파이프라인</h3><figure><a href="assets/system-flows/rfpilot.svg" rel="noopener noreferrer" target="_blank"><img alt="RFPilot 입력부터 출력까지 전체 파이프라인" loading="lazy" src="assets/system-flows/rfpilot.svg"/></a><figcaption>문서 준비와 색인, 사용자 질문에 대한 검색·생성·출처 표시를 연결한 전체 흐름입니다. 검색 내부의 상세 설계와 검증 범위는 아래 구현 자료에 정리했습니다. <a href="assets/system-flows/rfpilot.svg" rel="noopener noreferrer" target="_blank">확대 보기 ↗</a> · <a href="assets/system-flows/rfpilot.mmd">Mermaid 원문</a></figcaption></figure><p class="flow-key"><span aria-hidden="true"></span>파란 상자는 담당했던 기능과 연결된 부분입니다. 구체적인 작업은 아래에 설명했습니다.</p></section><section class="contribution-intro"><h3 class="block-label">담당한 기능</h3><p>검색(Retrieval)과 답변용 근거 구성을 맡았습니다. 문서 범위 지정, 하이브리드 검색, 다중문서 후보 배치와 출처 정규화를 구현하고, 팀과 원문을 대조해 평가셋을 다시 검수하는 과정을 주도했습니다.</p><div aria-label="맡은 역할" class="role-line role-chips"><span class="chips-k">맡은 역할</span><span class="chip">Retrieval(검색) 담당</span><span class="chip">답변용 근거 구성</span><span class="chip">검색 평가·원문 검수</span></div></section>
+<h3 class="block-label">구현과 실험</h3>
+<div class="features">
+<div><h4>질문에 맞는 검색 범위</h4><p>기관명과 사업명, 문서 ID로 범위를 좁혔습니다. 예산이나 제출서류처럼 질문 유형에 맞는 섹션을 후보로 모았습니다.</p></div>
+<div><h4>두 검색 결과 결합</h4><p>문장 의미를 비교하는 Dense 검색과 키워드 중심의 BM25/Kiwi 검색을 함께 썼습니다. 두 검색의 순위는 RRF 방식으로 합쳤습니다.</p></div>
+<div><h4>출처 정보 정규화</h4><p>문서·청크 ID와 출처를 기존 메타데이터와 매핑에서 채웠습니다. 찾지 못한 ID는 지어내지 않고 빈 값으로 남겨, 필수 필드 오류로 기록했습니다.</p></div>
+<div><h4>검색 평가와 원문 검수</h4><p>문서를 못 찾은 경우와 근거 표기가 달라 실패한 경우를 나눠 살폈습니다. 원문을 클릭해 대조할 수 있는 검수 도구도 마련했습니다.</p></div>
+</div>
+<section class="project-result"><h3 class="block-label">프로젝트 결과</h3><p>문서 보관함, 채팅 이력과 모델 자동 선택을 통합해 단일문서 질문과 다중문서 비교를 지원했습니다. 검색 고도화 후 동일한 내부 비교형 40문항에서 두 문서가 상위 20개 후보에 함께 포함된 결과는 39/40에서 40/40으로 늘었습니다. 최종 답변 정확도와는 별도 지표입니다.</p></section><section aria-labelledby="rfpilot-evidence-title" class="outcome">
+<h3 class="block-label">평가 결과와 조건</h3>
+<div class="nums">
+<div><span class="small-label">비교형 문서 후보 동시 포함</span><p class="n">39/40 <span>→</span> 40/40</p><p>동일한 내부 비교형 40문항, 상위 20개 문서 후보 기준. 최종 답변 정확도는 별도입니다.</p></div>
+<div><span class="small-label">검색 평가에 사용한 질문</span><p class="n">52 <span>+</span> 40</p><p>한 문서에서 내용을 찾는 질문과 두 문서를 비교하는 질문으로 나눠 검색 결과를 확인했습니다.</p></div>
+<div><span class="small-label">답변 생성에 넘기는 근거</span><p>검색한 내용에 문서·청크 ID와 원문 출처를 붙였습니다. 필수 정보 누락은 오류로, 비교 대상 문서의 근거 부족은 경고로 나눠 기록했습니다.</p></div>
+</div>
+<div class="evidence" id="rfpilot-evidence"><h3 id="rfpilot-evidence-title">자료와 코드</h3><div class="evidence-links"><a href="https://github.com/jaeheonki/rfp-rag-chatbot/blob/cb4a0778ef84f2ce8fa751982b6a00d8e9aeb2c9/docs/RFPilot_%EB%B0%9C%ED%91%9C%EB%8D%B1.pdf" rel="noopener noreferrer" target="_blank"><span>서비스 소개</span>발표덱 PDF ↗</a><a href="rfp-evaluation.html"><span>기존 CSV에서 발췌</span>다중문서 검색 평가 ↗</a><a href="https://github.com/jaeheonki/rfp-rag-chatbot/blob/cb4a0778ef84f2ce8fa751982b6a00d8e9aeb2c9/src/retrieval/evidence_units.py#L221-L301" rel="noopener noreferrer" target="_blank"><span>구현 코드</span>문서·출처 ID 정규화 ↗</a><a href="https://github.com/jaeheonki/rfp-rag-chatbot/blob/cb4a0778ef84f2ce8fa751982b6a00d8e9aeb2c9/src/retrieval/run_multi_doc_golden_eval.py#L550-L619" rel="noopener noreferrer" target="_blank"><span>동시 검색 포함 계산</span>다중문서 평가 코드 ↗</a></div><a class="repo-link" href="https://github.com/jaeheonki/rfp-rag-chatbot" rel="noopener noreferrer" target="_blank">RFPilot GitHub ↗</a></div>
+</section><section class="project-effect" aria-labelledby="rfpilot-effect-title"><h3 class="block-label" id="rfpilot-effect-title">기대 효과</h3><p>입찰 담당자가 여러 공고의 예산·자격·제출 조건을 빠르게 비교하고 원문 출처를 확인해, 검토 시간과 중요한 조건을 놓칠 가능성을 줄이는 데 도움이 될 것으로 기대합니다.</p></section>
+<details class="case-depth" id="rfpilot-details"><summary><span>검색 구조와 다중문서·근거 회수 개선</span><span aria-hidden="true" class="depth-icon">+</span></summary><div class="case-depth-body">
 <h3 class="block-label">구현 구조</h3>
-    <div class="dg">
-      <div class="dg-head"><div class="dg-legend"><span><i class="sw opt"></i>선택 경로</span></div><a href="assets/rfp-flow.jpg" target="_blank" rel="noopener noreferrer">공개 문서의 원 설계도 보기 ↗</a></div>
-      <span class="lane-title">Retrieval 내부</span>
-      <div class="node mine" style="display:block;padding:14px">
-          <div class="flow" style="gap:6px">
-            <div class="node io" style="min-width:96px;flex:0 1 110px"><b>사용자 질문</b></div><span class="arrow" aria-hidden="true">→</span>
-            <div class="node mine" style="min-width:120px"><b>질문 유형 분류</b><small>마감일·예산·제출서류·참가자격·평가기준·요약형·비교형·집계형</small></div><span class="arrow" aria-hidden="true">→</span>
-            <div class="node mine" style="min-width:120px"><b>Dense 검색 ∥ BM25/Kiwi 검색</b><small>병렬</small></div><span class="arrow" aria-hidden="true">→</span>
-            <div class="node mine" style="min-width:100px"><b>RRF 결합</b></div><span class="arrow" aria-hidden="true">→</span>
-            <div class="node mine" style="min-width:110px"><b>섹션 후보 생성</b><small>제출서류·평가표 등 유형별 섹션 후보</small></div><span class="arrow" aria-hidden="true">→</span>
-            <div class="node mine" style="min-width:130px"><b>문서 균형 배치</b><small>다중문서 비교형. 스코핑 단서: 발주기관·사업명·문서 ID·entity·active_doc_ids</small></div><span class="arrow" aria-hidden="true">→</span>
-            <div class="node mine" style="min-width:130px"><b>evidence_units 생성/정규화</b><small>doc_id·chunk_id·source_file·field·value. 없는 ID를 지어내지 않음</small></div><span class="arrow" aria-hidden="true">→</span>
-            <div class="node mine" style="min-width:110px"><b>payload validator</b><small>필수 정보 오류 · 문서 수 부족 경고</small></div>
-          </div>
-          <div class="optrow">
-            <span class="lbl">질문과 검색 결과에 따라 사용하는 선택 기능</span>
-            <div class="node opt"><b>Cross-Encoder 재순위 · 정밀 옵션</b><small>속도 부담 때문에 기본 경로에서 빼고, fallback과 정밀 검증 옵션으로 뒀습니다.</small></div>
-            <div class="node opt"><b>메타데이터 직접 답 · 선택 경로</b><small>마감일 등은 metadata 필드 값을 evidence_type=metadata로 evidence_units에 담아 전달합니다. 이 경로의 필드·값 검증은 설계 항목에 포함했습니다.</small></div>
-          </div>
-        </div>
-    </div>
-
-    
-<details class="technical"><summary>전달 계약과 검증 범위, 데이터 예시</summary><div class="details-body"><div class="payload-contract"><h4>전달 계약과 설계 목표</h4><ul><li>함께 넘기는 정보 9항목: contexts, evidence_units, doc_id, chunk_id, source_file, source_rank, doc_scope, active_doc_ids, metadata_answer</li><li>설계 문서의 검증 목표 6항목: query 존재 / contexts 또는 evidence_units 존재 / doc_id·chunk_id·source_file 일관성 / 단일문서 문서 범위 / 다중문서 문서 수 / metadata direct answer 필드·값 존재</li></ul><h4>설계 6항목과 공개 구현의 차이</h4><p>공개 validator는 필수 키와 자료형, 근거 필드의 누락을 검사합니다. 검색 결과가 있을 때는 근거가 참조한 순위도 확인합니다. 오류가 있으면 valid=false, 다중문서 수 부족은 경고로 기록합니다.</p><p>contexts는 빈 목록을 허용하고 evidence_units는 선택 항목입니다. 이 validator가 ID와 원문의 일치, 단일문서 범위, metadata_answer의 필드·값 유효성을 보장하지는 않습니다.</p><p>번들 생성 도구는 검증 옵션을 켰을 때 결과를 첨부합니다. 별도 오류 종료 옵션을 함께 켜면 산출물을 저장한 뒤, 검증 오류가 있을 때 오류 상태로 종료합니다.</p><p><a href="https://github.com/jaeheonki/rfp-rag-chatbot/blob/cb4a0778ef84f2ce8fa751982b6a00d8e9aeb2c9/src/retrieval/payload_validator.py#L624-L659" target="_blank" rel="noopener noreferrer">공개 검증 코드 ↗</a></p></div><div><p class="code-label">검색 후 생성 단계에 넘기는 데이터(payload)의 <strong>공개용 단순화 예시</strong>입니다. 실제 응답 로그나 필수 필드 목록은 아닙니다.</p><pre class="payload">{
+<div class="dg">
+<div class="dg-head"><div class="dg-legend"><span><i class="sw opt"></i>선택 경로</span></div><a href="assets/rfp-flow.jpg" rel="noopener noreferrer" target="_blank">공개 문서의 원 설계도 보기 ↗</a></div>
+<span class="lane-title">Retrieval 내부</span>
+<div class="node mine" style="display:block;padding:14px">
+<div class="flow" style="gap:6px">
+<div class="node io" style="min-width:96px;flex:0 1 110px"><b>사용자 질문</b></div><span aria-hidden="true" class="arrow">→</span>
+<div class="node mine" style="min-width:120px"><b>질문 유형 분류</b><small>마감일·예산·제출서류·참가자격·평가기준·요약형·비교형·집계형</small></div><span aria-hidden="true" class="arrow">→</span>
+<div class="node mine" style="min-width:120px"><b>Dense 검색 ∥ BM25/Kiwi 검색</b><small>병렬</small></div><span aria-hidden="true" class="arrow">→</span>
+<div class="node mine" style="min-width:100px"><b>RRF 결합</b></div><span aria-hidden="true" class="arrow">→</span>
+<div class="node mine" style="min-width:110px"><b>섹션 후보 생성</b><small>제출서류·평가표 등 유형별 섹션 후보</small></div><span aria-hidden="true" class="arrow">→</span>
+<div class="node mine" style="min-width:130px"><b>문서 균형 배치</b><small>다중문서 비교형. 스코핑 단서: 발주기관·사업명·문서 ID·entity·active_doc_ids</small></div><span aria-hidden="true" class="arrow">→</span>
+<div class="node mine" style="min-width:130px"><b>evidence_units 생성/정규화</b><small>doc_id·chunk_id·source_file·field·value. 없는 ID를 지어내지 않음</small></div><span aria-hidden="true" class="arrow">→</span>
+<div class="node mine" style="min-width:110px"><b>payload validator</b><small>필수 정보 오류 · 문서 수 부족 경고</small></div>
+</div>
+<div class="optrow">
+<span class="lbl">질문과 검색 결과에 따라 사용하는 선택 기능</span>
+<div class="node opt"><b>Cross-Encoder 재순위 · 정밀 옵션</b><small>속도 부담 때문에 기본 경로에서 빼고, fallback과 정밀 검증 옵션으로 뒀습니다.</small></div>
+<div class="node opt"><b>메타데이터 직접 답 · 선택 경로</b><small>마감일 등은 metadata 필드 값을 evidence_type=metadata로 evidence_units에 담아 전달합니다. 이 경로의 필드·값 검증은 설계 항목에 포함했습니다.</small></div>
+</div>
+</div>
+</div>
+<details class="technical"><summary>전달 계약과 검증 범위, 데이터 예시</summary><div class="details-body"><div class="payload-contract"><h4>전달 계약과 설계 목표</h4><ul><li>함께 넘기는 정보 9항목: contexts, evidence_units, doc_id, chunk_id, source_file, source_rank, doc_scope, active_doc_ids, metadata_answer</li><li>설계 문서의 검증 목표 6항목: query 존재 / contexts 또는 evidence_units 존재 / doc_id·chunk_id·source_file 일관성 / 단일문서 문서 범위 / 다중문서 문서 수 / metadata direct answer 필드·값 존재</li></ul><h4>설계 6항목과 공개 구현의 차이</h4><p>공개 validator는 필수 키와 자료형, 근거 필드의 누락을 검사합니다. 검색 결과가 있을 때는 근거가 참조한 순위도 확인합니다. 오류가 있으면 valid=false, 다중문서 수 부족은 경고로 기록합니다.</p><p>contexts는 빈 목록을 허용하고 evidence_units는 선택 항목입니다. 이 validator가 ID와 원문의 일치, 단일문서 범위, metadata_answer의 필드·값 유효성을 보장하지는 않습니다.</p><p>번들 생성 도구는 검증 옵션을 켰을 때 결과를 첨부합니다. 별도 오류 종료 옵션을 함께 켜면 산출물을 저장한 뒤, 검증 오류가 있을 때 오류 상태로 종료합니다.</p><p><a href="https://github.com/jaeheonki/rfp-rag-chatbot/blob/cb4a0778ef84f2ce8fa751982b6a00d8e9aeb2c9/src/retrieval/payload_validator.py#L624-L659" rel="noopener noreferrer" target="_blank">공개 검증 코드 ↗</a></p></div><div><p class="code-label">검색 후 생성 단계에 넘기는 데이터(payload)의 <strong>공개용 단순화 예시</strong>입니다. 실제 응답 로그나 필수 필드 목록은 아닙니다.</p><pre class="payload">{
   "query": "예시 사업의 입찰 참여 마감일은?",
   "filters": {
     "structured_payload_answer": true,
@@ -359,106 +311,88 @@
 }</pre></div></div></details>
 <details class="technical"><summary>논문 기여와 사용한 도구</summary><div class="details-body"><p>팀원의 단독저자 논문 「한국 공공 RFP 질의응답의 근거 가드 과잉 거부와 자동 채점의 한계: 고정 근거 구성요소 평가」(2026.12 발행 예정)에 프로젝트 비저자 기여자로 기재되었습니다.</p><p class="detail-tools">BM25, Chroma, JSON 검증, Kiwi, Python, RRF</p></div></details>
 </div></details>
-
-<section class="troubleshoot" aria-labelledby="rfpilot-ts-title"><h3 class="block-label" id="rfpilot-ts-title">문제 해결 기록 <span>문제 → 원인 → 조치 → 결과</span></h3><p class="ts-sub">다중문서 검색과 평가 기준 개선 과정</p><div class="troubles">
-      <section class="trouble" aria-labelledby="rfp-t1"><h4 id="rfp-t1">두 문서를 비교하는 질문에서 한쪽이 빠졌습니다.</h4><dl>
-        <dt>문제</dt><dd>유사 chunk가 한 문서에 몰리거나, 비슷한 사업명의 다른 기관 문서가 섞였습니다.</dd>
-        <dt>원인</dt><dd>chunk 유사도 순위만으로는 비교 대상 두 문서의 확보가 보장되지 않았습니다.</dd>
-        <dt>조치</dt><dd>기관·사업명 단서를 보강하고, 문서 단위 집계와 균형 배치를 적용했습니다.</dd>
-        <dt>결과</dt><dd>같은 내부 비교형 40문항에서 두 문서 동시 포함이 39/40 → 40/40(상위 20개 <strong>문서 후보</strong> 기준).<small>문서 검색 포함 여부이며, 세부 근거 회수와 최종 정답률은 별도입니다. <a href="rfp-evaluation.html">실험군별 기록 보기 ↗</a></small></dd>
-      </dl></section>
-      <section class="trouble" aria-labelledby="rfp-t2"><h4 id="rfp-t2">근거를 찾았는데 평가기는 실패로 셌습니다.</h4><dl>
-        <dt>문제</dt><dd>HWP 표·목록의 표현과 자연어 정답의 표기가 달라 strict 문자열 검사가 실패했습니다.</dd>
-        <dt>원인</dt><dd>평가셋의 정답 표기와 검사 방식이 원문 표현 차이를 구분하지 못했습니다. 데이터 담당자가 정답 오류를 제기한 뒤 팀과 원문을 대조했습니다.</dd>
-        <dt>조치</dt><dd>원문 근거의 엄격 비교(raw strict), 표현 차이를 허용한 비교(relaxed), 근거를 정규화한 뒤의 통과 후보(normalized strict candidate)를 나눠 집계했습니다. 평가셋을 다시 만들고 사람이 원문과 대조하는 과정을 주도했으며, 원문 위치와 근거 유형도 정규화했습니다.</dd>
-        <dt>결과</dt><dd>같은 52문항에서 원문 근거의 엄격 비교는 32문항이 통과했습니다. 표현 차이를 허용한 비교와 정규화 후 통과 후보는 각각 52문항이었습니다.<small>근거의 표기·매칭 기준별 집계입니다. 최종 답변 정확도는 별도입니다.</small></dd>
-      </dl></section>
-    </div></section>
-<div class="lesson" id="rfpilot-reflection"><span class="small-label">회고</span><p>평가셋을 원문과 대조해 고치면서 정답 기준도 검수해야 한다는 점을 배웠습니다. 비교 대상 문서와 답변용 근거를 함께 확보하도록 검색을 보완했지만, 제출서류 섹션을 혼동하거나 한쪽 문서의 세부 조건을 놓치는 경우는 남았습니다. 문서 검색과 필요한 근거의 회수, 최종 답변을 나눠 확인해야 실패 지점을 좁힐 수 있었습니다.</p><p><strong>취한 조치와 검증 결과</strong><br>기관·사업명 단서를 보강하고 검색 결과를 문서별로 묶어, 비교 대상이 한 문서에만 몰리는 문제를 보완했습니다. 기존 비교형 40문항 평가 기록에서 두 문서가 함께 포함된 질문이 39개에서 40개로 늘었습니다(상위 20개 문서 후보 기준). 최종 답변 정확도를 뜻하지는 않습니다. <a href="rfp-evaluation.html">기존 평가 결과 ↗</a></p></div>
-
-<p class="fold-end"><button type="button" class="fold-close" data-case="rfpilot">RFPilot 접기 ↑</button></p>
+<section aria-labelledby="rfpilot-ts-title" class="troubleshoot"><h3 class="block-label" id="rfpilot-ts-title">문제 해결 기록 <span>문제 → 원인 → 조치 → 결과</span></h3><p class="ts-sub">다중문서 검색과 평가 기준 개선 과정</p><div class="troubles">
+<section aria-labelledby="rfp-t1" class="trouble"><h4 id="rfp-t1">두 문서를 비교하는 질문에서 한쪽이 빠졌습니다.</h4><dl>
+<dt>문제</dt><dd>유사 chunk가 한 문서에 몰리거나, 비슷한 사업명의 다른 기관 문서가 섞였습니다.</dd>
+<dt>원인</dt><dd>chunk 유사도 순위만으로는 비교 대상 두 문서의 확보가 보장되지 않았습니다.</dd>
+<dt>조치</dt><dd>기관·사업명 단서를 보강하고, 문서 단위 집계와 균형 배치를 적용했습니다.</dd>
+<dt>결과</dt><dd>같은 내부 비교형 40문항에서 두 문서 동시 포함이 39/40 → 40/40(상위 20개 <strong>문서 후보</strong> 기준).<small>문서 검색 포함 여부이며, 세부 근거 회수와 최종 정답률은 별도입니다. <a href="rfp-evaluation.html">실험군별 기록 보기 ↗</a></small></dd>
+</dl></section>
+<section aria-labelledby="rfp-t2" class="trouble"><h4 id="rfp-t2">근거를 찾았는데 평가기는 실패로 셌습니다.</h4><dl>
+<dt>문제</dt><dd>HWP 표·목록의 표현과 자연어 정답의 표기가 달라 strict 문자열 검사가 실패했습니다.</dd>
+<dt>원인</dt><dd>평가셋의 정답 표기와 검사 방식이 원문 표현 차이를 구분하지 못했습니다. 데이터 담당자가 정답 오류를 제기한 뒤 팀과 원문을 대조했습니다.</dd>
+<dt>조치</dt><dd>원문 근거의 엄격 비교(raw strict), 표현 차이를 허용한 비교(relaxed), 근거를 정규화한 뒤의 통과 후보(normalized strict candidate)를 나눠 집계했습니다. 평가셋을 다시 만들고 사람이 원문과 대조하는 과정을 주도했으며, 원문 위치와 근거 유형도 정규화했습니다.</dd>
+<dt>결과</dt><dd>같은 52문항에서 원문 근거의 엄격 비교는 32문항이 통과했습니다. 표현 차이를 허용한 비교와 정규화 후 통과 후보는 각각 52문항이었습니다.<small>근거의 표기·매칭 기준별 집계입니다. 최종 답변 정확도는 별도입니다.</small></dd>
+</dl></section>
+</div></section>
+<details class="technical preserved-verification"><summary>추가 검증 기록</summary><div class="details-body"><p><strong>취한 조치와 검증 결과</strong><br/>기관·사업명 단서를 보강하고 검색 결과를 문서별로 묶어, 비교 대상이 한 문서에만 몰리는 문제를 보완했습니다. 기존 비교형 40문항 평가 기록에서 두 문서가 함께 포함된 질문이 39개에서 40개로 늘었습니다(상위 20개 문서 후보 기준). 최종 답변 정확도를 뜻하지는 않습니다. <a href="rfp-evaluation.html">기존 평가 결과 ↗</a></p></div></details><div class="lesson" id="rfpilot-reflection"><span class="small-label">회고</span><p>평가셋도 원문과 대조해야 한다는 점을 배웠습니다. 문서를 찾았어도 필요한 세부 조건이 빠질 수 있어, 문서 검색과 근거 회수, 최종 답변을 나눠 확인했습니다.</p></div>
+<p class="fold-end"><button class="fold-close" data-case="rfpilot" type="button">RFPilot 접기 ↑</button></p>
 </div></details>
 </article>
-<article class="case" id="healtheat" aria-labelledby="health-title">
-    <header class="case-header"><p class="eyebrow">04</p><h2 id="health-title">HealthEat</h2><p class="case-purpose">사용자 사진 기반 알약 탐지·식별 프로젝트</p><p class="case-lead">사용자가 찍은 사진에서 알약 위치와 약품명을 찾는 팀 프로젝트입니다. 제가 맡은 부분은 RTMDet 탐지 모델 실험으로, 후보 모델을 비교하고 실사용 사진으로 평가하며 합성 데이터와 학습 조건을 조정했습니다.</p><p class="meta"><span class="meta-item"><b class="meta-k">기간</b>2026.04–05</span><span class="meta-item"><b class="meta-k">인원</b>5명</span><span class="meta-item"><b class="meta-k">역할</b>탐지 모델 실험·평가</span></p><div class="tags"><span class="chips-k">사용 도구</span><span>Albumentations</span><span>MMDetection</span><span>PyTorch</span><span>RTMDet</span></div><div class="role-line role-chips" aria-label="맡은 역할"><span class="chips-k">맡은 역할</span><span class="chip">탐지 모델 실험·비교</span><span class="chip">실사용 사진 평가</span><span class="chip">합성·학습 조건 조정</span><span class="chip">탐지 점수 기준 조정</span></div></header>
-<details class="case-fold" id="healtheat-fold"><summary aria-label="HealthEat 상세 내용 펼치기"><span class="fold-label"><span class="fold-when-closed">자세히 보기</span><span class="fold-when-open">접기</span></span><span class="fold-hint">서비스 화면 · 실험과 평가 · 평가 결과 · 탐지 모델 실험과 오탐 개선 · 회고</span></summary><div class="case-fold-body">
+<article aria-labelledby="health-title" class="case" id="healtheat">
+<header class="case-header"><p class="eyebrow">04</p><h2 id="health-title">HealthEat</h2><p class="case-purpose">사용자 사진 기반 알약 탐지·식별 프로젝트</p><p class="case-lead">사용자가 찍은 알약 사진에서 위치와 약품명 후보를 찾는 식별 보조 데모입니다. 탐지와 재분류 결과에 각인·색상·모양 정보를 더하고, 확인이 필요한 후보를 화면에 표시합니다.</p><p class="meta"><span class="meta-item"><b class="meta-k">기간</b>2026.04–05</span><span class="meta-item"><b class="meta-k">인원</b>5명</span></p><div class="tags"><span class="chips-k">사용 도구</span><span>Albumentations</span><span>MMDetection</span><span>PyTorch</span><span>RTMDet</span></div></header><section aria-label="HealthEat 문제와 접근" class="project-overview"><div><h3>어떤 문제에서 시작했나요?</h3><p>포장 없이 알약만 남아 있으면 사진 속 모양과 각인으로 약품명을 찾아야 합니다. 손바닥 사진은 촬영용 흰 배경 사진과 조건이 달라, 위치를 찾더라도 약품명을 틀리거나 손가락을 알약으로 인식하는 문제가 있었습니다.</p></div><div><h3>어떻게 만들었나요?</h3><p>팀은 학습 데이터를 정제하고 다양한 배경의 합성 사진을 만들었습니다. 탐지 후보를 비교해 RTMDet-tiny를 선택하고, 잘라낸 알약 이미지를 EfficientNet-B0로 재분류했습니다.</p><p>OCR의 각인 인식 한계에 대응해 Qwen2.5-VL-3B가 API 후보 각인 중 하나 또는 UNKNOWN을 고르도록 제한했습니다. 식약처 API·캐시와 색상·모양을 함께 확인하고, 약품 후보와 추가 확인 상태를 Gradio 데모에 표시했습니다.</p></div></section>
+<details class="case-fold" id="healtheat-fold"><summary aria-label="HealthEat 상세 내용 펼치기"><span class="fold-label"><span class="fold-when-closed">자세히 보기</span><span class="fold-when-open">접기</span></span><span class="fold-hint">전체 화면 · 시스템 흐름 · 담당 기능 · 문제 해결 · 결과</span></summary><div class="case-fold-body">
+<h3 class="block-label">서비스 화면</h3>
+<div class="service-output">
+<div class="shots one"><figure><a href="assets/health-demo.png" rel="noopener noreferrer" target="_blank"><img alt="HealthEat 팀 데모의 알약 사진과 탐지 박스 및 약품명 후보 화면" height="1285" loading="lazy" src="assets/health-demo.png" width="1273"/></a><figcaption>사진 업로드, 탐지 결과와 약품 후보, 추가 확인 안내가 이어지는 데모 화면입니다.</figcaption></figure></div>
 
-    
-<h3 class="block-label">서비스 화면 <span>기존 모델을 적용한 데모</span></h3>
-    <div class="what">
-      <div class="shots one"><figure><a href="assets/health-demo.png" target="_blank" rel="noopener noreferrer"><img src="assets/health-demo.png" alt="HealthEat 팀 데모의 알약 사진과 탐지 박스 및 약품명 후보 화면" width="1273" height="1285" loading="lazy"></a><figcaption>사진에서 알약을 찾고 약품명 후보를 보여주는 서비스 화면입니다.</figcaption></figure></div>
-      <dl class="facts">
-        <div><dt>서비스</dt><dd>사용자 사진에서 알약 위치와 약품명을 찾는 서비스</dd></div>
-        <div><dt>평가 자료</dt><dd>블로그·SNS에서 모은 손바닥 위 알약 사진<small>흰 배경 사진에서 성적이 비슷했던 모델들이 사용자 사진에서도 알약 위치와 약품명을 맞히는지 비교했습니다.</small></dd></div>
-      </dl>
-    </div>
-    
-<h3 class="block-label">실험과 평가</h3>
-    <div class="features">
-      <div><h4>모델 선택</h4><p>후보 3개를 서로 다른 초기값(seed)으로 두 번 학습해 비교했습니다. 약품명 첫 번째 후보(Top-1)의 평균 정답률이 가장 높은 RTMDet-tiny를 골랐습니다.</p></div>
-      <div><h4>평가 지표 구분</h4><p>알약 위치를 찾았는지와 약품명을 맞혔는지를 나눠 봤습니다. 첫 번째 후보(Top-1)와 상위 세 후보(Top-3)의 정답 여부, 알약이 아닌 곳을 잘못 찾은 경우도 따로 집계했습니다.</p></div>
-      <div><h4>합성·학습 조건 조정</h4><p>알약 개수와 크기, 배치, 손바닥 영역, 증강과 입력 해상도를 바꿔 실험했습니다.</p></div>
-      <div><h4>탐지 점수 기준 조정</h4><p>모델의 탐지 점수(confidence) 기준을 올릴 때 잘못 찾은 박스가 줄어드는지, 맞게 찾은 알약도 함께 빠지는지 비교했습니다.</p></div>
-    </div>
-
-    
+</div><section class="whole-pipeline" id="healtheat-system"><h3 class="block-label">전체 파이프라인</h3><figure><a href="assets/system-flows/healtheat.svg" rel="noopener noreferrer" target="_blank"><img alt="HealthEat 입력부터 출력까지 전체 파이프라인" loading="lazy" src="assets/system-flows/healtheat.svg"/></a><figcaption>서비스에 적용된 탐지 모델과 CNN·각인 보조 검증의 흐름입니다. RTMDet v4 고도화 실험은 아래 결과에서 별도로 설명합니다. 복용 여부를 판단하는 의료 서비스로 검증한 것은 아닙니다. <a href="assets/system-flows/healtheat.svg" rel="noopener noreferrer" target="_blank">확대 보기 ↗</a> · <a href="assets/system-flows/healtheat.mmd">Mermaid 원문</a></figcaption></figure><p class="flow-key"><span aria-hidden="true"></span>파란 상자는 담당했던 기능과 연결된 부분입니다. 구체적인 작업은 아래에 설명했습니다.</p></section><section class="contribution-intro"><h3 class="block-label">담당한 기능</h3><p>탐지 모델 후보를 비교하고 실사용 사진에서 평가했습니다. 팀 합성 스크립트를 바탕으로 데이터 구성과 학습 조건을 조정했으며, 탐지 점수 기준을 바꾸어 정답 수와 불필요한 예측 박스를 함께 확인했습니다.</p><div aria-label="맡은 역할" class="role-line role-chips"><span class="chips-k">맡은 역할</span><span class="chip">탐지 모델 실험·비교</span><span class="chip">실사용 사진 평가</span><span class="chip">합성·학습 조건 조정</span><span class="chip">탐지 점수 기준 조정</span></div></section>
+<h3 class="block-label">구현과 실험</h3>
+<div class="features">
+<div><h4>모델 선택</h4><p>후보 3개를 서로 다른 초기값(seed)으로 두 번 학습해 비교했습니다. 약품명 첫 번째 후보(Top-1)의 평균 정답률이 가장 높은 RTMDet-tiny를 골랐습니다.</p></div>
+<div><h4>평가 지표 구분</h4><p>알약 위치를 찾았는지와 약품명을 맞혔는지를 나눠 봤습니다. 첫 번째 후보(Top-1)와 상위 세 후보(Top-3)의 정답 여부, 알약이 아닌 곳을 잘못 찾은 경우도 따로 집계했습니다.</p></div>
+<div><h4>합성·학습 조건 조정</h4><p>알약 개수와 크기, 배치, 손바닥 영역, 증강과 입력 해상도를 바꿔 실험했습니다.</p></div>
+<div><h4>탐지 점수 기준 조정</h4><p>모델의 탐지 점수(confidence) 기준을 올릴 때 잘못 찾은 박스가 줄어드는지, 맞게 찾은 알약도 함께 빠지는지 비교했습니다.</p></div>
+</div>
 <h3 class="block-label">알약 위치와 약품명을 함께 맞힌 결과</h3>
-    <div class="pair">
-      <div><p class="small-label">같은 사용자 사진에서 기존 모델과 개선 모델(v4) 비교</p><div class="table-wrap"><table class="hl"><caption>알약 위치·약품명을 모두 맞힌 결과 (Top-1, IoU 0.5)</caption><thead><tr><th scope="col">모델</th><th scope="col">위치·약품명 정답</th><th scope="col">정답률</th></tr></thead><tbody><tr><th scope="row">기존 모델</th><td>14 / 47</td><td>29.8%</td></tr><tr><th scope="row">개선 모델 v4</th><td>22 / 47</td><td>46.8%</td></tr></tbody></table></div><p class="measure-note">사진 33장 속 알약 47개 기준입니다. 정답 위치와의 박스 겹침 비율(IoU)이 0.5 이상이고, 첫 번째 약품명 후보(Top-1)까지 맞힌 경우를 셌습니다. 모델 선택과 평가에 같은 사진을 사용했습니다.</p><a href="https://github.com/ZerofZero/codeit10_pj1/blob/ae9bf694c34660a939849b045ed4698a7d6c098f/docs/v4_analysis_summary.md#%EB%A9%94%EC%9D%B8-%EB%B9%84%EA%B5%90%ED%91%9C-47-gt" target="_blank" rel="noopener noreferrer" style="font-size:12px">평가 분석 원문 ↗</a></div>
-      <figure class="artifact"><a href="assets/health-threshold-3way.png" target="_blank" rel="noopener noreferrer"><img src="assets/health-threshold-3way.png" alt="모델의 탐지 점수 기준을 바꿨을 때 정답 박스와 정답에 대응하지 않는 예측 박스 수를 비교한 그래프(v2·v3·v4)" width="2148" height="590" loading="lazy"></a><figcaption>탐지 점수 기준을 바꿨을 때 정답 수와 정답에 대응하지 않는 예측 박스 수를 비교한 그래프입니다. 같은 사진 33장·알약 47개와 동일한 위치 매칭 규칙을 사용했습니다. <a href="assets/health-threshold-3way.png" target="_blank" rel="noopener noreferrer">크게 보기 ↗</a></figcaption></figure>
-    </div>
-
-    
-<section class="outcome" aria-labelledby="health-evidence-title">
-      <h3 class="block-label">평가 결과와 조건</h3>
-      <div class="nums">
-        <div><span class="small-label">같은 알약 47개의 위치·약품명 정답률</span><p class="n">29.8% <span>→</span> 46.8%</p><p>같은 사진에서 위치와 약품명을 모두 맞힌 비율이 기존 모델보다 17.0%p 높아졌습니다.</p></div>
-        <div><span class="small-label">정답에 대응하지 않는 예측 박스 (탐지 점수 0.05 → 0.25)</span><p class="n">84 <span>→</span> 10</p><p>같은 v4 예측에서 점수 기준만 바꾼 결과입니다. 정답 22개를 유지하면서 불필요한 예측 박스를 줄였습니다.</p></div>
-        <div><span class="small-label">모델 비교에 사용한 사진</span><p class="n">33<span>장 · 알약 47개</span></p><p>팀이 모은 사진과 정답 표시를 모델 선택과 평가에 함께 사용했습니다.</p></div>
-      </div>
-      <div class="evidence" id="healtheat-evidence"><h3 id="health-evidence-title">자료와 코드</h3><div class="evidence-links"><a href="https://github.com/ZerofZero/codeit10_pj1/blob/ae9bf694c34660a939849b045ed4698a7d6c098f/docs/report.pdf" target="_blank" rel="noopener noreferrer"><span>서비스 소개와 모델 비교</span>최종 보고서 PDF ↗</a><a href="https://github.com/ZerofZero/codeit10_pj1/blob/ae9bf694c34660a939849b045ed4698a7d6c098f/docs/v4_analysis_summary.md#%EB%A9%94%EC%9D%B8-%EB%B9%84%EA%B5%90%ED%91%9C-47-gt" target="_blank" rel="noopener noreferrer"><span>동일 평가셋 비교</span>v4 평가 분석 원문 ↗</a><a href="https://github.com/ZerofZero/codeit10_pj1/blob/ae9bf694c34660a939849b045ed4698a7d6c098f/models/RTMDet/v4/inference_demo.py" target="_blank" rel="noopener noreferrer"><span>박스·클래스·점수 처리</span>v4 추론 코드 ↗</a><a href="https://github.com/ZerofZero/codeit10_pj1/blob/ae9bf694c34660a939849b045ed4698a7d6c098f/models/RTMDet/v4/config.py" target="_blank" rel="noopener noreferrer"><span>입력 크기와 증강 등</span>학습 설정 ↗</a></div><a class="repo-link" href="https://github.com/ZerofZero/codeit10_pj1" target="_blank" rel="noopener noreferrer">HealthEat GitHub ↗</a></div>
-      
-    </section>
-<details class="case-depth" id="healtheat-details"><summary><span>탐지 모델 실험과 오탐 개선</span><span class="depth-icon" aria-hidden="true">+</span></summary><div class="case-depth-body">
+<div class="pair">
+<div><p class="small-label">같은 사용자 사진에서 기존 모델과 개선 모델(v4) 비교</p><div class="table-wrap"><table class="hl"><caption>알약 위치·약품명을 모두 맞힌 결과 (Top-1, IoU 0.5)</caption><thead><tr><th scope="col">모델</th><th scope="col">위치·약품명 정답</th><th scope="col">정답률</th></tr></thead><tbody><tr><th scope="row">기존 모델</th><td>14 / 47</td><td>29.8%</td></tr><tr><th scope="row">개선 모델 v4</th><td>22 / 47</td><td>46.8%</td></tr></tbody></table></div><p class="measure-note">사진 33장 속 알약 47개 기준입니다. 정답 위치와의 박스 겹침 비율(IoU)이 0.5 이상이고, 첫 번째 약품명 후보(Top-1)까지 맞힌 경우를 셌습니다. 모델 선택과 평가에 같은 사진을 사용했습니다.</p><a href="https://github.com/ZerofZero/codeit10_pj1/blob/ae9bf694c34660a939849b045ed4698a7d6c098f/docs/v4_analysis_summary.md#%EB%A9%94%EC%9D%B8-%EB%B9%84%EA%B5%90%ED%91%9C-47-gt" rel="noopener noreferrer" style="font-size:12px" target="_blank">평가 분석 원문 ↗</a></div>
+<figure class="artifact"><a href="assets/health-threshold-3way.png" rel="noopener noreferrer" target="_blank"><img alt="모델의 탐지 점수 기준을 바꿨을 때 정답 박스와 정답에 대응하지 않는 예측 박스 수를 비교한 그래프(v2·v3·v4)" height="590" loading="lazy" src="assets/health-threshold-3way.png" width="2148"/></a><figcaption>탐지 점수 기준을 바꿨을 때 정답 수와 정답에 대응하지 않는 예측 박스 수를 비교한 그래프입니다. 같은 사진 33장·알약 47개와 동일한 위치 매칭 규칙을 사용했습니다. <a href="assets/health-threshold-3way.png" rel="noopener noreferrer" target="_blank">크게 보기 ↗</a></figcaption></figure>
+</div>
+<section class="project-result"><h3 class="block-label">프로젝트 결과</h3><p>사진 업로드부터 후보 확인까지 이어지는 데모를 구성했습니다. 별도 RTMDet v4 실험에서는 같은 사진 33장·알약 47개 중 위치와 약품명을 함께 맞힌 결과가 14/47에서 22/47로 늘었습니다. v4는 데모에 배포하지 않았습니다.</p><p>종료 후 기존 RTMDet 학습 로그와 평가 결과를 MLflow로 사후 정리해 원본 파일 해시와 기록의 대응을 남겼고, 평가와 체크포인트의 연결은 미확정으로 표시했습니다.</p></section><section aria-labelledby="health-evidence-title" class="outcome">
+<h3 class="block-label">평가 결과와 조건</h3>
+<div class="nums">
+<div><span class="small-label">같은 알약 47개의 위치·약품명 정답률</span><p class="n">29.8% <span>→</span> 46.8%</p><p>같은 사진에서 위치와 약품명을 모두 맞힌 비율이 기존 모델보다 17.0%p 높아졌습니다.</p></div>
+<div><span class="small-label">정답에 대응하지 않는 예측 박스 (탐지 점수 0.05 → 0.25)</span><p class="n">84 <span>→</span> 10</p><p>같은 v4 예측에서 점수 기준만 바꾼 결과입니다. 정답 22개를 유지하면서 불필요한 예측 박스를 줄였습니다.</p></div>
+<div><span class="small-label">모델 비교에 사용한 사진</span><p class="n">33<span>장 · 알약 47개</span></p><p>팀이 모은 사진과 정답 표시를 모델 선택과 평가에 함께 사용했습니다.</p></div>
+</div>
+<div class="evidence" id="healtheat-evidence"><h3 id="health-evidence-title">자료와 코드</h3><div class="evidence-links"><a href="https://github.com/ZerofZero/codeit10_pj1/blob/ae9bf694c34660a939849b045ed4698a7d6c098f/docs/report.pdf" rel="noopener noreferrer" target="_blank"><span>서비스 소개와 모델 비교</span>최종 보고서 PDF ↗</a><a href="https://github.com/ZerofZero/codeit10_pj1/blob/ae9bf694c34660a939849b045ed4698a7d6c098f/docs/v4_analysis_summary.md#%EB%A9%94%EC%9D%B8-%EB%B9%84%EA%B5%90%ED%91%9C-47-gt" rel="noopener noreferrer" target="_blank"><span>동일 평가셋 비교</span>v4 평가 분석 원문 ↗</a><a href="https://github.com/ZerofZero/codeit10_pj1/blob/ae9bf694c34660a939849b045ed4698a7d6c098f/models/RTMDet/v4/inference_demo.py" rel="noopener noreferrer" target="_blank"><span>박스·클래스·점수 처리</span>v4 추론 코드 ↗</a><a href="https://github.com/ZerofZero/codeit10_pj1/blob/ae9bf694c34660a939849b045ed4698a7d6c098f/models/RTMDet/v4/config.py" rel="noopener noreferrer" target="_blank"><span>입력 크기와 증강 등</span>학습 설정 ↗</a><a href="https://github.com/wony98/pill_detection/blob/a65f6259ebdb006aa8a50c4c821825fcee46289d/experiments/mlflow/README.md" rel="noopener noreferrer" target="_blank"><span>종료 후 사후 정리</span>MLflow 기록 (개인 저장소) ↗</a></div><a class="repo-link" href="https://github.com/ZerofZero/codeit10_pj1" rel="noopener noreferrer" target="_blank">HealthEat GitHub ↗</a></div>
+</section><section class="project-effect" aria-labelledby="healtheat-effect-title"><h3 class="block-label" id="healtheat-effect-title">기대 효과</h3><p>알약 사진과 각인으로 약품 후보를 찾는 번거로움을 줄이고, 전문가에게 약품을 확인하기 전에 필요한 정보를 정리하는 데 도움이 될 것으로 기대합니다.</p></section>
+<details class="case-depth" id="healtheat-details"><summary><span>탐지 모델 실험과 오탐 개선</span><span aria-hidden="true" class="depth-icon">+</span></summary><div class="case-depth-body">
 <h3 class="block-label">구현 구조</h3>
-    <div class="dg">
-      <span class="tag">실험 경로</span>
-      <div class="flow">
-        <div class="node io"><b>데이터·합성 원본</b><small>흰 배경 알약 사진과 합성 사진, 정답 표시 자료</small></div><span class="arrow" aria-hidden="true">→</span>
-        <div class="node mine"><b>후보 학습·비교</b><small>상위 3개 두 seed 비교 → RTMDet-tiny 선택</small></div><span class="arrow" aria-hidden="true">→</span>
-        <div class="node mine"><b>실사용 평가</b><small>박스 IoU 매칭, Top-1/Top-3와 오탐 확인</small></div><span class="arrow" aria-hidden="true">→</span>
-        <div class="node mine"><b>오탐·분포 분석</b><small>손가락 끝 오탐, 합성·평가 사진의 알약 개수 비교</small></div><span class="arrow" aria-hidden="true">→</span>
-        <div class="node mine"><b>합성·학습 조건 변경</b><small>개수·크기·배치·증강·해상도(동시 변경)</small></div><span class="arrow" aria-hidden="true">→</span>
-        <div class="node mine"><b>v4 · 탐지 점수 조정</b><small>점수 기준별로 맞힌 알약 수와 정답에 대응하지 않는 예측 박스 수 비교</small></div>
-      </div>
-    </div>
-
-    
-
+<div class="dg">
+<span class="tag">실험 경로</span>
+<div class="flow">
+<div class="node io"><b>데이터·합성 원본</b><small>흰 배경 알약 사진과 합성 사진, 정답 표시 자료</small></div><span aria-hidden="true" class="arrow">→</span>
+<div class="node mine"><b>후보 학습·비교</b><small>상위 3개 두 seed 비교 → RTMDet-tiny 선택</small></div><span aria-hidden="true" class="arrow">→</span>
+<div class="node mine"><b>실사용 평가</b><small>박스 IoU 매칭, Top-1/Top-3와 오탐 확인</small></div><span aria-hidden="true" class="arrow">→</span>
+<div class="node mine"><b>오탐·분포 분석</b><small>손가락 끝 오탐, 합성·평가 사진의 알약 개수 비교</small></div><span aria-hidden="true" class="arrow">→</span>
+<div class="node mine"><b>합성·학습 조건 변경</b><small>개수·크기·배치·증강·해상도(동시 변경)</small></div><span aria-hidden="true" class="arrow">→</span>
+<div class="node mine"><b>v4 · 탐지 점수 조정</b><small>점수 기준별로 맞힌 알약 수와 정답에 대응하지 않는 예측 박스 수 비교</small></div>
+</div>
+</div>
 <details class="technical"><summary>사용한 도구와 적용 범위</summary><div class="details-body"><p>v4는 후처리 호환 검증과 일정 때문에 서비스에 배포하지 못했습니다. 위 서비스 화면은 서비스에 적용된 기존 모델의 데모이며, v4는 별도 모델 실험 결과입니다.</p><p>의료 용도의 안전성과 정확성은 검증하지 않았습니다.</p><p class="detail-tools">Albumentations, MMDetection, Python, PyTorch, RTMDet</p></div></details>
 </div></details>
-
-<section class="troubleshoot" aria-labelledby="healtheat-ts-title"><h3 class="block-label" id="healtheat-ts-title">문제 해결 기록 <span>문제 → 원인 → 조치 → 결과</span></h3><p class="ts-sub">실사용 사진 분석과 confidence 임계값 선택</p><div class="troubles">
-      <section class="trouble" aria-labelledby="he-t1"><h4 id="he-t1">손가락을 알약으로 잘못 찾는 문제</h4><dl>
-        <dt>문제</dt><dd>흰 배경 알약 사진에서 탐지 성적이 높았던 모델도 손바닥 사진에서는 약품명을 틀리거나 손가락을 알약으로 찾았습니다.</dd>
-        <dt>관찰</dt><dd>합성 사진 중 알약 1개 비중은 3.4%, 평가 사진은 약 60.6%가 1개였습니다. 손가락 끝을 알약으로 오인했습니다.</dd>
-        <dt>조치</dt><dd>팀 합성 스크립트에 기반해 알약 개수·크기·배치와 학습 조건을 바꾸고, 같은 평가셋에서 비교했습니다.</dd>
-        <dt>결과</dt><dd>같은 평가셋에서 v4가 기준 모델보다 더 많은 박스를 맞혔습니다.<small>여러 설정을 함께 바꿔 어느 변경이 얼마나 영향을 줬는지는 분리하지 못했습니다.</small></dd>
-      </dl></section>
-      <section class="trouble" aria-labelledby="he-t2"><h4 id="he-t2">confidence 임계값 선택</h4><dl>
-        <dt>문제</dt><dd>오탐을 줄이려 임계값을 올리면 맞힌 박스도 함께 사라질 수 있었습니다.</dd>
-        <dt>조치</dt><dd>같은 v4 저장 예측을 confidence별로 필터링하고, 동일한 IoU 매칭 규칙으로 비교했습니다.</dd>
-        <dt>결과</dt><dd>0.05에서 정답 22/47·미매칭 박스 84, 0.25에서 22/47·10, 0.30에서는 21/47·7로 정답도 줄었습니다.</dd>
-        <dt>선택</dt><dd>v4 실험 설정에서는 정답 수를 유지한 0.25를 선택했습니다.</dd>
-      </dl></section>
-    </div></section>
-<div class="lesson" id="healtheat-reflection"><span class="small-label">회고</span><p>손바닥 사진에서 손가락을 알약으로 찾는 오탐을 보고, 합성 사진과 학습 조건을 조정했습니다. 같은 평가 사진에서는 더 많은 알약을 맞혔지만, 여러 조건을 함께 바꿔 어떤 변경이 효과가 있었는지는 분리하지 못했습니다. 모델 선택과 평가에도 같은 사진을 사용해, 새로운 사진에서의 성능은 별도로 확인해야 할 과제로 남았습니다.</p><p><strong>취한 조치와 검증 결과</strong><br>불필요한 예측 박스를 줄이기 위해 v4 추론 코드의 탐지 점수 기준을 0.25로 설정했습니다. 기존의 같은 사진 33장·알약 47개 평가에서 정답 22개를 유지하면서 정답에 대응하지 않는 예측 박스가 84개에서 10개로 줄었습니다. v4 실험 결과이며 서비스에 배포한 성과는 아닙니다. <a href="https://github.com/ZerofZero/codeit10_pj1/blob/ae9bf694c34660a939849b045ed4698a7d6c098f/models/RTMDet/v4/inference_demo.py" target="_blank" rel="noopener noreferrer">추론 설정 ↗</a> · <a href="https://github.com/ZerofZero/codeit10_pj1/blob/ae9bf694c34660a939849b045ed4698a7d6c098f/docs/v4_analysis_summary.md" target="_blank" rel="noopener noreferrer">평가 기록 ↗</a></p></div>
-
-<p class="fold-end"><button type="button" class="fold-close" data-case="healtheat">HealthEat 접기 ↑</button></p>
+<section aria-labelledby="healtheat-ts-title" class="troubleshoot"><h3 class="block-label" id="healtheat-ts-title">문제 해결 기록 <span>문제 → 원인 → 조치 → 결과</span></h3><p class="ts-sub">실사용 사진 분석과 confidence 임계값 선택</p><div class="troubles">
+<section aria-labelledby="he-t1" class="trouble"><h4 id="he-t1">손가락을 알약으로 잘못 찾는 문제</h4><dl>
+<dt>문제</dt><dd>흰 배경 알약 사진에서 탐지 성적이 높았던 모델도 손바닥 사진에서는 약품명을 틀리거나 손가락을 알약으로 찾았습니다.</dd>
+<dt>관찰</dt><dd>합성 사진 중 알약 1개 비중은 3.4%, 평가 사진은 약 60.6%가 1개였습니다. 손가락 끝을 알약으로 오인했습니다.</dd>
+<dt>조치</dt><dd>팀 합성 스크립트에 기반해 알약 개수·크기·배치와 학습 조건을 바꾸고, 같은 평가셋에서 비교했습니다.</dd>
+<dt>결과</dt><dd>같은 평가셋에서 v4가 기준 모델보다 더 많은 박스를 맞혔습니다.<small>여러 설정을 함께 바꿔 어느 변경이 얼마나 영향을 줬는지는 분리하지 못했습니다.</small></dd>
+</dl></section>
+<section aria-labelledby="he-t2" class="trouble"><h4 id="he-t2">confidence 임계값 선택</h4><dl>
+<dt>문제</dt><dd>오탐을 줄이려 임계값을 올리면 맞힌 박스도 함께 사라질 수 있었습니다.</dd>
+<dt>조치</dt><dd>같은 v4 저장 예측을 confidence별로 필터링하고, 동일한 IoU 매칭 규칙으로 비교했습니다.</dd>
+<dt>결과</dt><dd>0.05에서 정답 22/47·미매칭 박스 84, 0.25에서 22/47·10, 0.30에서는 21/47·7로 정답도 줄었습니다.</dd>
+<dt>선택</dt><dd>v4 실험 설정에서는 정답 수를 유지한 0.25를 선택했습니다.</dd>
+</dl></section>
+</div></section>
+<details class="technical preserved-verification"><summary>추가 검증 기록</summary><div class="details-body"><p><strong>취한 조치와 검증 결과</strong><br/>불필요한 예측 박스를 줄이기 위해 v4 추론 코드의 탐지 점수 기준을 0.25로 설정했습니다. 기존의 같은 사진 33장·알약 47개 평가에서 정답 22개를 유지하면서 정답에 대응하지 않는 예측 박스가 84개에서 10개로 줄었습니다. v4 실험 결과이며 서비스에 배포한 성과는 아닙니다. <a href="https://github.com/ZerofZero/codeit10_pj1/blob/ae9bf694c34660a939849b045ed4698a7d6c098f/models/RTMDet/v4/inference_demo.py" rel="noopener noreferrer" target="_blank">추론 설정 ↗</a> · <a href="https://github.com/ZerofZero/codeit10_pj1/blob/ae9bf694c34660a939849b045ed4698a7d6c098f/docs/v4_analysis_summary.md" rel="noopener noreferrer" target="_blank">평가 기록 ↗</a></p></div></details><div class="lesson" id="healtheat-reflection"><span class="small-label">회고</span><p>사용자 사진의 오류를 살펴보며 데이터와 학습 조건을 바꿨습니다. 여러 조건을 함께 바꾸고 모델 선택과 평가에 같은 사진을 사용해, 변경별 효과와 새로운 사진의 성능은 따로 확인해야 했습니다.</p></div>
+<p class="fold-end"><button class="fold-close" data-case="healtheat" type="button">HealthEat 접기 ↑</button></p>
 </div></details>
 </article>
-<section class="background" id="background" aria-labelledby="background-title"><h2 id="background-title">교육과 이전 경험</h2><details class="technical"><summary>교육·학력, 경력, 자격증</summary><div class="details-body"><h4 class="history-k">교육·학력</h4><dl class="history"><dt>2026.02.05–08.31</dt><dd>코드잇 스프린트 AI 엔지니어 10기 수료 (1,250시간)</dd><dt>2017.02</dt><dd>금촌고등학교 인문계 졸업</dd></dl><h4 class="history-k">경력 (비개발 직무)</h4><dl class="history"><dt>2024.12–2025.07</dt><dd>CU 선정송이점 점주 / 매출·재고·직원 관리, 근무 매뉴얼 정리</dd><dt>2020.10–2022.03</dt><dd>CK푸드원 물류팀장 / 배차·납품 일정, 재고·창고, 매출·명세서 관리, 팀원 2명</dd></dl><h4 class="history-k">자격증</h4><dl class="history"><dt>2018.03</dt><dd>1종 보통 운전면허</dd></dl></div></details></section>
+<section aria-labelledby="background-title" class="background" id="background"><h2 id="background-title">교육과 이전 경험</h2><details class="technical"><summary>교육·학력, 경력, 자격증</summary><div class="details-body"><h4 class="history-k">교육·학력</h4><dl class="history"><dt>2026.02.05–08.31</dt><dd>코드잇 스프린트 AI 엔지니어 10기 수료 (1,250시간)</dd><dt>2017.02</dt><dd>금촌고등학교 인문계 졸업</dd></dl><h4 class="history-k">경력 (비개발 직무)</h4><dl class="history"><dt>2024.12–2025.07</dt><dd>CU 선정송이점 점주 / 매출·재고·직원 관리, 근무 매뉴얼 정리</dd><dt>2020.10–2022.03</dt><dd>CK푸드원 물류팀장 / 배차·납품 일정, 재고·창고, 매출·명세서 관리, 팀원 2명</dd></dl><h4 class="history-k">자격증</h4><dl class="history"><dt>2018.03</dt><dd>1종 보통 운전면허</dd></dl></div></details></section>
 </main>
-<footer class="site-footer"><div><strong>노승원</strong><p>신입 AI 엔지니어</p></div><div class="footer-links"><a href="https://github.com/wony98" target="_blank" rel="noopener noreferrer">GitHub wony98 ↗</a><a href="https://github.com/ynow98" target="_blank" rel="noopener noreferrer">GitHub ynow98 ↗</a><a href="https://nohseungwon98.tistory.com/" target="_blank" rel="noopener noreferrer">블로그 ↗</a><a href="#main">맨 위로 ↑</a></div><p class="footer-note">SalonCutAI부터 협업 계정 ynow98을 사용했습니다.</p></footer>
+<footer class="site-footer"><div><strong>노승원</strong><p>신입 AI 엔지니어</p></div><div class="footer-links"><a href="https://github.com/wony98" rel="noopener noreferrer" target="_blank">GitHub wony98 ↗</a><a href="https://github.com/ynow98" rel="noopener noreferrer" target="_blank">GitHub ynow98 ↗</a><a href="https://nohseungwon98.tistory.com/" rel="noopener noreferrer" target="_blank">블로그 ↗</a><a href="#main">맨 위로 ↑</a></div></footer>
 </body>
 </html>

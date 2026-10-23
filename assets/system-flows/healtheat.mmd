@@ -1,0 +1,13 @@
+flowchart TD
+  UI["Gradio<br/>알약 사진 업로드"] --> DET["RTMDet<br/>위치와 약품 후보 탐지"]
+  DET --> CROP["알약 영역 잘라내기"]
+  CROP --> CNN["CNN<br/>약품명 재분류"]
+  CNN --> CAND["후보 병합<br/>API/캐시 조회"]
+  CAND --> CHECK["색상·모양·각인 보조 검증"]
+  CROP --> Q["Qwen VLM<br/>각인 후보 선택"]
+  CAND --> Q
+  Q -.-> CHECK
+  CHECK --> OUT["약품 후보 · 확인 상태<br/>참고 정보"]
+  OUT --> USER["사용자 각인 확인<br/>필요 시 재촬영"]
+  classDef focus fill:#e7efff,stroke:#315790,stroke-width:2px,color:#172c4b;
+  class DET focus;
