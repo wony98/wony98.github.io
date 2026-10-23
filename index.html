@@ -63,7 +63,13 @@
 <div><h4>예측 당시 기록 보관</h4><p>경기 후 틀린 판단을 조사할 수 있도록, 입력과 모델 정보, 해시, 변수별 기여도를 예측 직후 함께 남기는 방식을 채택했습니다.</p></div>
 <div><h4>판정 방식 비교와 확장 여부 결정</h4><p>같은 근거를 두 LLM이 읽은 결과를 비교했습니다. 일치도가 기준에 못 미친 판정 방식은 확장하지 않기로 했습니다.</p></div>
 </div>
-<section class="project-result"><h3 class="block-label">프로젝트 결과</h3><p>예측 당시 입력과 경기 후 자료를 구분해 오류를 조사할 수 있게 했습니다. 다만 서로 충돌하는 근거를 종합해 새 경기의 승리 팀을 일관되게 판단하는 기준은 해결하지 못했습니다.</p><p>종료 후 재실험에서 기존 누수 판정 규칙으로 선별한 피처 세트를 같은 분할에서 비교하고 실행 설정과 결과를 MLflow로 추적했습니다. 규칙 탐지 열을 뺀 모델은 이 분할에서 시장가격 환산 확률과 같은 수준(test AUC 0.58)이었습니다.</p></section><section aria-labelledby="mlb-evidence-title" class="outcome">
+<section class="project-result"><h3 class="block-label">프로젝트 결과</h3><p>예측 당시 입력과 경기 후 자료를 구분해 오류를 조사할 수 있게 했습니다. 다만 서로 충돌하는 근거를 종합해 새 경기의 승리 팀을 일관되게 판단하는 기준은 해결하지 못했습니다.</p><p>종료 후 재실험에서 기존 누수 판정 규칙으로 선별한 피처 세트를 같은 분할에서 비교하고 실행 설정과 결과를 MLflow로 추적했습니다. 규칙 탐지 열을 뺀 모델은 이 분할에서 시장가격 환산 확률과 같은 수준(test AUC 0.58)이었습니다.</p></section>
+<section class="mlflow-evidence" id="mlb-mlflow" aria-labelledby="mlb-mlflow-title">
+<h3 class="block-label" id="mlb-mlflow-title">MLflow 실험 기록</h3>
+<figure><a href="assets/mlflow/mlb-runs.png" target="_blank" rel="noopener noreferrer"><img src="assets/mlflow/mlb-runs.png" width="1500" height="900" loading="lazy" alt="MLflow에 기록한 MLB 모델 실험 10건과 시장가격 환산 확률 참고 기록 1건의 실행 목록"/></a><figcaption><strong>설정별 실행을 한곳에 기록</strong><p>승패·총득점 모델 실험 10건과 참고 기록 1건입니다. 2026년 10월 23일 재실행한 결과로, 각 실행에 설정·지표·산출물을 함께 남겼습니다.</p><a href="assets/mlflow/mlb-runs.png" target="_blank" rel="noopener noreferrer">실행 목록 크게 보기 ↗</a></figcaption></figure>
+<figure><a href="assets/mlflow/mlb-auc-comparison.png" target="_blank" rel="noopener noreferrer"><img src="assets/mlflow/mlb-auc-comparison.png" width="1495" height="572" loading="lazy" alt="같은 데이터 분할에서 규칙이 탐지한 누수 피처를 포함한 세트와 제거한 세트의 test AUC 비교 그래프"/></a><figcaption><strong>누수 피처를 빼면 결과가 어떻게 달라지는지 비교</strong><p>저장된 실험 결과(CSV)로 만든 그래프입니다. 빨강은 규칙 탐지 열을 포함한 세트, 파랑은 해당 열을 제거한 세트입니다. 세로축은 0이 아닌 0.40부터 시작합니다.</p><a href="assets/mlflow/mlb-auc-comparison.png" target="_blank" rel="noopener noreferrer">비교 그래프 크게 보기 ↗</a></figcaption></figure>
+</section>
+<section aria-labelledby="mlb-evidence-title" class="outcome">
 <h3 class="block-label">평가 결과와 조건</h3>
 <div class="nums">
 <div><span class="small-label">2025년 시간순 테스트</span><p class="n">2,416<span>경기</span></p><p>2021~2023년 학습, 2024년 검증을 거친 승패 모델의 테스트 규모입니다. 이후 전체 기간 재학습 모델과 구분했습니다.</p></div>
@@ -349,7 +355,12 @@
 <div><p class="small-label">같은 사용자 사진에서 기존 모델과 개선 모델(v4) 비교</p><div class="table-wrap"><table class="hl"><caption>알약 위치·약품명을 모두 맞힌 결과 (Top-1, IoU 0.5)</caption><thead><tr><th scope="col">모델</th><th scope="col">위치·약품명 정답</th><th scope="col">정답률</th></tr></thead><tbody><tr><th scope="row">기존 모델</th><td>14 / 47</td><td>29.8%</td></tr><tr><th scope="row">개선 모델 v4</th><td>22 / 47</td><td>46.8%</td></tr></tbody></table></div><p class="measure-note">사진 33장 속 알약 47개 기준입니다. 정답 위치와의 박스 겹침 비율(IoU)이 0.5 이상이고, 첫 번째 약품명 후보(Top-1)까지 맞힌 경우를 셌습니다. 모델 선택과 평가에 같은 사진을 사용했습니다.</p><a href="https://github.com/ZerofZero/codeit10_pj1/blob/ae9bf694c34660a939849b045ed4698a7d6c098f/docs/v4_analysis_summary.md#%EB%A9%94%EC%9D%B8-%EB%B9%84%EA%B5%90%ED%91%9C-47-gt" rel="noopener noreferrer" style="font-size:12px" target="_blank">평가 분석 원문 ↗</a></div>
 <figure class="artifact"><a href="assets/health-threshold-3way.png" rel="noopener noreferrer" target="_blank"><img alt="모델의 탐지 점수 기준을 바꿨을 때 정답 박스와 정답에 대응하지 않는 예측 박스 수를 비교한 그래프(v2·v3·v4)" height="590" loading="lazy" src="assets/health-threshold-3way.png" width="2148"/></a><figcaption>탐지 점수 기준을 바꿨을 때 정답 수와 정답에 대응하지 않는 예측 박스 수를 비교한 그래프입니다. 같은 사진 33장·알약 47개와 동일한 위치 매칭 규칙을 사용했습니다. <a href="assets/health-threshold-3way.png" rel="noopener noreferrer" target="_blank">크게 보기 ↗</a></figcaption></figure>
 </div>
-<section class="project-result"><h3 class="block-label">프로젝트 결과</h3><p>사진 업로드부터 후보 확인까지 이어지는 데모를 구성했습니다. 별도 RTMDet v4 실험에서는 같은 사진 33장·알약 47개 중 위치와 약품명을 함께 맞힌 결과가 14/47에서 22/47로 늘었습니다. v4는 데모에 배포하지 않았습니다.</p><p>종료 후 기존 RTMDet 학습 로그와 평가 결과를 MLflow로 사후 정리해 원본 파일 해시와 기록의 대응을 남겼고, 평가와 체크포인트의 연결은 미확정으로 표시했습니다.</p></section><section aria-labelledby="health-evidence-title" class="outcome">
+<section class="project-result"><h3 class="block-label">프로젝트 결과</h3><p>사진 업로드부터 후보 확인까지 이어지는 데모를 구성했습니다. 별도 RTMDet v4 실험에서는 같은 사진 33장·알약 47개 중 위치와 약품명을 함께 맞힌 결과가 14/47에서 22/47로 늘었습니다. v4는 데모에 배포하지 않았습니다.</p><p>종료 후 기존 RTMDet 학습 로그와 평가 결과를 MLflow로 사후 정리해 원본 파일 해시와 기록의 대응을 남겼고, 평가와 체크포인트의 연결은 미확정으로 표시했습니다.</p></section>
+<section class="mlflow-evidence" id="healtheat-mlflow" aria-labelledby="healtheat-mlflow-title">
+<h3 class="block-label" id="healtheat-mlflow-title">MLflow 사후 정리 기록</h3>
+<figure><a href="assets/mlflow/healtheat-evaluation.png" target="_blank" rel="noopener noreferrer"><img src="assets/mlflow/healtheat-evaluation.png" width="1010" height="282" loading="lazy" alt="MLflow의 Top-1 비교표: baseline 0.2979, v2 0.3191, v3 0.2979, v4 0.4681"/></a><figcaption><strong>기존 모델별 정답률을 나란히 확인</strong><p>정답 수: baseline 14/47 · v2 15/47 · v3 14/47 · v4 22/47</p><p>MLflow의 Top-1 정답률 비교표입니다. 같은 사진 33장·알약 47개에서 위치와 첫 번째 약품명 후보를 모두 맞힌 비율을 비교했습니다. 새 학습·추론이 아니라 저장된 예측을 다시 집계한 기록입니다.</p><a href="assets/mlflow/healtheat-evaluation.png" target="_blank" rel="noopener noreferrer">평가 기록 크게 보기 ↗</a></figcaption></figure>
+</section>
+<section aria-labelledby="health-evidence-title" class="outcome">
 <h3 class="block-label">평가 결과와 조건</h3>
 <div class="nums">
 <div><span class="small-label">같은 알약 47개의 위치·약품명 정답률</span><p class="n">29.8% <span>→</span> 46.8%</p><p>같은 사진에서 위치와 약품명을 모두 맞힌 비율이 기존 모델보다 17.0%p 높아졌습니다.</p></div>
