@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-23",
+  "helper_version": "0.7.0",
+  "helper_sha256": "69a40b3fd2c153d50bee86b02ae2b172e68479e5aa93cb5926ff49733c912664",
+  "existing_unittest_suite": {
+    "tests": 36,
+    "result": "OK",
+    "seconds": 55.285
+  },
+  "fixture_checks": [
+    {
+      "case": "stale_last_number",
+      "exit_code": 5,
+      "unchanged": true,
+      "message": "[thread] mode=LOCAL\n[thread] append refused: expected last #0000, actual last #0001; reread before retrying"
+    },
+    {
+      "case": "wrong_declared_mode",
+      "exit_code": 5,
+      "unchanged": true,
+      "message": "[thread] append refused: expected mode GIT, declared mode LOCAL"
+    },
+    {
+      "case": "stale_pinned_hash",
+      "exit_code": 5,
+      "unchanged": true,
+      "message": "[thread] mode=LOCAL\n[thread] pin refused: expected hash 0000000000000000000000000000000000000000000000000000000000000000, actual hash 9c5c728b05ad6fdb606899c05782fd4c6e0f1367d335ae59d4bc2b5f26e8b55e"
+    },
+    {
+      "case": "mixed_line_endings",
+      "exit_code": 2,
+      "unchanged": true,
+      "message": "mixed line endings: crlf=1, lf_only=24"
+    }
+  ],
+  "real_threads_modified": false,
+  "installed_skills_modified": false
+}

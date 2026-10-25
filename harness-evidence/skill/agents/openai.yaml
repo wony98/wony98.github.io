@@ -1,0 +1,4 @@
+interface:
+  display_name: "Collaboration Thread"
+  short_description: "Read and operate a compact Claude/Codex mailbox"
+  default_prompt: "Use $operate-collaboration-thread. Run bounded intake with the exact agent name and previous last number, classify every newly received message, and process only genuinely unhandled work."

@@ -1,0 +1,1165 @@
+<!doctype html><html lang="ko"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
+<title>회귀 테스트 코드 | 하네스 근거</title><link rel="stylesheet" href="evidence.css">
+<main><a href="index.html">← 근거 요약</a><h1>회귀 테스트 코드</h1>
+<p>버전 0.7.0의 변경 없는 사본입니다. <a href="skill/scripts/test_thread_mailbox.py">Python 원문</a></p>
+<pre class="source"><code><span class="line" id="L1"><a href="#L1" aria-label="1행">1</a>from __future__ import annotations</span>
+<span class="line" id="L2"><a href="#L2" aria-label="2행">2</a></span>
+<span class="line" id="L3"><a href="#L3" aria-label="3행">3</a>import re</span>
+<span class="line" id="L4"><a href="#L4" aria-label="4행">4</a>import subprocess</span>
+<span class="line" id="L5"><a href="#L5" aria-label="5행">5</a>import sys</span>
+<span class="line" id="L6"><a href="#L6" aria-label="6행">6</a>import tempfile</span>
+<span class="line" id="L7"><a href="#L7" aria-label="7행">7</a>import unittest</span>
+<span class="line" id="L8"><a href="#L8" aria-label="8행">8</a>from pathlib import Path</span>
+<span class="line" id="L9"><a href="#L9" aria-label="9행">9</a></span>
+<span class="line" id="L10"><a href="#L10" aria-label="10행">10</a></span>
+<span class="line" id="L11"><a href="#L11" aria-label="11행">11</a>HELPER = Path(__file__).with_name(&quot;thread_mailbox.py&quot;)</span>
+<span class="line" id="L12"><a href="#L12" aria-label="12행">12</a>SKILL_ROOT = HELPER.parent.parent</span>
+<span class="line" id="L13"><a href="#L13" aria-label="13행">13</a>CLAUDE_POINTER = (</span>
+<span class="line" id="L14"><a href="#L14" aria-label="14행">14</a>    SKILL_ROOT / &quot;../../../.claude/skills/operate-collaboration-thread/SKILL.md&quot;</span>
+<span class="line" id="L15"><a href="#L15" aria-label="15행">15</a>).resolve()</span>
+<span class="line" id="L16"><a href="#L16" aria-label="16행">16</a>POINTER_VERSION_RE = re.compile(</span>
+<span class="line" id="L17"><a href="#L17" aria-label="17행">17</a>    r&quot;(?:Expected helper version:|require exactly)\s*`(\d+\.\d+\.\d+)`&quot;</span>
+<span class="line" id="L18"><a href="#L18" aria-label="18행">18</a>)</span>
+<span class="line" id="L19"><a href="#L19" aria-label="19행">19</a>MODE_START = b&quot;&lt;!-- THREAD:MODE:START --&gt;&quot;</span>
+<span class="line" id="L20"><a href="#L20" aria-label="20행">20</a>MODE_END = b&quot;&lt;!-- THREAD:MODE:END --&gt;&quot;</span>
+<span class="line" id="L21"><a href="#L21" aria-label="21행">21</a>PIN_START = b&quot;&lt;!-- THREAD:PINNED:START --&gt;&quot;</span>
+<span class="line" id="L22"><a href="#L22" aria-label="22행">22</a>PIN_END = b&quot;&lt;!-- THREAD:PINNED:END --&gt;&quot;</span>
+<span class="line" id="L23"><a href="#L23" aria-label="23행">23</a></span>
+<span class="line" id="L24"><a href="#L24" aria-label="24행">24</a></span>
+<span class="line" id="L25"><a href="#L25" aria-label="25행">25</a>def run_helper(*args: str) -&gt; subprocess.CompletedProcess[str]:</span>
+<span class="line" id="L26"><a href="#L26" aria-label="26행">26</a>    return subprocess.run(</span>
+<span class="line" id="L27"><a href="#L27" aria-label="27행">27</a>        [sys.executable, str(HELPER), *args],</span>
+<span class="line" id="L28"><a href="#L28" aria-label="28행">28</a>        capture_output=True,</span>
+<span class="line" id="L29"><a href="#L29" aria-label="29행">29</a>        check=False,</span>
+<span class="line" id="L30"><a href="#L30" aria-label="30행">30</a>        text=True,</span>
+<span class="line" id="L31"><a href="#L31" aria-label="31행">31</a>        encoding=&quot;utf-8&quot;,</span>
+<span class="line" id="L32"><a href="#L32" aria-label="32행">32</a>    )</span>
+<span class="line" id="L33"><a href="#L33" aria-label="33행">33</a></span>
+<span class="line" id="L34"><a href="#L34" aria-label="34행">34</a></span>
+<span class="line" id="L35"><a href="#L35" aria-label="35행">35</a>def helper_version() -&gt; str:</span>
+<span class="line" id="L36"><a href="#L36" aria-label="36행">36</a>    result = run_helper(&quot;--version&quot;)</span>
+<span class="line" id="L37"><a href="#L37" aria-label="37행">37</a>    if result.returncode != 0:</span>
+<span class="line" id="L38"><a href="#L38" aria-label="38행">38</a>        raise AssertionError(result.stderr or &quot;helper --version failed&quot;)</span>
+<span class="line" id="L39"><a href="#L39" aria-label="39행">39</a>    return result.stdout.strip()</span>
+<span class="line" id="L40"><a href="#L40" aria-label="40행">40</a></span>
+<span class="line" id="L41"><a href="#L41" aria-label="41행">41</a></span>
+<span class="line" id="L42"><a href="#L42" aria-label="42행">42</a>def assert_pointer_version(pointer: Path, expected: str) -&gt; bool:</span>
+<span class="line" id="L43"><a href="#L43" aria-label="43행">43</a>    if not pointer.exists():</span>
+<span class="line" id="L44"><a href="#L44" aria-label="44행">44</a>        return False</span>
+<span class="line" id="L45"><a href="#L45" aria-label="45행">45</a>    content = pointer.read_text(encoding=&quot;utf-8&quot;)</span>
+<span class="line" id="L46"><a href="#L46" aria-label="46행">46</a>    declared = POINTER_VERSION_RE.findall(content)</span>
+<span class="line" id="L47"><a href="#L47" aria-label="47행">47</a>    if not declared:</span>
+<span class="line" id="L48"><a href="#L48" aria-label="48행">48</a>        raise AssertionError(&quot;Claude pointer has no declared helper version&quot;)</span>
+<span class="line" id="L49"><a href="#L49" aria-label="49행">49</a>    if set(declared) != {expected}:</span>
+<span class="line" id="L50"><a href="#L50" aria-label="50행">50</a>        raise AssertionError(</span>
+<span class="line" id="L51"><a href="#L51" aria-label="51행">51</a>            f&quot;Claude pointer versions {sorted(set(declared))} do not match helper {expected}&quot;</span>
+<span class="line" id="L52"><a href="#L52" aria-label="52행">52</a>        )</span>
+<span class="line" id="L53"><a href="#L53" aria-label="53행">53</a>    return True</span>
+<span class="line" id="L54"><a href="#L54" aria-label="54행">54</a></span>
+<span class="line" id="L55"><a href="#L55" aria-label="55행">55</a></span>
+<span class="line" id="L56"><a href="#L56" aria-label="56행">56</a>def initialize(thread: Path, mode: str | None = None) -&gt; subprocess.CompletedProcess[str]:</span>
+<span class="line" id="L57"><a href="#L57" aria-label="57행">57</a>    args = [&quot;--thread&quot;, str(thread), &quot;init&quot;, &quot;--title&quot;, &quot;Regression&quot;]</span>
+<span class="line" id="L58"><a href="#L58" aria-label="58행">58</a>    if mode is not None:</span>
+<span class="line" id="L59"><a href="#L59" aria-label="59행">59</a>        args.extend((&quot;--mode&quot;, mode))</span>
+<span class="line" id="L60"><a href="#L60" aria-label="60행">60</a>    return run_helper(*args)</span>
+<span class="line" id="L61"><a href="#L61" aria-label="61행">61</a></span>
+<span class="line" id="L62"><a href="#L62" aria-label="62행">62</a></span>
+<span class="line" id="L63"><a href="#L63" aria-label="63행">63</a>def append_message(</span>
+<span class="line" id="L64"><a href="#L64" aria-label="64행">64</a>    thread: Path,</span>
+<span class="line" id="L65"><a href="#L65" aria-label="65행">65</a>    expected_last: int,</span>
+<span class="line" id="L66"><a href="#L66" aria-label="66행">66</a>    body: str = &quot;body&quot;,</span>
+<span class="line" id="L67"><a href="#L67" aria-label="67행">67</a>    expected_mode: str | None = None,</span>
+<span class="line" id="L68"><a href="#L68" aria-label="68행">68</a>    reply: str = &quot;Y&quot;,</span>
+<span class="line" id="L69"><a href="#L69" aria-label="69행">69</a>    in_reply_to: str | None = None,</span>
+<span class="line" id="L70"><a href="#L70" aria-label="70행">70</a>    sender: str = &quot;CODEX&quot;,</span>
+<span class="line" id="L71"><a href="#L71" aria-label="71행">71</a>    receiver: str = &quot;CLAUDE/OWNER&quot;,</span>
+<span class="line" id="L72"><a href="#L72" aria-label="72행">72</a>    status: str = &quot;OPEN&quot;,</span>
+<span class="line" id="L73"><a href="#L73" aria-label="73행">73</a>    artifact: str | None = None,</span>
+<span class="line" id="L74"><a href="#L74" aria-label="74행">74</a>    message_type: str = &quot;REPORT&quot;,</span>
+<span class="line" id="L75"><a href="#L75" aria-label="75행">75</a>) -&gt; subprocess.CompletedProcess[str]:</span>
+<span class="line" id="L76"><a href="#L76" aria-label="76행">76</a>    args = [</span>
+<span class="line" id="L77"><a href="#L77" aria-label="77행">77</a>        &quot;--thread&quot;,</span>
+<span class="line" id="L78"><a href="#L78" aria-label="78행">78</a>        str(thread),</span>
+<span class="line" id="L79"><a href="#L79" aria-label="79행">79</a>        &quot;append&quot;,</span>
+<span class="line" id="L80"><a href="#L80" aria-label="80행">80</a>        &quot;--expect-last&quot;,</span>
+<span class="line" id="L81"><a href="#L81" aria-label="81행">81</a>        str(expected_last),</span>
+<span class="line" id="L82"><a href="#L82" aria-label="82행">82</a>        &quot;--tag&quot;,</span>
+<span class="line" id="L83"><a href="#L83" aria-label="83행">83</a>        &quot;REGRESSION&quot;,</span>
+<span class="line" id="L84"><a href="#L84" aria-label="84행">84</a>        &quot;--type&quot;,</span>
+<span class="line" id="L85"><a href="#L85" aria-label="85행">85</a>        message_type,</span>
+<span class="line" id="L86"><a href="#L86" aria-label="86행">86</a>        &quot;--sender&quot;,</span>
+<span class="line" id="L87"><a href="#L87" aria-label="87행">87</a>        sender,</span>
+<span class="line" id="L88"><a href="#L88" aria-label="88행">88</a>        &quot;--receiver&quot;,</span>
+<span class="line" id="L89"><a href="#L89" aria-label="89행">89</a>        receiver,</span>
+<span class="line" id="L90"><a href="#L90" aria-label="90행">90</a>        &quot;--title&quot;,</span>
+<span class="line" id="L91"><a href="#L91" aria-label="91행">91</a>        &quot;message&quot;,</span>
+<span class="line" id="L92"><a href="#L92" aria-label="92행">92</a>        &quot;--body&quot;,</span>
+<span class="line" id="L93"><a href="#L93" aria-label="93행">93</a>        body,</span>
+<span class="line" id="L94"><a href="#L94" aria-label="94행">94</a>        &quot;--reply&quot;,</span>
+<span class="line" id="L95"><a href="#L95" aria-label="95행">95</a>        reply,</span>
+<span class="line" id="L96"><a href="#L96" aria-label="96행">96</a>        &quot;--status&quot;,</span>
+<span class="line" id="L97"><a href="#L97" aria-label="97행">97</a>        status,</span>
+<span class="line" id="L98"><a href="#L98" aria-label="98행">98</a>    ]</span>
+<span class="line" id="L99"><a href="#L99" aria-label="99행">99</a>    if expected_mode is not None:</span>
+<span class="line" id="L100"><a href="#L100" aria-label="100행">100</a>        args.extend((&quot;--expect-mode&quot;, expected_mode))</span>
+<span class="line" id="L101"><a href="#L101" aria-label="101행">101</a>    if in_reply_to is not None:</span>
+<span class="line" id="L102"><a href="#L102" aria-label="102행">102</a>        args.extend((&quot;--in-reply-to&quot;, in_reply_to))</span>
+<span class="line" id="L103"><a href="#L103" aria-label="103행">103</a>    if artifact is not None:</span>
+<span class="line" id="L104"><a href="#L104" aria-label="104행">104</a>        args.extend((&quot;--artifact&quot;, artifact))</span>
+<span class="line" id="L105"><a href="#L105" aria-label="105행">105</a>    return run_helper(*args)</span>
+<span class="line" id="L106"><a href="#L106" aria-label="106행">106</a></span>
+<span class="line" id="L107"><a href="#L107" aria-label="107행">107</a></span>
+<span class="line" id="L108"><a href="#L108" aria-label="108행">108</a>def marker_block(raw: bytes, start: bytes, end: bytes) -&gt; bytes:</span>
+<span class="line" id="L109"><a href="#L109" aria-label="109행">109</a>    start_index = raw.index(start)</span>
+<span class="line" id="L110"><a href="#L110" aria-label="110행">110</a>    end_index = raw.index(end, start_index)</span>
+<span class="line" id="L111"><a href="#L111" aria-label="111행">111</a>    end_line = raw.find(b&quot;\n&quot;, end_index)</span>
+<span class="line" id="L112"><a href="#L112" aria-label="112행">112</a>    end_after = len(raw) if end_line == -1 else end_line + 1</span>
+<span class="line" id="L113"><a href="#L113" aria-label="113행">113</a>    return raw[start_index:end_after]</span>
+<span class="line" id="L114"><a href="#L114" aria-label="114행">114</a></span>
+<span class="line" id="L115"><a href="#L115" aria-label="115행">115</a></span>
+<span class="line" id="L116"><a href="#L116" aria-label="116행">116</a>def message_region(raw: bytes) -&gt; bytes:</span>
+<span class="line" id="L117"><a href="#L117" aria-label="117행">117</a>    index = raw.find(b&quot;### [&quot;)</span>
+<span class="line" id="L118"><a href="#L118" aria-label="118행">118</a>    return b&quot;&quot; if index == -1 else raw[index:]</span>
+<span class="line" id="L119"><a href="#L119" aria-label="119행">119</a></span>
+<span class="line" id="L120"><a href="#L120" aria-label="120행">120</a></span>
+<span class="line" id="L121"><a href="#L121" aria-label="121행">121</a>class ThreadMailboxRegressionTests(unittest.TestCase):</span>
+<span class="line" id="L122"><a href="#L122" aria-label="122행">122</a>    def test_helper_version_is_0_7_0(self) -&gt; None:</span>
+<span class="line" id="L123"><a href="#L123" aria-label="123행">123</a>        self.assertEqual(helper_version(), &quot;0.7.0&quot;)</span>
+<span class="line" id="L124"><a href="#L124" aria-label="124행">124</a></span>
+<span class="line" id="L125"><a href="#L125" aria-label="125행">125</a>    def test_claude_pointer_matches_helper_version_when_present(self) -&gt; None:</span>
+<span class="line" id="L126"><a href="#L126" aria-label="126행">126</a>        if not CLAUDE_POINTER.exists():</span>
+<span class="line" id="L127"><a href="#L127" aria-label="127행">127</a>            self.skipTest(&quot;Claude pointer is not installed&quot;)</span>
+<span class="line" id="L128"><a href="#L128" aria-label="128행">128</a>        self.assertTrue(assert_pointer_version(CLAUDE_POINTER, helper_version()))</span>
+<span class="line" id="L129"><a href="#L129" aria-label="129행">129</a>        self.assertNotIn(&quot;0.3.2&quot;, CLAUDE_POINTER.read_text(encoding=&quot;utf-8&quot;))</span>
+<span class="line" id="L130"><a href="#L130" aria-label="130행">130</a>        self.assertNotIn(&quot;0.&quot; + &quot;4.0&quot;, CLAUDE_POINTER.read_text(encoding=&quot;utf-8&quot;))</span>
+<span class="line" id="L131"><a href="#L131" aria-label="131행">131</a></span>
+<span class="line" id="L132"><a href="#L132" aria-label="132행">132</a>    def test_claude_pointer_mismatch_fails(self) -&gt; None:</span>
+<span class="line" id="L133"><a href="#L133" aria-label="133행">133</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L134"><a href="#L134" aria-label="134행">134</a>            pointer = Path(temp_dir) / &quot;SKILL.md&quot;</span>
+<span class="line" id="L135"><a href="#L135" aria-label="135행">135</a>            pointer.write_text(</span>
+<span class="line" id="L136"><a href="#L136" aria-label="136행">136</a>                &quot;Expected helper version: `0.0.0`.\n&quot;</span>
+<span class="line" id="L137"><a href="#L137" aria-label="137행">137</a>                &quot;Run the helper and require exactly `0.0.0`.\n&quot;,</span>
+<span class="line" id="L138"><a href="#L138" aria-label="138행">138</a>                encoding=&quot;utf-8&quot;,</span>
+<span class="line" id="L139"><a href="#L139" aria-label="139행">139</a>            )</span>
+<span class="line" id="L140"><a href="#L140" aria-label="140행">140</a>            with self.assertRaises(AssertionError):</span>
+<span class="line" id="L141"><a href="#L141" aria-label="141행">141</a>                assert_pointer_version(pointer, helper_version())</span>
+<span class="line" id="L142"><a href="#L142" aria-label="142행">142</a></span>
+<span class="line" id="L143"><a href="#L143" aria-label="143행">143</a>    def test_claude_pointer_absence_is_skipped_by_check(self) -&gt; None:</span>
+<span class="line" id="L144"><a href="#L144" aria-label="144행">144</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L145"><a href="#L145" aria-label="145행">145</a>            pointer = Path(temp_dir) / &quot;missing&quot; / &quot;SKILL.md&quot;</span>
+<span class="line" id="L146"><a href="#L146" aria-label="146행">146</a>            self.assertFalse(assert_pointer_version(pointer, helper_version()))</span>
+<span class="line" id="L147"><a href="#L147" aria-label="147행">147</a></span>
+<span class="line" id="L148"><a href="#L148" aria-label="148행">148</a>    def test_inline_body_crlf_does_not_create_stray_cr(self) -&gt; None:</span>
+<span class="line" id="L149"><a href="#L149" aria-label="149행">149</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L150"><a href="#L150" aria-label="150행">150</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L151"><a href="#L151" aria-label="151행">151</a>            created = initialize(thread)</span>
+<span class="line" id="L152"><a href="#L152" aria-label="152행">152</a>            self.assertEqual(created.returncode, 0, created.stderr)</span>
+<span class="line" id="L153"><a href="#L153" aria-label="153행">153</a></span>
+<span class="line" id="L154"><a href="#L154" aria-label="154행">154</a>            raw = thread.read_bytes()</span>
+<span class="line" id="L155"><a href="#L155" aria-label="155행">155</a>            self.assertNotIn(b&quot;\r&quot;, raw)</span>
+<span class="line" id="L156"><a href="#L156" aria-label="156행">156</a>            thread.write_bytes(raw.replace(b&quot;\n&quot;, b&quot;\r\n&quot;))</span>
+<span class="line" id="L157"><a href="#L157" aria-label="157행">157</a></span>
+<span class="line" id="L158"><a href="#L158" aria-label="158행">158</a>            appended = append_message(</span>
+<span class="line" id="L159"><a href="#L159" aria-label="159행">159</a>                thread,</span>
+<span class="line" id="L160"><a href="#L160" aria-label="160행">160</a>                0,</span>
+<span class="line" id="L161"><a href="#L161" aria-label="161행">161</a>                body=&quot;first line\r\n\r\n| second | line |&quot;,</span>
+<span class="line" id="L162"><a href="#L162" aria-label="162행">162</a>            )</span>
+<span class="line" id="L163"><a href="#L163" aria-label="163행">163</a>            self.assertEqual(appended.returncode, 0, appended.stderr)</span>
+<span class="line" id="L164"><a href="#L164" aria-label="164행">164</a></span>
+<span class="line" id="L165"><a href="#L165" aria-label="165행">165</a>            result = thread.read_bytes()</span>
+<span class="line" id="L166"><a href="#L166" aria-label="166행">166</a>            self.assertNotIn(b&quot;\r\r\n&quot;, result)</span>
+<span class="line" id="L167"><a href="#L167" aria-label="167행">167</a>            self.assertIsNone(re.search(br&quot;\r(?!\n)&quot;, result))</span>
+<span class="line" id="L168"><a href="#L168" aria-label="168행">168</a></span>
+<span class="line" id="L169"><a href="#L169" aria-label="169행">169</a>            validated = run_helper(&quot;--thread&quot;, str(thread), &quot;validate&quot;)</span>
+<span class="line" id="L170"><a href="#L170" aria-label="170행">170</a>            self.assertEqual(validated.returncode, 0, validated.stderr)</span>
+<span class="line" id="L171"><a href="#L171" aria-label="171행">171</a>            self.assertIn(&quot;stray_cr=0&quot;, validated.stdout)</span>
+<span class="line" id="L172"><a href="#L172" aria-label="172행">172</a></span>
+<span class="line" id="L173"><a href="#L173" aria-label="173행">173</a>    def test_mode_show_and_set_round_trip(self) -&gt; None:</span>
+<span class="line" id="L174"><a href="#L174" aria-label="174행">174</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L175"><a href="#L175" aria-label="175행">175</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L176"><a href="#L176" aria-label="176행">176</a>            self.assertEqual(initialize(thread).returncode, 0)</span>
+<span class="line" id="L177"><a href="#L177" aria-label="177행">177</a>            shown = run_helper(&quot;--thread&quot;, str(thread), &quot;mode&quot;, &quot;--show&quot;)</span>
+<span class="line" id="L178"><a href="#L178" aria-label="178행">178</a>            self.assertEqual(shown.returncode, 0, shown.stderr)</span>
+<span class="line" id="L179"><a href="#L179" aria-label="179행">179</a>            self.assertIn(&quot;UNDECLARED&quot;, shown.stdout)</span>
+<span class="line" id="L180"><a href="#L180" aria-label="180행">180</a></span>
+<span class="line" id="L181"><a href="#L181" aria-label="181행">181</a>            updated = run_helper(</span>
+<span class="line" id="L182"><a href="#L182" aria-label="182행">182</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L183"><a href="#L183" aria-label="183행">183</a>                str(thread),</span>
+<span class="line" id="L184"><a href="#L184" aria-label="184행">184</a>                &quot;mode&quot;,</span>
+<span class="line" id="L185"><a href="#L185" aria-label="185행">185</a>                &quot;--set&quot;,</span>
+<span class="line" id="L186"><a href="#L186" aria-label="186행">186</a>                &quot;GIT&quot;,</span>
+<span class="line" id="L187"><a href="#L187" aria-label="187행">187</a>                &quot;--by&quot;,</span>
+<span class="line" id="L188"><a href="#L188" aria-label="188행">188</a>                &quot;OWNER&quot;,</span>
+<span class="line" id="L189"><a href="#L189" aria-label="189행">189</a>                &quot;--reason&quot;,</span>
+<span class="line" id="L190"><a href="#L190" aria-label="190행">190</a>                &quot;repository review&quot;,</span>
+<span class="line" id="L191"><a href="#L191" aria-label="191행">191</a>            )</span>
+<span class="line" id="L192"><a href="#L192" aria-label="192행">192</a>            self.assertEqual(updated.returncode, 0, updated.stderr)</span>
+<span class="line" id="L193"><a href="#L193" aria-label="193행">193</a>            raw = thread.read_bytes()</span>
+<span class="line" id="L194"><a href="#L194" aria-label="194행">194</a>            self.assertLess(raw.index(MODE_START), raw.index(PIN_START))</span>
+<span class="line" id="L195"><a href="#L195" aria-label="195행">195</a>            shown = run_helper(&quot;--thread&quot;, str(thread), &quot;mode&quot;, &quot;--show&quot;)</span>
+<span class="line" id="L196"><a href="#L196" aria-label="196행">196</a>            self.assertIn(&quot;mode GIT&quot;, shown.stdout)</span>
+<span class="line" id="L197"><a href="#L197" aria-label="197행">197</a>            self.assertIn(&quot;OWNER&quot;, shown.stdout)</span>
+<span class="line" id="L198"><a href="#L198" aria-label="198행">198</a>            self.assertIn(&quot;repository review&quot;, shown.stdout)</span>
+<span class="line" id="L199"><a href="#L199" aria-label="199행">199</a></span>
+<span class="line" id="L200"><a href="#L200" aria-label="200행">200</a>    def test_expect_mode_four_conditions_for_append(self) -&gt; None:</span>
+<span class="line" id="L201"><a href="#L201" aria-label="201행">201</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L202"><a href="#L202" aria-label="202행">202</a>            base = Path(temp_dir)</span>
+<span class="line" id="L203"><a href="#L203" aria-label="203행">203</a>            legacy = base / &quot;legacy.md&quot;</span>
+<span class="line" id="L204"><a href="#L204" aria-label="204행">204</a>            self.assertEqual(initialize(legacy).returncode, 0)</span>
+<span class="line" id="L205"><a href="#L205" aria-label="205행">205</a>            self.assertEqual(append_message(legacy, 0).returncode, 0)</span>
+<span class="line" id="L206"><a href="#L206" aria-label="206행">206</a>            no_block_with_expect = append_message(legacy, 1, expected_mode=&quot;GIT&quot;)</span>
+<span class="line" id="L207"><a href="#L207" aria-label="207행">207</a>            self.assertEqual(no_block_with_expect.returncode, 5)</span>
+<span class="line" id="L208"><a href="#L208" aria-label="208행">208</a></span>
+<span class="line" id="L209"><a href="#L209" aria-label="209행">209</a>            declared = base / &quot;declared.md&quot;</span>
+<span class="line" id="L210"><a href="#L210" aria-label="210행">210</a>            self.assertEqual(initialize(declared, &quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L211"><a href="#L211" aria-label="211행">211</a>            missing = append_message(declared, 0)</span>
+<span class="line" id="L212"><a href="#L212" aria-label="212행">212</a>            mismatch = append_message(declared, 0, expected_mode=&quot;LOCAL&quot;)</span>
+<span class="line" id="L213"><a href="#L213" aria-label="213행">213</a>            correct = append_message(declared, 0, expected_mode=&quot;GIT&quot;)</span>
+<span class="line" id="L214"><a href="#L214" aria-label="214행">214</a>            self.assertEqual(missing.returncode, 5)</span>
+<span class="line" id="L215"><a href="#L215" aria-label="215행">215</a>            self.assertEqual(mismatch.returncode, 5)</span>
+<span class="line" id="L216"><a href="#L216" aria-label="216행">216</a>            self.assertEqual(correct.returncode, 0, correct.stderr)</span>
+<span class="line" id="L217"><a href="#L217" aria-label="217행">217</a></span>
+<span class="line" id="L218"><a href="#L218" aria-label="218행">218</a>    def test_resolve_and_pin_require_expected_mode(self) -&gt; None:</span>
+<span class="line" id="L219"><a href="#L219" aria-label="219행">219</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L220"><a href="#L220" aria-label="220행">220</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L221"><a href="#L221" aria-label="221행">221</a>            self.assertEqual(initialize(thread, &quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L222"><a href="#L222" aria-label="222행">222</a>            self.assertEqual(append_message(thread, 0, expected_mode=&quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L223"><a href="#L223" aria-label="223행">223</a></span>
+<span class="line" id="L224"><a href="#L224" aria-label="224행">224</a>            missing_resolve = run_helper(</span>
+<span class="line" id="L225"><a href="#L225" aria-label="225행">225</a>                &quot;--thread&quot;, str(thread), &quot;resolve&quot;, &quot;--number&quot;, &quot;1&quot;, &quot;--status&quot;, &quot;DONE&quot;</span>
+<span class="line" id="L226"><a href="#L226" aria-label="226행">226</a>            )</span>
+<span class="line" id="L227"><a href="#L227" aria-label="227행">227</a>            good_resolve = run_helper(</span>
+<span class="line" id="L228"><a href="#L228" aria-label="228행">228</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L229"><a href="#L229" aria-label="229행">229</a>                str(thread),</span>
+<span class="line" id="L230"><a href="#L230" aria-label="230행">230</a>                &quot;resolve&quot;,</span>
+<span class="line" id="L231"><a href="#L231" aria-label="231행">231</a>                &quot;--number&quot;,</span>
+<span class="line" id="L232"><a href="#L232" aria-label="232행">232</a>                &quot;1&quot;,</span>
+<span class="line" id="L233"><a href="#L233" aria-label="233행">233</a>                &quot;--status&quot;,</span>
+<span class="line" id="L234"><a href="#L234" aria-label="234행">234</a>                &quot;DONE&quot;,</span>
+<span class="line" id="L235"><a href="#L235" aria-label="235행">235</a>                &quot;--expect-mode&quot;,</span>
+<span class="line" id="L236"><a href="#L236" aria-label="236행">236</a>                &quot;GIT&quot;,</span>
+<span class="line" id="L237"><a href="#L237" aria-label="237행">237</a>            )</span>
+<span class="line" id="L238"><a href="#L238" aria-label="238행">238</a>            missing_pin = run_helper(&quot;--thread&quot;, str(thread), &quot;pin&quot;, &quot;--show-hash&quot;)</span>
+<span class="line" id="L239"><a href="#L239" aria-label="239행">239</a>            good_pin = run_helper(</span>
+<span class="line" id="L240"><a href="#L240" aria-label="240행">240</a>                &quot;--thread&quot;, str(thread), &quot;pin&quot;, &quot;--show-hash&quot;, &quot;--expect-mode&quot;, &quot;GIT&quot;</span>
+<span class="line" id="L241"><a href="#L241" aria-label="241행">241</a>            )</span>
+<span class="line" id="L242"><a href="#L242" aria-label="242행">242</a>            self.assertEqual(missing_resolve.returncode, 5)</span>
+<span class="line" id="L243"><a href="#L243" aria-label="243행">243</a>            self.assertEqual(good_resolve.returncode, 0, good_resolve.stderr)</span>
+<span class="line" id="L244"><a href="#L244" aria-label="244행">244</a>            self.assertEqual(missing_pin.returncode, 5)</span>
+<span class="line" id="L245"><a href="#L245" aria-label="245행">245</a>            self.assertEqual(good_pin.returncode, 0, good_pin.stderr)</span>
+<span class="line" id="L246"><a href="#L246" aria-label="246행">246</a></span>
+<span class="line" id="L247"><a href="#L247" aria-label="247행">247</a>    def test_pin_and_mode_preserve_each_other_and_messages(self) -&gt; None:</span>
+<span class="line" id="L248"><a href="#L248" aria-label="248행">248</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L249"><a href="#L249" aria-label="249행">249</a>            root = Path(temp_dir)</span>
+<span class="line" id="L250"><a href="#L250" aria-label="250행">250</a>            thread = root / &quot;THREAD.md&quot;</span>
+<span class="line" id="L251"><a href="#L251" aria-label="251행">251</a>            body_file = root / &quot;pin.md&quot;</span>
+<span class="line" id="L252"><a href="#L252" aria-label="252행">252</a>            body_file.write_text(&quot;## Updated\n\n- fact\n&quot;, encoding=&quot;utf-8&quot;)</span>
+<span class="line" id="L253"><a href="#L253" aria-label="253행">253</a>            self.assertEqual(initialize(thread, &quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L254"><a href="#L254" aria-label="254행">254</a>            self.assertEqual(append_message(thread, 0, expected_mode=&quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L255"><a href="#L255" aria-label="255행">255</a></span>
+<span class="line" id="L256"><a href="#L256" aria-label="256행">256</a>            before = thread.read_bytes()</span>
+<span class="line" id="L257"><a href="#L257" aria-label="257행">257</a>            mode_before = marker_block(before, MODE_START, MODE_END)</span>
+<span class="line" id="L258"><a href="#L258" aria-label="258행">258</a>            messages_before = message_region(before)</span>
+<span class="line" id="L259"><a href="#L259" aria-label="259행">259</a>            pin_show = run_helper(</span>
+<span class="line" id="L260"><a href="#L260" aria-label="260행">260</a>                &quot;--thread&quot;, str(thread), &quot;pin&quot;, &quot;--show-hash&quot;, &quot;--expect-mode&quot;, &quot;GIT&quot;</span>
+<span class="line" id="L261"><a href="#L261" aria-label="261행">261</a>            )</span>
+<span class="line" id="L262"><a href="#L262" aria-label="262행">262</a>            pin_hash = re.search(r&quot;([0-9a-f]{64})&quot;, pin_show.stdout).group(1)</span>
+<span class="line" id="L263"><a href="#L263" aria-label="263행">263</a>            pin_update = run_helper(</span>
+<span class="line" id="L264"><a href="#L264" aria-label="264행">264</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L265"><a href="#L265" aria-label="265행">265</a>                str(thread),</span>
+<span class="line" id="L266"><a href="#L266" aria-label="266행">266</a>                &quot;pin&quot;,</span>
+<span class="line" id="L267"><a href="#L267" aria-label="267행">267</a>                &quot;--expect-hash&quot;,</span>
+<span class="line" id="L268"><a href="#L268" aria-label="268행">268</a>                pin_hash,</span>
+<span class="line" id="L269"><a href="#L269" aria-label="269행">269</a>                &quot;--body-file&quot;,</span>
+<span class="line" id="L270"><a href="#L270" aria-label="270행">270</a>                str(body_file),</span>
+<span class="line" id="L271"><a href="#L271" aria-label="271행">271</a>                &quot;--expect-mode&quot;,</span>
+<span class="line" id="L272"><a href="#L272" aria-label="272행">272</a>                &quot;GIT&quot;,</span>
+<span class="line" id="L273"><a href="#L273" aria-label="273행">273</a>            )</span>
+<span class="line" id="L274"><a href="#L274" aria-label="274행">274</a>            self.assertEqual(pin_update.returncode, 0, pin_update.stderr)</span>
+<span class="line" id="L275"><a href="#L275" aria-label="275행">275</a>            after_pin = thread.read_bytes()</span>
+<span class="line" id="L276"><a href="#L276" aria-label="276행">276</a>            self.assertEqual(marker_block(after_pin, MODE_START, MODE_END), mode_before)</span>
+<span class="line" id="L277"><a href="#L277" aria-label="277행">277</a>            self.assertEqual(message_region(after_pin), messages_before)</span>
+<span class="line" id="L278"><a href="#L278" aria-label="278행">278</a></span>
+<span class="line" id="L279"><a href="#L279" aria-label="279행">279</a>            pin_before_mode = marker_block(after_pin, PIN_START, PIN_END)</span>
+<span class="line" id="L280"><a href="#L280" aria-label="280행">280</a>            messages_before_mode = message_region(after_pin)</span>
+<span class="line" id="L281"><a href="#L281" aria-label="281행">281</a>            mode_update = run_helper(</span>
+<span class="line" id="L282"><a href="#L282" aria-label="282행">282</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L283"><a href="#L283" aria-label="283행">283</a>                str(thread),</span>
+<span class="line" id="L284"><a href="#L284" aria-label="284행">284</a>                &quot;mode&quot;,</span>
+<span class="line" id="L285"><a href="#L285" aria-label="285행">285</a>                &quot;--set&quot;,</span>
+<span class="line" id="L286"><a href="#L286" aria-label="286행">286</a>                &quot;LOCAL&quot;,</span>
+<span class="line" id="L287"><a href="#L287" aria-label="287행">287</a>                &quot;--by&quot;,</span>
+<span class="line" id="L288"><a href="#L288" aria-label="288행">288</a>                &quot;OWNER&quot;,</span>
+<span class="line" id="L289"><a href="#L289" aria-label="289행">289</a>                &quot;--reason&quot;,</span>
+<span class="line" id="L290"><a href="#L290" aria-label="290행">290</a>                &quot;local documents&quot;,</span>
+<span class="line" id="L291"><a href="#L291" aria-label="291행">291</a>                &quot;--expect-current-mode&quot;,</span>
+<span class="line" id="L292"><a href="#L292" aria-label="292행">292</a>                &quot;GIT&quot;,</span>
+<span class="line" id="L293"><a href="#L293" aria-label="293행">293</a>            )</span>
+<span class="line" id="L294"><a href="#L294" aria-label="294행">294</a>            self.assertEqual(mode_update.returncode, 0, mode_update.stderr)</span>
+<span class="line" id="L295"><a href="#L295" aria-label="295행">295</a>            after_mode = thread.read_bytes()</span>
+<span class="line" id="L296"><a href="#L296" aria-label="296행">296</a>            self.assertEqual(marker_block(after_mode, PIN_START, PIN_END), pin_before_mode)</span>
+<span class="line" id="L297"><a href="#L297" aria-label="297행">297</a>            self.assertEqual(message_region(after_mode), messages_before_mode)</span>
+<span class="line" id="L298"><a href="#L298" aria-label="298행">298</a></span>
+<span class="line" id="L299"><a href="#L299" aria-label="299행">299</a>    def test_mode_command_rejects_markers_only_in_message_body(self) -&gt; None:</span>
+<span class="line" id="L300"><a href="#L300" aria-label="300행">300</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L301"><a href="#L301" aria-label="301행">301</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L302"><a href="#L302" aria-label="302행">302</a>            self.assertEqual(initialize(thread).returncode, 0)</span>
+<span class="line" id="L303"><a href="#L303" aria-label="303행">303</a>            body = &quot;&lt;!-- THREAD:MODE:START --&gt;\nexample\n&lt;!-- THREAD:MODE:END --&gt;&quot;</span>
+<span class="line" id="L304"><a href="#L304" aria-label="304행">304</a>            self.assertEqual(append_message(thread, 0, body=body).returncode, 0)</span>
+<span class="line" id="L305"><a href="#L305" aria-label="305행">305</a>            validated = run_helper(&quot;--thread&quot;, str(thread), &quot;validate&quot;)</span>
+<span class="line" id="L306"><a href="#L306" aria-label="306행">306</a>            shown = run_helper(&quot;--thread&quot;, str(thread), &quot;mode&quot;, &quot;--show&quot;)</span>
+<span class="line" id="L307"><a href="#L307" aria-label="307행">307</a>            setting = run_helper(</span>
+<span class="line" id="L308"><a href="#L308" aria-label="308행">308</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L309"><a href="#L309" aria-label="309행">309</a>                str(thread),</span>
+<span class="line" id="L310"><a href="#L310" aria-label="310행">310</a>                &quot;mode&quot;,</span>
+<span class="line" id="L311"><a href="#L311" aria-label="311행">311</a>                &quot;--set&quot;,</span>
+<span class="line" id="L312"><a href="#L312" aria-label="312행">312</a>                &quot;GIT&quot;,</span>
+<span class="line" id="L313"><a href="#L313" aria-label="313행">313</a>                &quot;--by&quot;,</span>
+<span class="line" id="L314"><a href="#L314" aria-label="314행">314</a>                &quot;OWNER&quot;,</span>
+<span class="line" id="L315"><a href="#L315" aria-label="315행">315</a>                &quot;--reason&quot;,</span>
+<span class="line" id="L316"><a href="#L316" aria-label="316행">316</a>                &quot;review&quot;,</span>
+<span class="line" id="L317"><a href="#L317" aria-label="317행">317</a>            )</span>
+<span class="line" id="L318"><a href="#L318" aria-label="318행">318</a>            self.assertEqual(validated.returncode, 0, validated.stderr)</span>
+<span class="line" id="L319"><a href="#L319" aria-label="319행">319</a>            self.assertNotEqual(shown.returncode, 0)</span>
+<span class="line" id="L320"><a href="#L320" aria-label="320행">320</a>            self.assertNotEqual(setting.returncode, 0)</span>
+<span class="line" id="L321"><a href="#L321" aria-label="321행">321</a></span>
+<span class="line" id="L322"><a href="#L322" aria-label="322행">322</a>    def test_malformed_mode_inputs_are_rejected(self) -&gt; None:</span>
+<span class="line" id="L323"><a href="#L323" aria-label="323행">323</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L324"><a href="#L324" aria-label="324행">324</a>            base = Path(temp_dir)</span>
+<span class="line" id="L325"><a href="#L325" aria-label="325행">325</a></span>
+<span class="line" id="L326"><a href="#L326" aria-label="326행">326</a>            def malformed(name: str, transform) -&gt; subprocess.CompletedProcess[str]:</span>
+<span class="line" id="L327"><a href="#L327" aria-label="327행">327</a>                thread = base / f&quot;{name}.md&quot;</span>
+<span class="line" id="L328"><a href="#L328" aria-label="328행">328</a>                self.assertEqual(initialize(thread, &quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L329"><a href="#L329" aria-label="329행">329</a>                thread.write_bytes(transform(thread.read_bytes()))</span>
+<span class="line" id="L330"><a href="#L330" aria-label="330행">330</a>                return run_helper(&quot;--thread&quot;, str(thread), &quot;validate&quot;)</span>
+<span class="line" id="L331"><a href="#L331" aria-label="331행">331</a></span>
+<span class="line" id="L332"><a href="#L332" aria-label="332행">332</a>            cases = {</span>
+<span class="line" id="L333"><a href="#L333" aria-label="333행">333</a>                &quot;duplicate_marker&quot;: lambda raw: raw.replace(MODE_START, MODE_START + b&quot;\n&quot; + MODE_START, 1),</span>
+<span class="line" id="L334"><a href="#L334" aria-label="334행">334</a>                &quot;reverse_marker&quot;: lambda raw: raw.replace(MODE_START, b&quot;MODE-TEMP&quot;, 1)</span>
+<span class="line" id="L335"><a href="#L335" aria-label="335행">335</a>                .replace(MODE_END, MODE_START, 1)</span>
+<span class="line" id="L336"><a href="#L336" aria-label="336행">336</a>                .replace(b&quot;MODE-TEMP&quot;, MODE_END, 1),</span>
+<span class="line" id="L337"><a href="#L337" aria-label="337행">337</a>                &quot;nested_marker&quot;: lambda raw: raw.replace(</span>
+<span class="line" id="L338"><a href="#L338" aria-label="338행">338</a>                    MODE_END + b&quot;\n\n&quot; + PIN_START,</span>
+<span class="line" id="L339"><a href="#L339" aria-label="339행">339</a>                    PIN_START + b&quot;\n&quot; + MODE_END,</span>
+<span class="line" id="L340"><a href="#L340" aria-label="340행">340</a>                    1,</span>
+<span class="line" id="L341"><a href="#L341" aria-label="341행">341</a>                ),</span>
+<span class="line" id="L342"><a href="#L342" aria-label="342행">342</a>                &quot;invalid_enum&quot;: lambda raw: raw.replace(b&quot;- \xeb\xaa\xa8\xeb\x93\x9c: GIT&quot;, b&quot;- \xeb\xaa\xa8\xeb\x93\x9c: git&quot;, 1),</span>
+<span class="line" id="L343"><a href="#L343" aria-label="343행">343</a>                &quot;duplicate_field&quot;: lambda raw: raw.replace(</span>
+<span class="line" id="L344"><a href="#L344" aria-label="344행">344</a>                    b&quot;- \xeb\xaa\xa8\xeb\x93\x9c: GIT\n&quot;,</span>
+<span class="line" id="L345"><a href="#L345" aria-label="345행">345</a>                    b&quot;- \xeb\xaa\xa8\xeb\x93\x9c: GIT\n- \xeb\xaa\xa8\xeb\x93\x9c: LOCAL\n&quot;,</span>
+<span class="line" id="L346"><a href="#L346" aria-label="346행">346</a>                    1,</span>
+<span class="line" id="L347"><a href="#L347" aria-label="347행">347</a>                ),</span>
+<span class="line" id="L348"><a href="#L348" aria-label="348행">348</a>                &quot;mode_after_pin&quot;: lambda raw: marker_block(raw, PIN_START, PIN_END)</span>
+<span class="line" id="L349"><a href="#L349" aria-label="349행">349</a>                + b&quot;\n&quot;</span>
+<span class="line" id="L350"><a href="#L350" aria-label="350행">350</a>                + marker_block(raw, MODE_START, MODE_END)</span>
+<span class="line" id="L351"><a href="#L351" aria-label="351행">351</a>                + message_region(raw),</span>
+<span class="line" id="L352"><a href="#L352" aria-label="352행">352</a>            }</span>
+<span class="line" id="L353"><a href="#L353" aria-label="353행">353</a>            for name, transform in cases.items():</span>
+<span class="line" id="L354"><a href="#L354" aria-label="354행">354</a>                with self.subTest(name=name):</span>
+<span class="line" id="L355"><a href="#L355" aria-label="355행">355</a>                    result = malformed(name, transform)</span>
+<span class="line" id="L356"><a href="#L356" aria-label="356행">356</a>                    self.assertNotEqual(result.returncode, 0, result.stdout)</span>
+<span class="line" id="L357"><a href="#L357" aria-label="357행">357</a></span>
+<span class="line" id="L358"><a href="#L358" aria-label="358행">358</a>    def test_init_mode_is_optional_and_case_sensitive(self) -&gt; None:</span>
+<span class="line" id="L359"><a href="#L359" aria-label="359행">359</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L360"><a href="#L360" aria-label="360행">360</a>            base = Path(temp_dir)</span>
+<span class="line" id="L361"><a href="#L361" aria-label="361행">361</a>            legacy = base / &quot;legacy.md&quot;</span>
+<span class="line" id="L362"><a href="#L362" aria-label="362행">362</a>            local = base / &quot;local.md&quot;</span>
+<span class="line" id="L363"><a href="#L363" aria-label="363행">363</a>            invalid = base / &quot;invalid.md&quot;</span>
+<span class="line" id="L364"><a href="#L364" aria-label="364행">364</a>            self.assertEqual(initialize(legacy).returncode, 0)</span>
+<span class="line" id="L365"><a href="#L365" aria-label="365행">365</a>            self.assertNotIn(MODE_START, legacy.read_bytes())</span>
+<span class="line" id="L366"><a href="#L366" aria-label="366행">366</a>            validated = run_helper(&quot;--thread&quot;, str(legacy), &quot;validate&quot;)</span>
+<span class="line" id="L367"><a href="#L367" aria-label="367행">367</a>            self.assertIn(&quot;mode=UNDECLARED&quot;, validated.stdout)</span>
+<span class="line" id="L368"><a href="#L368" aria-label="368행">368</a></span>
+<span class="line" id="L369"><a href="#L369" aria-label="369행">369</a>            self.assertEqual(initialize(local, &quot;LOCAL&quot;).returncode, 0)</span>
+<span class="line" id="L370"><a href="#L370" aria-label="370행">370</a>            shown = run_helper(&quot;--thread&quot;, str(local), &quot;mode&quot;, &quot;--show&quot;)</span>
+<span class="line" id="L371"><a href="#L371" aria-label="371행">371</a>            self.assertIn(&quot;mode LOCAL&quot;, shown.stdout)</span>
+<span class="line" id="L372"><a href="#L372" aria-label="372행">372</a>            bad = initialize(invalid, &quot;Local&quot;)</span>
+<span class="line" id="L373"><a href="#L373" aria-label="373행">373</a>            self.assertNotEqual(bad.returncode, 0)</span>
+<span class="line" id="L374"><a href="#L374" aria-label="374행">374</a></span>
+<span class="line" id="L375"><a href="#L375" aria-label="375행">375</a>    def test_mode_set_rejects_stale_hash(self) -&gt; None:</span>
+<span class="line" id="L376"><a href="#L376" aria-label="376행">376</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L377"><a href="#L377" aria-label="377행">377</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L378"><a href="#L378" aria-label="378행">378</a>            self.assertEqual(initialize(thread, &quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L379"><a href="#L379" aria-label="379행">379</a>            shown = run_helper(&quot;--thread&quot;, str(thread), &quot;mode&quot;, &quot;--show&quot;)</span>
+<span class="line" id="L380"><a href="#L380" aria-label="380행">380</a>            current_hash = re.search(r&quot;hash=([0-9a-f]{64})&quot;, shown.stdout).group(1)</span>
+<span class="line" id="L381"><a href="#L381" aria-label="381행">381</a>            stale = run_helper(</span>
+<span class="line" id="L382"><a href="#L382" aria-label="382행">382</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L383"><a href="#L383" aria-label="383행">383</a>                str(thread),</span>
+<span class="line" id="L384"><a href="#L384" aria-label="384행">384</a>                &quot;mode&quot;,</span>
+<span class="line" id="L385"><a href="#L385" aria-label="385행">385</a>                &quot;--set&quot;,</span>
+<span class="line" id="L386"><a href="#L386" aria-label="386행">386</a>                &quot;LOCAL&quot;,</span>
+<span class="line" id="L387"><a href="#L387" aria-label="387행">387</a>                &quot;--by&quot;,</span>
+<span class="line" id="L388"><a href="#L388" aria-label="388행">388</a>                &quot;OWNER&quot;,</span>
+<span class="line" id="L389"><a href="#L389" aria-label="389행">389</a>                &quot;--reason&quot;,</span>
+<span class="line" id="L390"><a href="#L390" aria-label="390행">390</a>                &quot;local&quot;,</span>
+<span class="line" id="L391"><a href="#L391" aria-label="391행">391</a>                &quot;--expect-hash&quot;,</span>
+<span class="line" id="L392"><a href="#L392" aria-label="392행">392</a>                &quot;0&quot; * 64,</span>
+<span class="line" id="L393"><a href="#L393" aria-label="393행">393</a>            )</span>
+<span class="line" id="L394"><a href="#L394" aria-label="394행">394</a>            correct = run_helper(</span>
+<span class="line" id="L395"><a href="#L395" aria-label="395행">395</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L396"><a href="#L396" aria-label="396행">396</a>                str(thread),</span>
+<span class="line" id="L397"><a href="#L397" aria-label="397행">397</a>                &quot;mode&quot;,</span>
+<span class="line" id="L398"><a href="#L398" aria-label="398행">398</a>                &quot;--set&quot;,</span>
+<span class="line" id="L399"><a href="#L399" aria-label="399행">399</a>                &quot;LOCAL&quot;,</span>
+<span class="line" id="L400"><a href="#L400" aria-label="400행">400</a>                &quot;--by&quot;,</span>
+<span class="line" id="L401"><a href="#L401" aria-label="401행">401</a>                &quot;OWNER&quot;,</span>
+<span class="line" id="L402"><a href="#L402" aria-label="402행">402</a>                &quot;--reason&quot;,</span>
+<span class="line" id="L403"><a href="#L403" aria-label="403행">403</a>                &quot;local&quot;,</span>
+<span class="line" id="L404"><a href="#L404" aria-label="404행">404</a>                &quot;--expect-hash&quot;,</span>
+<span class="line" id="L405"><a href="#L405" aria-label="405행">405</a>                current_hash,</span>
+<span class="line" id="L406"><a href="#L406" aria-label="406행">406</a>            )</span>
+<span class="line" id="L407"><a href="#L407" aria-label="407행">407</a>            self.assertEqual(stale.returncode, 5)</span>
+<span class="line" id="L408"><a href="#L408" aria-label="408행">408</a>            self.assertEqual(correct.returncode, 0, correct.stderr)</span>
+<span class="line" id="L409"><a href="#L409" aria-label="409행">409</a></span>
+<span class="line" id="L410"><a href="#L410" aria-label="410행">410</a>    def test_append_stdout_remains_backward_compatible(self) -&gt; None:</span>
+<span class="line" id="L411"><a href="#L411" aria-label="411행">411</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L412"><a href="#L412" aria-label="412행">412</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L413"><a href="#L413" aria-label="413행">413</a>            self.assertEqual(initialize(thread, &quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L414"><a href="#L414" aria-label="414행">414</a>            appended = append_message(thread, 0, expected_mode=&quot;GIT&quot;)</span>
+<span class="line" id="L415"><a href="#L415" aria-label="415행">415</a>            self.assertEqual(appended.returncode, 0, appended.stderr)</span>
+<span class="line" id="L416"><a href="#L416" aria-label="416행">416</a>            match = re.match(r&quot;^\[thread\] appended #(\d{4}) -&gt; &quot;, appended.stdout)</span>
+<span class="line" id="L417"><a href="#L417" aria-label="417행">417</a>            self.assertIsNotNone(match, appended.stdout)</span>
+<span class="line" id="L418"><a href="#L418" aria-label="418행">418</a>            self.assertEqual(match.group(1), &quot;0001&quot;)</span>
+<span class="line" id="L419"><a href="#L419" aria-label="419행">419</a>            self.assertIn(&quot;mode=GIT&quot;, appended.stderr)</span>
+<span class="line" id="L420"><a href="#L420" aria-label="420행">420</a>            self.assertIn(&quot;awaiting_reply=1&quot;, appended.stdout)</span>
+<span class="line" id="L421"><a href="#L421" aria-label="421행">421</a></span>
+<span class="line" id="L422"><a href="#L422" aria-label="422행">422</a>    def test_in_reply_to_records_structured_metadata_and_clears_awaiting(self) -&gt; None:</span>
+<span class="line" id="L423"><a href="#L423" aria-label="423행">423</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L424"><a href="#L424" aria-label="424행">424</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L425"><a href="#L425" aria-label="425행">425</a>            self.assertEqual(initialize(thread, &quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L426"><a href="#L426" aria-label="426행">426</a>            first = append_message(thread, 0, expected_mode=&quot;GIT&quot;)</span>
+<span class="line" id="L427"><a href="#L427" aria-label="427행">427</a>            second = append_message(</span>
+<span class="line" id="L428"><a href="#L428" aria-label="428행">428</a>                thread,</span>
+<span class="line" id="L429"><a href="#L429" aria-label="429행">429</a>                1,</span>
+<span class="line" id="L430"><a href="#L430" aria-label="430행">430</a>                expected_mode=&quot;GIT&quot;,</span>
+<span class="line" id="L431"><a href="#L431" aria-label="431행">431</a>            )</span>
+<span class="line" id="L432"><a href="#L432" aria-label="432행">432</a>            third = append_message(</span>
+<span class="line" id="L433"><a href="#L433" aria-label="433행">433</a>                thread,</span>
+<span class="line" id="L434"><a href="#L434" aria-label="434행">434</a>                2,</span>
+<span class="line" id="L435"><a href="#L435" aria-label="435행">435</a>                expected_mode=&quot;GIT&quot;,</span>
+<span class="line" id="L436"><a href="#L436" aria-label="436행">436</a>                reply=&quot;N&quot;,</span>
+<span class="line" id="L437"><a href="#L437" aria-label="437행">437</a>                in_reply_to=&quot;1,2&quot;,</span>
+<span class="line" id="L438"><a href="#L438" aria-label="438행">438</a>            )</span>
+<span class="line" id="L439"><a href="#L439" aria-label="439행">439</a>            self.assertEqual(first.returncode, 0, first.stderr)</span>
+<span class="line" id="L440"><a href="#L440" aria-label="440행">440</a>            self.assertEqual(second.returncode, 0, second.stderr)</span>
+<span class="line" id="L441"><a href="#L441" aria-label="441행">441</a>            self.assertEqual(third.returncode, 0, third.stderr)</span>
+<span class="line" id="L442"><a href="#L442" aria-label="442행">442</a>            self.assertIn(&quot;- 회신대상: #0001,#0002&quot;, thread.read_text(encoding=&quot;utf-8&quot;))</span>
+<span class="line" id="L443"><a href="#L443" aria-label="443행">443</a>            self.assertIn(&quot;awaiting_reply=0&quot;, third.stdout)</span>
+<span class="line" id="L444"><a href="#L444" aria-label="444행">444</a>            resolved = run_helper(</span>
+<span class="line" id="L445"><a href="#L445" aria-label="445행">445</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L446"><a href="#L446" aria-label="446행">446</a>                str(thread),</span>
+<span class="line" id="L447"><a href="#L447" aria-label="447행">447</a>                &quot;resolve&quot;,</span>
+<span class="line" id="L448"><a href="#L448" aria-label="448행">448</a>                &quot;--number&quot;,</span>
+<span class="line" id="L449"><a href="#L449" aria-label="449행">449</a>                &quot;1&quot;,</span>
+<span class="line" id="L450"><a href="#L450" aria-label="450행">450</a>                &quot;--status&quot;,</span>
+<span class="line" id="L451"><a href="#L451" aria-label="451행">451</a>                &quot;DONE&quot;,</span>
+<span class="line" id="L452"><a href="#L452" aria-label="452행">452</a>                &quot;--expect-mode&quot;,</span>
+<span class="line" id="L453"><a href="#L453" aria-label="453행">453</a>                &quot;GIT&quot;,</span>
+<span class="line" id="L454"><a href="#L454" aria-label="454행">454</a>            )</span>
+<span class="line" id="L455"><a href="#L455" aria-label="455행">455</a>            self.assertEqual(resolved.returncode, 0, resolved.stderr)</span>
+<span class="line" id="L456"><a href="#L456" aria-label="456행">456</a>            self.assertIn(&quot;- 회신대상: #0001,#0002&quot;, thread.read_text(encoding=&quot;utf-8&quot;))</span>
+<span class="line" id="L457"><a href="#L457" aria-label="457행">457</a></span>
+<span class="line" id="L458"><a href="#L458" aria-label="458행">458</a>    def test_append_requires_explicit_reply_without_mutating_thread(self) -&gt; None:</span>
+<span class="line" id="L459"><a href="#L459" aria-label="459행">459</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L460"><a href="#L460" aria-label="460행">460</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L461"><a href="#L461" aria-label="461행">461</a>            self.assertEqual(initialize(thread, &quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L462"><a href="#L462" aria-label="462행">462</a>            before = thread.read_bytes()</span>
+<span class="line" id="L463"><a href="#L463" aria-label="463행">463</a>            missing = run_helper(</span>
+<span class="line" id="L464"><a href="#L464" aria-label="464행">464</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L465"><a href="#L465" aria-label="465행">465</a>                str(thread),</span>
+<span class="line" id="L466"><a href="#L466" aria-label="466행">466</a>                &quot;append&quot;,</span>
+<span class="line" id="L467"><a href="#L467" aria-label="467행">467</a>                &quot;--sender&quot;,</span>
+<span class="line" id="L468"><a href="#L468" aria-label="468행">468</a>                &quot;CODEX-BUILD&quot;,</span>
+<span class="line" id="L469"><a href="#L469" aria-label="469행">469</a>                &quot;--receiver&quot;,</span>
+<span class="line" id="L470"><a href="#L470" aria-label="470행">470</a>                &quot;OWNER&quot;,</span>
+<span class="line" id="L471"><a href="#L471" aria-label="471행">471</a>                &quot;--type&quot;,</span>
+<span class="line" id="L472"><a href="#L472" aria-label="472행">472</a>                &quot;REPORT&quot;,</span>
+<span class="line" id="L473"><a href="#L473" aria-label="473행">473</a>                &quot;--tag&quot;,</span>
+<span class="line" id="L474"><a href="#L474" aria-label="474행">474</a>                &quot;REGRESSION&quot;,</span>
+<span class="line" id="L475"><a href="#L475" aria-label="475행">475</a>                &quot;--title&quot;,</span>
+<span class="line" id="L476"><a href="#L476" aria-label="476행">476</a>                &quot;missing reply&quot;,</span>
+<span class="line" id="L477"><a href="#L477" aria-label="477행">477</a>                &quot;--status&quot;,</span>
+<span class="line" id="L478"><a href="#L478" aria-label="478행">478</a>                &quot;DONE&quot;,</span>
+<span class="line" id="L479"><a href="#L479" aria-label="479행">479</a>                &quot;--expect-last&quot;,</span>
+<span class="line" id="L480"><a href="#L480" aria-label="480행">480</a>                &quot;0&quot;,</span>
+<span class="line" id="L481"><a href="#L481" aria-label="481행">481</a>                &quot;--expect-mode&quot;,</span>
+<span class="line" id="L482"><a href="#L482" aria-label="482행">482</a>                &quot;GIT&quot;,</span>
+<span class="line" id="L483"><a href="#L483" aria-label="483행">483</a>                &quot;--body&quot;,</span>
+<span class="line" id="L484"><a href="#L484" aria-label="484행">484</a>                &quot;body&quot;,</span>
+<span class="line" id="L485"><a href="#L485" aria-label="485행">485</a>            )</span>
+<span class="line" id="L486"><a href="#L486" aria-label="486행">486</a>            self.assertEqual(missing.returncode, 2)</span>
+<span class="line" id="L487"><a href="#L487" aria-label="487행">487</a>            self.assertIn(</span>
+<span class="line" id="L488"><a href="#L488" aria-label="488행">488</a>                &quot;질문·검증 요청은 Y, 완료 보고·공유는 N&quot;,</span>
+<span class="line" id="L489"><a href="#L489" aria-label="489행">489</a>                missing.stderr,</span>
+<span class="line" id="L490"><a href="#L490" aria-label="490행">490</a>            )</span>
+<span class="line" id="L491"><a href="#L491" aria-label="491행">491</a>            self.assertEqual(thread.read_bytes(), before)</span>
+<span class="line" id="L492"><a href="#L492" aria-label="492행">492</a></span>
+<span class="line" id="L493"><a href="#L493" aria-label="493행">493</a>    def test_in_reply_to_rejects_future_missing_and_duplicate_numbers(self) -&gt; None:</span>
+<span class="line" id="L494"><a href="#L494" aria-label="494행">494</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L495"><a href="#L495" aria-label="495행">495</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L496"><a href="#L496" aria-label="496행">496</a>            self.assertEqual(initialize(thread, &quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L497"><a href="#L497" aria-label="497행">497</a>            self.assertEqual(append_message(thread, 0, expected_mode=&quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L498"><a href="#L498" aria-label="498행">498</a>            for value in (&quot;2&quot;, &quot;99&quot;, &quot;1,1&quot;):</span>
+<span class="line" id="L499"><a href="#L499" aria-label="499행">499</a>                with self.subTest(value=value):</span>
+<span class="line" id="L500"><a href="#L500" aria-label="500행">500</a>                    result = append_message(</span>
+<span class="line" id="L501"><a href="#L501" aria-label="501행">501</a>                        thread,</span>
+<span class="line" id="L502"><a href="#L502" aria-label="502행">502</a>                        1,</span>
+<span class="line" id="L503"><a href="#L503" aria-label="503행">503</a>                        expected_mode=&quot;GIT&quot;,</span>
+<span class="line" id="L504"><a href="#L504" aria-label="504행">504</a>                        reply=&quot;N&quot;,</span>
+<span class="line" id="L505"><a href="#L505" aria-label="505행">505</a>                        in_reply_to=value,</span>
+<span class="line" id="L506"><a href="#L506" aria-label="506행">506</a>                    )</span>
+<span class="line" id="L507"><a href="#L507" aria-label="507행">507</a>                    self.assertNotEqual(result.returncode, 0)</span>
+<span class="line" id="L508"><a href="#L508" aria-label="508행">508</a>            validated = run_helper(&quot;--thread&quot;, str(thread), &quot;validate&quot;)</span>
+<span class="line" id="L509"><a href="#L509" aria-label="509행">509</a>            self.assertIn(&quot;last=#0001&quot;, validated.stdout)</span>
+<span class="line" id="L510"><a href="#L510" aria-label="510행">510</a></span>
+<span class="line" id="L511"><a href="#L511" aria-label="511행">511</a>    def test_awaiting_uses_explicit_links_not_status_or_freeform_mentions(self) -&gt; None:</span>
+<span class="line" id="L512"><a href="#L512" aria-label="512행">512</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L513"><a href="#L513" aria-label="513행">513</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L514"><a href="#L514" aria-label="514행">514</a>            self.assertEqual(initialize(thread, &quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L515"><a href="#L515" aria-label="515행">515</a>            self.assertEqual(append_message(thread, 0, expected_mode=&quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L516"><a href="#L516" aria-label="516행">516</a>            mention = append_message(</span>
+<span class="line" id="L517"><a href="#L517" aria-label="517행">517</a>                thread,</span>
+<span class="line" id="L518"><a href="#L518" aria-label="518행">518</a>                1,</span>
+<span class="line" id="L519"><a href="#L519" aria-label="519행">519</a>                body=&quot;관련 자료는 #0001 입니다.&quot;,</span>
+<span class="line" id="L520"><a href="#L520" aria-label="520행">520</a>                expected_mode=&quot;GIT&quot;,</span>
+<span class="line" id="L521"><a href="#L521" aria-label="521행">521</a>                reply=&quot;N&quot;,</span>
+<span class="line" id="L522"><a href="#L522" aria-label="522행">522</a>            )</span>
+<span class="line" id="L523"><a href="#L523" aria-label="523행">523</a>            self.assertIn(&quot;awaiting_reply=1&quot;, mention.stdout)</span>
+<span class="line" id="L524"><a href="#L524" aria-label="524행">524</a>            review = run_helper(</span>
+<span class="line" id="L525"><a href="#L525" aria-label="525행">525</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L526"><a href="#L526" aria-label="526행">526</a>                str(thread),</span>
+<span class="line" id="L527"><a href="#L527" aria-label="527행">527</a>                &quot;resolve&quot;,</span>
+<span class="line" id="L528"><a href="#L528" aria-label="528행">528</a>                &quot;--number&quot;,</span>
+<span class="line" id="L529"><a href="#L529" aria-label="529행">529</a>                &quot;1&quot;,</span>
+<span class="line" id="L530"><a href="#L530" aria-label="530행">530</a>                &quot;--status&quot;,</span>
+<span class="line" id="L531"><a href="#L531" aria-label="531행">531</a>                &quot;REVIEW&quot;,</span>
+<span class="line" id="L532"><a href="#L532" aria-label="532행">532</a>                &quot;--expect-mode&quot;,</span>
+<span class="line" id="L533"><a href="#L533" aria-label="533행">533</a>                &quot;GIT&quot;,</span>
+<span class="line" id="L534"><a href="#L534" aria-label="534행">534</a>            )</span>
+<span class="line" id="L535"><a href="#L535" aria-label="535행">535</a>            self.assertEqual(review.returncode, 0, review.stderr)</span>
+<span class="line" id="L536"><a href="#L536" aria-label="536행">536</a>            self.assertIn(&quot;awaiting_reply=1&quot;, review.stdout)</span>
+<span class="line" id="L537"><a href="#L537" aria-label="537행">537</a>            linked = append_message(</span>
+<span class="line" id="L538"><a href="#L538" aria-label="538행">538</a>                thread,</span>
+<span class="line" id="L539"><a href="#L539" aria-label="539행">539</a>                2,</span>
+<span class="line" id="L540"><a href="#L540" aria-label="540행">540</a>                expected_mode=&quot;GIT&quot;,</span>
+<span class="line" id="L541"><a href="#L541" aria-label="541행">541</a>                reply=&quot;N&quot;,</span>
+<span class="line" id="L542"><a href="#L542" aria-label="542행">542</a>                in_reply_to=&quot;1&quot;,</span>
+<span class="line" id="L543"><a href="#L543" aria-label="543행">543</a>            )</span>
+<span class="line" id="L544"><a href="#L544" aria-label="544행">544</a>            self.assertIn(&quot;awaiting_reply=0&quot;, linked.stdout)</span>
+<span class="line" id="L545"><a href="#L545" aria-label="545행">545</a></span>
+<span class="line" id="L546"><a href="#L546" aria-label="546행">546</a>    def test_legacy_exact_processed_message_line_is_compatible(self) -&gt; None:</span>
+<span class="line" id="L547"><a href="#L547" aria-label="547행">547</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L548"><a href="#L548" aria-label="548행">548</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L549"><a href="#L549" aria-label="549행">549</a>            self.assertEqual(initialize(thread, &quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L550"><a href="#L550" aria-label="550행">550</a>            self.assertEqual(append_message(thread, 0, expected_mode=&quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L551"><a href="#L551" aria-label="551행">551</a>            legacy = append_message(</span>
+<span class="line" id="L552"><a href="#L552" aria-label="552행">552</a>                thread,</span>
+<span class="line" id="L553"><a href="#L553" aria-label="553행">553</a>                1,</span>
+<span class="line" id="L554"><a href="#L554" aria-label="554행">554</a>                body=&quot;처리한 메시지: `#0001`&quot;,</span>
+<span class="line" id="L555"><a href="#L555" aria-label="555행">555</a>                expected_mode=&quot;GIT&quot;,</span>
+<span class="line" id="L556"><a href="#L556" aria-label="556행">556</a>                reply=&quot;N&quot;,</span>
+<span class="line" id="L557"><a href="#L557" aria-label="557행">557</a>            )</span>
+<span class="line" id="L558"><a href="#L558" aria-label="558행">558</a>            self.assertEqual(legacy.returncode, 0, legacy.stderr)</span>
+<span class="line" id="L559"><a href="#L559" aria-label="559행">559</a>            self.assertIn(&quot;awaiting_reply=0&quot;, legacy.stdout)</span>
+<span class="line" id="L560"><a href="#L560" aria-label="560행">560</a>            self.assertNotIn(&quot;- 회신대상:&quot;, thread.read_text(encoding=&quot;utf-8&quot;))</span>
+<span class="line" id="L561"><a href="#L561" aria-label="561행">561</a></span>
+<span class="line" id="L562"><a href="#L562" aria-label="562행">562</a>    def test_open_awaiting_format_and_mutual_exclusion(self) -&gt; None:</span>
+<span class="line" id="L563"><a href="#L563" aria-label="563행">563</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L564"><a href="#L564" aria-label="564행">564</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L565"><a href="#L565" aria-label="565행">565</a>            self.assertEqual(initialize(thread, &quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L566"><a href="#L566" aria-label="566행">566</a>            self.assertEqual(append_message(thread, 0, expected_mode=&quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L567"><a href="#L567" aria-label="567행">567</a>            opened = run_helper(&quot;--thread&quot;, str(thread), &quot;open&quot;, &quot;--awaiting&quot;)</span>
+<span class="line" id="L568"><a href="#L568" aria-label="568행">568</a>            conflict = run_helper(&quot;--thread&quot;, str(thread), &quot;open&quot;, &quot;--all&quot;, &quot;--awaiting&quot;)</span>
+<span class="line" id="L569"><a href="#L569" aria-label="569행">569</a>            self.assertEqual(opened.returncode, 0, opened.stderr)</span>
+<span class="line" id="L570"><a href="#L570" aria-label="570행">570</a>            self.assertRegex(opened.stdout, r&quot;#0001 · CODEX → CLAUDE/OWNER · message&quot;)</span>
+<span class="line" id="L571"><a href="#L571" aria-label="571행">571</a>            self.assertIn(&quot;awaiting_reply=1&quot;, opened.stdout)</span>
+<span class="line" id="L572"><a href="#L572" aria-label="572행">572</a>            self.assertNotEqual(conflict.returncode, 0)</span>
+<span class="line" id="L573"><a href="#L573" aria-label="573행">573</a></span>
+<span class="line" id="L574"><a href="#L574" aria-label="574행">574</a>    def test_intake_combines_mode_pinned_pending_and_bounded_body(self) -&gt; None:</span>
+<span class="line" id="L575"><a href="#L575" aria-label="575행">575</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L576"><a href="#L576" aria-label="576행">576</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L577"><a href="#L577" aria-label="577행">577</a>            self.assertEqual(initialize(thread, &quot;LOCAL&quot;).returncode, 0)</span>
+<span class="line" id="L578"><a href="#L578" aria-label="578행">578</a>            first = append_message(</span>
+<span class="line" id="L579"><a href="#L579" aria-label="579행">579</a>                thread,</span>
+<span class="line" id="L580"><a href="#L580" aria-label="580행">580</a>                0,</span>
+<span class="line" id="L581"><a href="#L581" aria-label="581행">581</a>                body=&quot;A&quot; * 200,</span>
+<span class="line" id="L582"><a href="#L582" aria-label="582행">582</a>                expected_mode=&quot;LOCAL&quot;,</span>
+<span class="line" id="L583"><a href="#L583" aria-label="583행">583</a>                sender=&quot;CLAUDE&quot;,</span>
+<span class="line" id="L584"><a href="#L584" aria-label="584행">584</a>                receiver=&quot;CODEX&quot;,</span>
+<span class="line" id="L585"><a href="#L585" aria-label="585행">585</a>            )</span>
+<span class="line" id="L586"><a href="#L586" aria-label="586행">586</a>            second = append_message(</span>
+<span class="line" id="L587"><a href="#L587" aria-label="587행">587</a>                thread,</span>
+<span class="line" id="L588"><a href="#L588" aria-label="588행">588</a>                1,</span>
+<span class="line" id="L589"><a href="#L589" aria-label="589행">589</a>                body=&quot;not for codex&quot;,</span>
+<span class="line" id="L590"><a href="#L590" aria-label="590행">590</a>                expected_mode=&quot;LOCAL&quot;,</span>
+<span class="line" id="L591"><a href="#L591" aria-label="591행">591</a>                sender=&quot;CODEX&quot;,</span>
+<span class="line" id="L592"><a href="#L592" aria-label="592행">592</a>                receiver=&quot;CLAUDE&quot;,</span>
+<span class="line" id="L593"><a href="#L593" aria-label="593행">593</a>            )</span>
+<span class="line" id="L594"><a href="#L594" aria-label="594행">594</a>            self.assertEqual(first.returncode, 0, first.stderr)</span>
+<span class="line" id="L595"><a href="#L595" aria-label="595행">595</a>            self.assertEqual(second.returncode, 0, second.stderr)</span>
+<span class="line" id="L596"><a href="#L596" aria-label="596행">596</a></span>
+<span class="line" id="L597"><a href="#L597" aria-label="597행">597</a>            result = run_helper(</span>
+<span class="line" id="L598"><a href="#L598" aria-label="598행">598</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L599"><a href="#L599" aria-label="599행">599</a>                str(thread),</span>
+<span class="line" id="L600"><a href="#L600" aria-label="600행">600</a>                &quot;intake&quot;,</span>
+<span class="line" id="L601"><a href="#L601" aria-label="601행">601</a>                &quot;--agent&quot;,</span>
+<span class="line" id="L602"><a href="#L602" aria-label="602행">602</a>                &quot;CODEX&quot;,</span>
+<span class="line" id="L603"><a href="#L603" aria-label="603행">603</a>                &quot;--limit&quot;,</span>
+<span class="line" id="L604"><a href="#L604" aria-label="604행">604</a>                &quot;3&quot;,</span>
+<span class="line" id="L605"><a href="#L605" aria-label="605행">605</a>                &quot;--recent&quot;,</span>
+<span class="line" id="L606"><a href="#L606" aria-label="606행">606</a>                &quot;0&quot;,</span>
+<span class="line" id="L607"><a href="#L607" aria-label="607행">607</a>                &quot;--body-chars&quot;,</span>
+<span class="line" id="L608"><a href="#L608" aria-label="608행">608</a>                &quot;40&quot;,</span>
+<span class="line" id="L609"><a href="#L609" aria-label="609행">609</a>                &quot;--pinned-chars&quot;,</span>
+<span class="line" id="L610"><a href="#L610" aria-label="610행">610</a>                &quot;80&quot;,</span>
+<span class="line" id="L611"><a href="#L611" aria-label="611행">611</a>            )</span>
+<span class="line" id="L612"><a href="#L612" aria-label="612행">612</a>            self.assertEqual(result.returncode, 0, result.stderr)</span>
+<span class="line" id="L613"><a href="#L613" aria-label="613행">613</a>            self.assertIn(&quot;mode=LOCAL&quot;, result.stdout)</span>
+<span class="line" id="L614"><a href="#L614" aria-label="614행">614</a>            self.assertIn(&quot;pinned_changed=UNKNOWN&quot;, result.stdout)</span>
+<span class="line" id="L615"><a href="#L615" aria-label="615행">615</a>            self.assertIn(&quot;pending_for=1&quot;, result.stdout)</span>
+<span class="line" id="L616"><a href="#L616" aria-label="616행">616</a>            self.assertIn(&quot;latest_OPEN=#0001&quot;, result.stdout)</span>
+<span class="line" id="L617"><a href="#L617" aria-label="617행">617</a>            self.assertIn(&quot;latest_REVIEW=NONE&quot;, result.stdout)</span>
+<span class="line" id="L618"><a href="#L618" aria-label="618행">618</a>            self.assertIn(&quot;latest_BLOCKED=NONE&quot;, result.stdout)</span>
+<span class="line" id="L619"><a href="#L619" aria-label="619행">619</a>            self.assertIn(&quot;[PINNED&quot;, result.stdout)</span>
+<span class="line" id="L620"><a href="#L620" aria-label="620행">620</a>            self.assertIn(&quot;[MESSAGE #0001&quot;, result.stdout)</span>
+<span class="line" id="L621"><a href="#L621" aria-label="621행">621</a>            self.assertNotIn(&quot;[MESSAGE #0002&quot;, result.stdout)</span>
+<span class="line" id="L622"><a href="#L622" aria-label="622행">622</a>            self.assertIn(&quot;truncated 160 chars&quot;, result.stdout)</span>
+<span class="line" id="L623"><a href="#L623" aria-label="623행">623</a></span>
+<span class="line" id="L624"><a href="#L624" aria-label="624행">624</a>    def test_intake_reports_pinned_change_and_latest_each_pending_status(self) -&gt; None:</span>
+<span class="line" id="L625"><a href="#L625" aria-label="625행">625</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L626"><a href="#L626" aria-label="626행">626</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L627"><a href="#L627" aria-label="627행">627</a>            self.assertEqual(initialize(thread, &quot;LOCAL&quot;).returncode, 0)</span>
+<span class="line" id="L628"><a href="#L628" aria-label="628행">628</a>            pin = run_helper(</span>
+<span class="line" id="L629"><a href="#L629" aria-label="629행">629</a>                &quot;--thread&quot;, str(thread), &quot;pin&quot;, &quot;--show-hash&quot;, &quot;--expect-mode&quot;, &quot;LOCAL&quot;</span>
+<span class="line" id="L630"><a href="#L630" aria-label="630행">630</a>            )</span>
+<span class="line" id="L631"><a href="#L631" aria-label="631행">631</a>            pin_hash = re.search(r&quot;([0-9a-f]{64})&quot;, pin.stdout).group(1)</span>
+<span class="line" id="L632"><a href="#L632" aria-label="632행">632</a>            self.assertEqual(</span>
+<span class="line" id="L633"><a href="#L633" aria-label="633행">633</a>                append_message(thread, 0, expected_mode=&quot;LOCAL&quot;, receiver=&quot;CODEX&quot;).returncode,</span>
+<span class="line" id="L634"><a href="#L634" aria-label="634행">634</a>                0,</span>
+<span class="line" id="L635"><a href="#L635" aria-label="635행">635</a>            )</span>
+<span class="line" id="L636"><a href="#L636" aria-label="636행">636</a>            self.assertEqual(</span>
+<span class="line" id="L637"><a href="#L637" aria-label="637행">637</a>                append_message(</span>
+<span class="line" id="L638"><a href="#L638" aria-label="638행">638</a>                    thread,</span>
+<span class="line" id="L639"><a href="#L639" aria-label="639행">639</a>                    1,</span>
+<span class="line" id="L640"><a href="#L640" aria-label="640행">640</a>                    expected_mode=&quot;LOCAL&quot;,</span>
+<span class="line" id="L641"><a href="#L641" aria-label="641행">641</a>                    receiver=&quot;CODEX&quot;,</span>
+<span class="line" id="L642"><a href="#L642" aria-label="642행">642</a>                    status=&quot;REVIEW&quot;,</span>
+<span class="line" id="L643"><a href="#L643" aria-label="643행">643</a>                ).returncode,</span>
+<span class="line" id="L644"><a href="#L644" aria-label="644행">644</a>                0,</span>
+<span class="line" id="L645"><a href="#L645" aria-label="645행">645</a>            )</span>
+<span class="line" id="L646"><a href="#L646" aria-label="646행">646</a>            self.assertEqual(</span>
+<span class="line" id="L647"><a href="#L647" aria-label="647행">647</a>                append_message(</span>
+<span class="line" id="L648"><a href="#L648" aria-label="648행">648</a>                    thread,</span>
+<span class="line" id="L649"><a href="#L649" aria-label="649행">649</a>                    2,</span>
+<span class="line" id="L650"><a href="#L650" aria-label="650행">650</a>                    expected_mode=&quot;LOCAL&quot;,</span>
+<span class="line" id="L651"><a href="#L651" aria-label="651행">651</a>                    receiver=&quot;CODEX&quot;,</span>
+<span class="line" id="L652"><a href="#L652" aria-label="652행">652</a>                    status=&quot;BLOCKED&quot;,</span>
+<span class="line" id="L653"><a href="#L653" aria-label="653행">653</a>                ).returncode,</span>
+<span class="line" id="L654"><a href="#L654" aria-label="654행">654</a>                0,</span>
+<span class="line" id="L655"><a href="#L655" aria-label="655행">655</a>            )</span>
+<span class="line" id="L656"><a href="#L656" aria-label="656행">656</a>            self.assertEqual(</span>
+<span class="line" id="L657"><a href="#L657" aria-label="657행">657</a>                append_message(thread, 3, expected_mode=&quot;LOCAL&quot;, receiver=&quot;CODEX&quot;).returncode,</span>
+<span class="line" id="L658"><a href="#L658" aria-label="658행">658</a>                0,</span>
+<span class="line" id="L659"><a href="#L659" aria-label="659행">659</a>            )</span>
+<span class="line" id="L660"><a href="#L660" aria-label="660행">660</a>            unchanged = run_helper(</span>
+<span class="line" id="L661"><a href="#L661" aria-label="661행">661</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L662"><a href="#L662" aria-label="662행">662</a>                str(thread),</span>
+<span class="line" id="L663"><a href="#L663" aria-label="663행">663</a>                &quot;intake&quot;,</span>
+<span class="line" id="L664"><a href="#L664" aria-label="664행">664</a>                &quot;--agent&quot;,</span>
+<span class="line" id="L665"><a href="#L665" aria-label="665행">665</a>                &quot;CODEX&quot;,</span>
+<span class="line" id="L666"><a href="#L666" aria-label="666행">666</a>                &quot;--limit&quot;,</span>
+<span class="line" id="L667"><a href="#L667" aria-label="667행">667</a>                &quot;1&quot;,</span>
+<span class="line" id="L668"><a href="#L668" aria-label="668행">668</a>                &quot;--recent&quot;,</span>
+<span class="line" id="L669"><a href="#L669" aria-label="669행">669</a>                &quot;0&quot;,</span>
+<span class="line" id="L670"><a href="#L670" aria-label="670행">670</a>                &quot;--known-pinned-hash&quot;,</span>
+<span class="line" id="L671"><a href="#L671" aria-label="671행">671</a>                pin_hash,</span>
+<span class="line" id="L672"><a href="#L672" aria-label="672행">672</a>            )</span>
+<span class="line" id="L673"><a href="#L673" aria-label="673행">673</a>            changed = run_helper(</span>
+<span class="line" id="L674"><a href="#L674" aria-label="674행">674</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L675"><a href="#L675" aria-label="675행">675</a>                str(thread),</span>
+<span class="line" id="L676"><a href="#L676" aria-label="676행">676</a>                &quot;intake&quot;,</span>
+<span class="line" id="L677"><a href="#L677" aria-label="677행">677</a>                &quot;--agent&quot;,</span>
+<span class="line" id="L678"><a href="#L678" aria-label="678행">678</a>                &quot;CODEX&quot;,</span>
+<span class="line" id="L679"><a href="#L679" aria-label="679행">679</a>                &quot;--limit&quot;,</span>
+<span class="line" id="L680"><a href="#L680" aria-label="680행">680</a>                &quot;1&quot;,</span>
+<span class="line" id="L681"><a href="#L681" aria-label="681행">681</a>                &quot;--recent&quot;,</span>
+<span class="line" id="L682"><a href="#L682" aria-label="682행">682</a>                &quot;0&quot;,</span>
+<span class="line" id="L683"><a href="#L683" aria-label="683행">683</a>                &quot;--known-pinned-hash&quot;,</span>
+<span class="line" id="L684"><a href="#L684" aria-label="684행">684</a>                &quot;0&quot; * 64,</span>
+<span class="line" id="L685"><a href="#L685" aria-label="685행">685</a>            )</span>
+<span class="line" id="L686"><a href="#L686" aria-label="686행">686</a>            self.assertIn(&quot;pinned_changed=NO&quot;, unchanged.stdout)</span>
+<span class="line" id="L687"><a href="#L687" aria-label="687행">687</a>            self.assertIn(&quot;pinned_changed=YES&quot;, changed.stdout)</span>
+<span class="line" id="L688"><a href="#L688" aria-label="688행">688</a>            self.assertIn(&quot;[PINNED] unchanged; body omitted&quot;, unchanged.stdout)</span>
+<span class="line" id="L689"><a href="#L689" aria-label="689행">689</a>            self.assertNotIn(&quot;## Pinned context&quot;, unchanged.stdout)</span>
+<span class="line" id="L690"><a href="#L690" aria-label="690행">690</a>            self.assertIn(&quot;## Pinned context&quot;, changed.stdout)</span>
+<span class="line" id="L691"><a href="#L691" aria-label="691행">691</a>            self.assertIn(&quot;latest_OPEN=#0004&quot;, unchanged.stdout)</span>
+<span class="line" id="L692"><a href="#L692" aria-label="692행">692</a>            self.assertIn(&quot;latest_REVIEW=#0002&quot;, unchanged.stdout)</span>
+<span class="line" id="L693"><a href="#L693" aria-label="693행">693</a>            self.assertIn(&quot;latest_BLOCKED=#0003&quot;, unchanged.stdout)</span>
+<span class="line" id="L694"><a href="#L694" aria-label="694행">694</a>            for number in (2, 3, 4):</span>
+<span class="line" id="L695"><a href="#L695" aria-label="695행">695</a>                self.assertIn(f&quot;[MESSAGE #{number:04d}&quot;, unchanged.stdout)</span>
+<span class="line" id="L696"><a href="#L696" aria-label="696행">696</a></span>
+<span class="line" id="L697"><a href="#L697" aria-label="697행">697</a>    def test_intake_known_last_pages_all_exact_agent_messages_in_order(self) -&gt; None:</span>
+<span class="line" id="L698"><a href="#L698" aria-label="698행">698</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L699"><a href="#L699" aria-label="699행">699</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L700"><a href="#L700" aria-label="700행">700</a>            self.assertEqual(initialize(thread, &quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L701"><a href="#L701" aria-label="701행">701</a>            receivers = (</span>
+<span class="line" id="L702"><a href="#L702" aria-label="702행">702</a>                &quot;CODEX-BUILD&quot;,</span>
+<span class="line" id="L703"><a href="#L703" aria-label="703행">703</a>                &quot;CODEX-REVIEW&quot;,</span>
+<span class="line" id="L704"><a href="#L704" aria-label="704행">704</a>                &quot;ALL&quot;,</span>
+<span class="line" id="L705"><a href="#L705" aria-label="705행">705</a>                &quot;CODEX-BUILD&quot;,</span>
+<span class="line" id="L706"><a href="#L706" aria-label="706행">706</a>                &quot;CODEX-BUILD&quot;,</span>
+<span class="line" id="L707"><a href="#L707" aria-label="707행">707</a>            )</span>
+<span class="line" id="L708"><a href="#L708" aria-label="708행">708</a>            for index, receiver in enumerate(receivers):</span>
+<span class="line" id="L709"><a href="#L709" aria-label="709행">709</a>                self.assertEqual(</span>
+<span class="line" id="L710"><a href="#L710" aria-label="710행">710</a>                    append_message(</span>
+<span class="line" id="L711"><a href="#L711" aria-label="711행">711</a>                        thread,</span>
+<span class="line" id="L712"><a href="#L712" aria-label="712행">712</a>                        index,</span>
+<span class="line" id="L713"><a href="#L713" aria-label="713행">713</a>                        expected_mode=&quot;GIT&quot;,</span>
+<span class="line" id="L714"><a href="#L714" aria-label="714행">714</a>                        reply=&quot;N&quot;,</span>
+<span class="line" id="L715"><a href="#L715" aria-label="715행">715</a>                        receiver=receiver,</span>
+<span class="line" id="L716"><a href="#L716" aria-label="716행">716</a>                    ).returncode,</span>
+<span class="line" id="L717"><a href="#L717" aria-label="717행">717</a>                    0,</span>
+<span class="line" id="L718"><a href="#L718" aria-label="718행">718</a>                )</span>
+<span class="line" id="L719"><a href="#L719" aria-label="719행">719</a></span>
+<span class="line" id="L720"><a href="#L720" aria-label="720행">720</a>            first = run_helper(</span>
+<span class="line" id="L721"><a href="#L721" aria-label="721행">721</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L722"><a href="#L722" aria-label="722행">722</a>                str(thread),</span>
+<span class="line" id="L723"><a href="#L723" aria-label="723행">723</a>                &quot;intake&quot;,</span>
+<span class="line" id="L724"><a href="#L724" aria-label="724행">724</a>                &quot;--agent&quot;,</span>
+<span class="line" id="L725"><a href="#L725" aria-label="725행">725</a>                &quot;CODEX-BUILD&quot;,</span>
+<span class="line" id="L726"><a href="#L726" aria-label="726행">726</a>                &quot;--known-last&quot;,</span>
+<span class="line" id="L727"><a href="#L727" aria-label="727행">727</a>                &quot;0&quot;,</span>
+<span class="line" id="L728"><a href="#L728" aria-label="728행">728</a>                &quot;--limit&quot;,</span>
+<span class="line" id="L729"><a href="#L729" aria-label="729행">729</a>                &quot;3&quot;,</span>
+<span class="line" id="L730"><a href="#L730" aria-label="730행">730</a>                &quot;--recent&quot;,</span>
+<span class="line" id="L731"><a href="#L731" aria-label="731행">731</a>                &quot;9&quot;,</span>
+<span class="line" id="L732"><a href="#L732" aria-label="732행">732</a>            )</span>
+<span class="line" id="L733"><a href="#L733" aria-label="733행">733</a>            second = run_helper(</span>
+<span class="line" id="L734"><a href="#L734" aria-label="734행">734</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L735"><a href="#L735" aria-label="735행">735</a>                str(thread),</span>
+<span class="line" id="L736"><a href="#L736" aria-label="736행">736</a>                &quot;intake&quot;,</span>
+<span class="line" id="L737"><a href="#L737" aria-label="737행">737</a>                &quot;--agent&quot;,</span>
+<span class="line" id="L738"><a href="#L738" aria-label="738행">738</a>                &quot;CODEX-BUILD&quot;,</span>
+<span class="line" id="L739"><a href="#L739" aria-label="739행">739</a>                &quot;--known-last&quot;,</span>
+<span class="line" id="L740"><a href="#L740" aria-label="740행">740</a>                &quot;4&quot;,</span>
+<span class="line" id="L741"><a href="#L741" aria-label="741행">741</a>                &quot;--limit&quot;,</span>
+<span class="line" id="L742"><a href="#L742" aria-label="742행">742</a>                &quot;3&quot;,</span>
+<span class="line" id="L743"><a href="#L743" aria-label="743행">743</a>            )</span>
+<span class="line" id="L744"><a href="#L744" aria-label="744행">744</a>            plain_codex = run_helper(</span>
+<span class="line" id="L745"><a href="#L745" aria-label="745행">745</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L746"><a href="#L746" aria-label="746행">746</a>                str(thread),</span>
+<span class="line" id="L747"><a href="#L747" aria-label="747행">747</a>                &quot;intake&quot;,</span>
+<span class="line" id="L748"><a href="#L748" aria-label="748행">748</a>                &quot;--agent&quot;,</span>
+<span class="line" id="L749"><a href="#L749" aria-label="749행">749</a>                &quot;CODEX&quot;,</span>
+<span class="line" id="L750"><a href="#L750" aria-label="750행">750</a>                &quot;--known-last&quot;,</span>
+<span class="line" id="L751"><a href="#L751" aria-label="751행">751</a>                &quot;0&quot;,</span>
+<span class="line" id="L752"><a href="#L752" aria-label="752행">752</a>                &quot;--limit&quot;,</span>
+<span class="line" id="L753"><a href="#L753" aria-label="753행">753</a>                &quot;10&quot;,</span>
+<span class="line" id="L754"><a href="#L754" aria-label="754행">754</a>            )</span>
+<span class="line" id="L755"><a href="#L755" aria-label="755행">755</a>            reviewer = run_helper(</span>
+<span class="line" id="L756"><a href="#L756" aria-label="756행">756</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L757"><a href="#L757" aria-label="757행">757</a>                str(thread),</span>
+<span class="line" id="L758"><a href="#L758" aria-label="758행">758</a>                &quot;intake&quot;,</span>
+<span class="line" id="L759"><a href="#L759" aria-label="759행">759</a>                &quot;--agent&quot;,</span>
+<span class="line" id="L760"><a href="#L760" aria-label="760행">760</a>                &quot;CODEX-REVIEW&quot;,</span>
+<span class="line" id="L761"><a href="#L761" aria-label="761행">761</a>                &quot;--known-last&quot;,</span>
+<span class="line" id="L762"><a href="#L762" aria-label="762행">762</a>                &quot;0&quot;,</span>
+<span class="line" id="L763"><a href="#L763" aria-label="763행">763</a>                &quot;--limit&quot;,</span>
+<span class="line" id="L764"><a href="#L764" aria-label="764행">764</a>                &quot;10&quot;,</span>
+<span class="line" id="L765"><a href="#L765" aria-label="765행">765</a>            )</span>
+<span class="line" id="L766"><a href="#L766" aria-label="766행">766</a></span>
+<span class="line" id="L767"><a href="#L767" aria-label="767행">767</a>            self.assertEqual(first.returncode, 0, first.stderr)</span>
+<span class="line" id="L768"><a href="#L768" aria-label="768행">768</a>            self.assertIn(&quot;matched=4 shown=3 remaining=1&quot;, first.stdout)</span>
+<span class="line" id="L769"><a href="#L769" aria-label="769행">769</a>            self.assertIn(&quot;next_after=#0004 next_range=#0005-#0005&quot;, first.stdout)</span>
+<span class="line" id="L770"><a href="#L770" aria-label="770행">770</a>            self.assertLess(</span>
+<span class="line" id="L771"><a href="#L771" aria-label="771행">771</a>                first.stdout.index(&quot;[MESSAGE #0001&quot;),</span>
+<span class="line" id="L772"><a href="#L772" aria-label="772행">772</a>                first.stdout.index(&quot;[MESSAGE #0003&quot;),</span>
+<span class="line" id="L773"><a href="#L773" aria-label="773행">773</a>            )</span>
+<span class="line" id="L774"><a href="#L774" aria-label="774행">774</a>            self.assertLess(</span>
+<span class="line" id="L775"><a href="#L775" aria-label="775행">775</a>                first.stdout.index(&quot;[MESSAGE #0003&quot;),</span>
+<span class="line" id="L776"><a href="#L776" aria-label="776행">776</a>                first.stdout.index(&quot;[MESSAGE #0004&quot;),</span>
+<span class="line" id="L777"><a href="#L777" aria-label="777행">777</a>            )</span>
+<span class="line" id="L778"><a href="#L778" aria-label="778행">778</a>            self.assertNotIn(&quot;[MESSAGE #0002&quot;, first.stdout)</span>
+<span class="line" id="L779"><a href="#L779" aria-label="779행">779</a>            self.assertNotIn(&quot;[MESSAGE #0005&quot;, first.stdout)</span>
+<span class="line" id="L780"><a href="#L780" aria-label="780행">780</a>            self.assertIn(&quot;matched=1 shown=1 remaining=0&quot;, second.stdout)</span>
+<span class="line" id="L781"><a href="#L781" aria-label="781행">781</a>            self.assertIn(&quot;[MESSAGE #0005&quot;, second.stdout)</span>
+<span class="line" id="L782"><a href="#L782" aria-label="782행">782</a>            self.assertNotIn(&quot;[MESSAGE #0004&quot;, second.stdout)</span>
+<span class="line" id="L783"><a href="#L783" aria-label="783행">783</a>            self.assertIn(&quot;matched=1 shown=1&quot;, plain_codex.stdout)</span>
+<span class="line" id="L784"><a href="#L784" aria-label="784행">784</a>            self.assertIn(&quot;[MESSAGE #0003&quot;, plain_codex.stdout)</span>
+<span class="line" id="L785"><a href="#L785" aria-label="785행">785</a>            self.assertNotIn(&quot;[MESSAGE #0001&quot;, plain_codex.stdout)</span>
+<span class="line" id="L786"><a href="#L786" aria-label="786행">786</a>            self.assertIn(&quot;matched=2 shown=2&quot;, reviewer.stdout)</span>
+<span class="line" id="L787"><a href="#L787" aria-label="787행">787</a>            self.assertIn(&quot;[MESSAGE #0002&quot;, reviewer.stdout)</span>
+<span class="line" id="L788"><a href="#L788" aria-label="788행">788</a>            self.assertIn(&quot;[MESSAGE #0003&quot;, reviewer.stdout)</span>
+<span class="line" id="L789"><a href="#L789" aria-label="789행">789</a></span>
+<span class="line" id="L790"><a href="#L790" aria-label="790행">790</a>    def test_intake_known_last_boundaries_and_all_statuses(self) -&gt; None:</span>
+<span class="line" id="L791"><a href="#L791" aria-label="791행">791</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L792"><a href="#L792" aria-label="792행">792</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L793"><a href="#L793" aria-label="793행">793</a>            self.assertEqual(initialize(thread, &quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L794"><a href="#L794" aria-label="794행">794</a>            cases = (</span>
+<span class="line" id="L795"><a href="#L795" aria-label="795행">795</a>                (&quot;OPEN&quot;, &quot;REPORT&quot;),</span>
+<span class="line" id="L796"><a href="#L796" aria-label="796행">796</a>                (&quot;REVIEW&quot;, &quot;VERIFY-REQ&quot;),</span>
+<span class="line" id="L797"><a href="#L797" aria-label="797행">797</a>                (&quot;BLOCKED&quot;, &quot;ASK&quot;),</span>
+<span class="line" id="L798"><a href="#L798" aria-label="798행">798</a>                (&quot;DONE&quot;, &quot;FYI&quot;),</span>
+<span class="line" id="L799"><a href="#L799" aria-label="799행">799</a>            )</span>
+<span class="line" id="L800"><a href="#L800" aria-label="800행">800</a>            for index, (status, message_type) in enumerate(cases):</span>
+<span class="line" id="L801"><a href="#L801" aria-label="801행">801</a>                self.assertEqual(</span>
+<span class="line" id="L802"><a href="#L802" aria-label="802행">802</a>                    append_message(</span>
+<span class="line" id="L803"><a href="#L803" aria-label="803행">803</a>                        thread,</span>
+<span class="line" id="L804"><a href="#L804" aria-label="804행">804</a>                        index,</span>
+<span class="line" id="L805"><a href="#L805" aria-label="805행">805</a>                        expected_mode=&quot;GIT&quot;,</span>
+<span class="line" id="L806"><a href="#L806" aria-label="806행">806</a>                        reply=&quot;N&quot;,</span>
+<span class="line" id="L807"><a href="#L807" aria-label="807행">807</a>                        receiver=&quot;CODEX-BUILD&quot;,</span>
+<span class="line" id="L808"><a href="#L808" aria-label="808행">808</a>                        status=status,</span>
+<span class="line" id="L809"><a href="#L809" aria-label="809행">809</a>                        message_type=message_type,</span>
+<span class="line" id="L810"><a href="#L810" aria-label="810행">810</a>                    ).returncode,</span>
+<span class="line" id="L811"><a href="#L811" aria-label="811행">811</a>                    0,</span>
+<span class="line" id="L812"><a href="#L812" aria-label="812행">812</a>                )</span>
+<span class="line" id="L813"><a href="#L813" aria-label="813행">813</a>            all_new = run_helper(</span>
+<span class="line" id="L814"><a href="#L814" aria-label="814행">814</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L815"><a href="#L815" aria-label="815행">815</a>                str(thread),</span>
+<span class="line" id="L816"><a href="#L816" aria-label="816행">816</a>                &quot;intake&quot;,</span>
+<span class="line" id="L817"><a href="#L817" aria-label="817행">817</a>                &quot;--agent&quot;,</span>
+<span class="line" id="L818"><a href="#L818" aria-label="818행">818</a>                &quot;CODEX-BUILD&quot;,</span>
+<span class="line" id="L819"><a href="#L819" aria-label="819행">819</a>                &quot;--known-last&quot;,</span>
+<span class="line" id="L820"><a href="#L820" aria-label="820행">820</a>                &quot;0&quot;,</span>
+<span class="line" id="L821"><a href="#L821" aria-label="821행">821</a>                &quot;--limit&quot;,</span>
+<span class="line" id="L822"><a href="#L822" aria-label="822행">822</a>                &quot;10&quot;,</span>
+<span class="line" id="L823"><a href="#L823" aria-label="823행">823</a>            )</span>
+<span class="line" id="L824"><a href="#L824" aria-label="824행">824</a>            at_last = run_helper(</span>
+<span class="line" id="L825"><a href="#L825" aria-label="825행">825</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L826"><a href="#L826" aria-label="826행">826</a>                str(thread),</span>
+<span class="line" id="L827"><a href="#L827" aria-label="827행">827</a>                &quot;intake&quot;,</span>
+<span class="line" id="L828"><a href="#L828" aria-label="828행">828</a>                &quot;--agent&quot;,</span>
+<span class="line" id="L829"><a href="#L829" aria-label="829행">829</a>                &quot;CODEX-BUILD&quot;,</span>
+<span class="line" id="L830"><a href="#L830" aria-label="830행">830</a>                &quot;--known-last&quot;,</span>
+<span class="line" id="L831"><a href="#L831" aria-label="831행">831</a>                &quot;4&quot;,</span>
+<span class="line" id="L832"><a href="#L832" aria-label="832행">832</a>            )</span>
+<span class="line" id="L833"><a href="#L833" aria-label="833행">833</a>            negative = run_helper(</span>
+<span class="line" id="L834"><a href="#L834" aria-label="834행">834</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L835"><a href="#L835" aria-label="835행">835</a>                str(thread),</span>
+<span class="line" id="L836"><a href="#L836" aria-label="836행">836</a>                &quot;intake&quot;,</span>
+<span class="line" id="L837"><a href="#L837" aria-label="837행">837</a>                &quot;--agent&quot;,</span>
+<span class="line" id="L838"><a href="#L838" aria-label="838행">838</a>                &quot;CODEX-BUILD&quot;,</span>
+<span class="line" id="L839"><a href="#L839" aria-label="839행">839</a>                &quot;--known-last&quot;,</span>
+<span class="line" id="L840"><a href="#L840" aria-label="840행">840</a>                &quot;-1&quot;,</span>
+<span class="line" id="L841"><a href="#L841" aria-label="841행">841</a>            )</span>
+<span class="line" id="L842"><a href="#L842" aria-label="842행">842</a>            future = run_helper(</span>
+<span class="line" id="L843"><a href="#L843" aria-label="843행">843</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L844"><a href="#L844" aria-label="844행">844</a>                str(thread),</span>
+<span class="line" id="L845"><a href="#L845" aria-label="845행">845</a>                &quot;intake&quot;,</span>
+<span class="line" id="L846"><a href="#L846" aria-label="846행">846</a>                &quot;--agent&quot;,</span>
+<span class="line" id="L847"><a href="#L847" aria-label="847행">847</a>                &quot;CODEX-BUILD&quot;,</span>
+<span class="line" id="L848"><a href="#L848" aria-label="848행">848</a>                &quot;--known-last&quot;,</span>
+<span class="line" id="L849"><a href="#L849" aria-label="849행">849</a>                &quot;5&quot;,</span>
+<span class="line" id="L850"><a href="#L850" aria-label="850행">850</a>            )</span>
+<span class="line" id="L851"><a href="#L851" aria-label="851행">851</a>            zero_limit = run_helper(</span>
+<span class="line" id="L852"><a href="#L852" aria-label="852행">852</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L853"><a href="#L853" aria-label="853행">853</a>                str(thread),</span>
+<span class="line" id="L854"><a href="#L854" aria-label="854행">854</a>                &quot;intake&quot;,</span>
+<span class="line" id="L855"><a href="#L855" aria-label="855행">855</a>                &quot;--agent&quot;,</span>
+<span class="line" id="L856"><a href="#L856" aria-label="856행">856</a>                &quot;CODEX-BUILD&quot;,</span>
+<span class="line" id="L857"><a href="#L857" aria-label="857행">857</a>                &quot;--known-last&quot;,</span>
+<span class="line" id="L858"><a href="#L858" aria-label="858행">858</a>                &quot;0&quot;,</span>
+<span class="line" id="L859"><a href="#L859" aria-label="859행">859</a>                &quot;--limit&quot;,</span>
+<span class="line" id="L860"><a href="#L860" aria-label="860행">860</a>                &quot;0&quot;,</span>
+<span class="line" id="L861"><a href="#L861" aria-label="861행">861</a>            )</span>
+<span class="line" id="L862"><a href="#L862" aria-label="862행">862</a>            self.assertIn(&quot;matched=4 shown=4 remaining=0&quot;, all_new.stdout)</span>
+<span class="line" id="L863"><a href="#L863" aria-label="863행">863</a>            for number in range(1, 5):</span>
+<span class="line" id="L864"><a href="#L864" aria-label="864행">864</a>                self.assertIn(f&quot;[MESSAGE #{number:04d}&quot;, all_new.stdout)</span>
+<span class="line" id="L865"><a href="#L865" aria-label="865행">865</a>            self.assertIn(&quot;matched=0 shown=0 remaining=0&quot;, at_last.stdout)</span>
+<span class="line" id="L866"><a href="#L866" aria-label="866행">866</a>            for refused in (negative, future, zero_limit):</span>
+<span class="line" id="L867"><a href="#L867" aria-label="867행">867</a>                self.assertEqual(refused.returncode, 2)</span>
+<span class="line" id="L868"><a href="#L868" aria-label="868행">868</a></span>
+<span class="line" id="L869"><a href="#L869" aria-label="869행">869</a>    def test_open_awaiting_filters_exact_agent_and_after_number(self) -&gt; None:</span>
+<span class="line" id="L870"><a href="#L870" aria-label="870행">870</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L871"><a href="#L871" aria-label="871행">871</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L872"><a href="#L872" aria-label="872행">872</a>            self.assertEqual(initialize(thread, &quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L873"><a href="#L873" aria-label="873행">873</a>            receivers = (&quot;CODEX-BUILD&quot;, &quot;CODEX-REVIEW&quot;, &quot;ALL&quot;, &quot;CODEX-BUILD&quot;)</span>
+<span class="line" id="L874"><a href="#L874" aria-label="874행">874</a>            for index, receiver in enumerate(receivers):</span>
+<span class="line" id="L875"><a href="#L875" aria-label="875행">875</a>                self.assertEqual(</span>
+<span class="line" id="L876"><a href="#L876" aria-label="876행">876</a>                    append_message(</span>
+<span class="line" id="L877"><a href="#L877" aria-label="877행">877</a>                        thread,</span>
+<span class="line" id="L878"><a href="#L878" aria-label="878행">878</a>                        index,</span>
+<span class="line" id="L879"><a href="#L879" aria-label="879행">879</a>                        expected_mode=&quot;GIT&quot;,</span>
+<span class="line" id="L880"><a href="#L880" aria-label="880행">880</a>                        receiver=receiver,</span>
+<span class="line" id="L881"><a href="#L881" aria-label="881행">881</a>                    ).returncode,</span>
+<span class="line" id="L882"><a href="#L882" aria-label="882행">882</a>                    0,</span>
+<span class="line" id="L883"><a href="#L883" aria-label="883행">883</a>                )</span>
+<span class="line" id="L884"><a href="#L884" aria-label="884행">884</a>            filtered = run_helper(</span>
+<span class="line" id="L885"><a href="#L885" aria-label="885행">885</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L886"><a href="#L886" aria-label="886행">886</a>                str(thread),</span>
+<span class="line" id="L887"><a href="#L887" aria-label="887행">887</a>                &quot;open&quot;,</span>
+<span class="line" id="L888"><a href="#L888" aria-label="888행">888</a>                &quot;--awaiting&quot;,</span>
+<span class="line" id="L889"><a href="#L889" aria-label="889행">889</a>                &quot;--agent&quot;,</span>
+<span class="line" id="L890"><a href="#L890" aria-label="890행">890</a>                &quot;CODEX-BUILD&quot;,</span>
+<span class="line" id="L891"><a href="#L891" aria-label="891행">891</a>                &quot;--after-number&quot;,</span>
+<span class="line" id="L892"><a href="#L892" aria-label="892행">892</a>                &quot;2&quot;,</span>
+<span class="line" id="L893"><a href="#L893" aria-label="893행">893</a>            )</span>
+<span class="line" id="L894"><a href="#L894" aria-label="894행">894</a>            review = run_helper(</span>
+<span class="line" id="L895"><a href="#L895" aria-label="895행">895</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L896"><a href="#L896" aria-label="896행">896</a>                str(thread),</span>
+<span class="line" id="L897"><a href="#L897" aria-label="897행">897</a>                &quot;open&quot;,</span>
+<span class="line" id="L898"><a href="#L898" aria-label="898행">898</a>                &quot;--awaiting&quot;,</span>
+<span class="line" id="L899"><a href="#L899" aria-label="899행">899</a>                &quot;--agent&quot;,</span>
+<span class="line" id="L900"><a href="#L900" aria-label="900행">900</a>                &quot;CODEX-REVIEW&quot;,</span>
+<span class="line" id="L901"><a href="#L901" aria-label="901행">901</a>                &quot;--after-number&quot;,</span>
+<span class="line" id="L902"><a href="#L902" aria-label="902행">902</a>                &quot;0&quot;,</span>
+<span class="line" id="L903"><a href="#L903" aria-label="903행">903</a>            )</span>
+<span class="line" id="L904"><a href="#L904" aria-label="904행">904</a>            legacy = run_helper(&quot;--thread&quot;, str(thread), &quot;open&quot;, &quot;--awaiting&quot;)</span>
+<span class="line" id="L905"><a href="#L905" aria-label="905행">905</a>            invalid = run_helper(</span>
+<span class="line" id="L906"><a href="#L906" aria-label="906행">906</a>                &quot;--thread&quot;, str(thread), &quot;open&quot;, &quot;--agent&quot;, &quot;CODEX-BUILD&quot;</span>
+<span class="line" id="L907"><a href="#L907" aria-label="907행">907</a>            )</span>
+<span class="line" id="L908"><a href="#L908" aria-label="908행">908</a>            negative = run_helper(</span>
+<span class="line" id="L909"><a href="#L909" aria-label="909행">909</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L910"><a href="#L910" aria-label="910행">910</a>                str(thread),</span>
+<span class="line" id="L911"><a href="#L911" aria-label="911행">911</a>                &quot;open&quot;,</span>
+<span class="line" id="L912"><a href="#L912" aria-label="912행">912</a>                &quot;--awaiting&quot;,</span>
+<span class="line" id="L913"><a href="#L913" aria-label="913행">913</a>                &quot;--agent&quot;,</span>
+<span class="line" id="L914"><a href="#L914" aria-label="914행">914</a>                &quot;CODEX-BUILD&quot;,</span>
+<span class="line" id="L915"><a href="#L915" aria-label="915행">915</a>                &quot;--after-number&quot;,</span>
+<span class="line" id="L916"><a href="#L916" aria-label="916행">916</a>                &quot;-1&quot;,</span>
+<span class="line" id="L917"><a href="#L917" aria-label="917행">917</a>            )</span>
+<span class="line" id="L918"><a href="#L918" aria-label="918행">918</a>            self.assertEqual(filtered.returncode, 0, filtered.stderr)</span>
+<span class="line" id="L919"><a href="#L919" aria-label="919행">919</a>            self.assertIn(&quot;matched=2&quot;, filtered.stdout)</span>
+<span class="line" id="L920"><a href="#L920" aria-label="920행">920</a>            self.assertIn(&quot;#0003&quot;, filtered.stdout)</span>
+<span class="line" id="L921"><a href="#L921" aria-label="921행">921</a>            self.assertIn(&quot;#0004&quot;, filtered.stdout)</span>
+<span class="line" id="L922"><a href="#L922" aria-label="922행">922</a>            self.assertNotIn(&quot;#0001&quot;, filtered.stdout)</span>
+<span class="line" id="L923"><a href="#L923" aria-label="923행">923</a>            self.assertNotIn(&quot;#0002 ·&quot;, filtered.stdout)</span>
+<span class="line" id="L924"><a href="#L924" aria-label="924행">924</a>            self.assertIn(&quot;#0002&quot;, review.stdout)</span>
+<span class="line" id="L925"><a href="#L925" aria-label="925행">925</a>            self.assertIn(&quot;#0003&quot;, review.stdout)</span>
+<span class="line" id="L926"><a href="#L926" aria-label="926행">926</a>            self.assertNotIn(&quot;#0001&quot;, review.stdout)</span>
+<span class="line" id="L927"><a href="#L927" aria-label="927행">927</a>            for number in range(1, 5):</span>
+<span class="line" id="L928"><a href="#L928" aria-label="928행">928</a>                self.assertIn(f&quot;#{number:04d}&quot;, legacy.stdout)</span>
+<span class="line" id="L929"><a href="#L929" aria-label="929행">929</a>            self.assertEqual(invalid.returncode, 2)</span>
+<span class="line" id="L930"><a href="#L930" aria-label="930행">930</a>            self.assertEqual(negative.returncode, 2)</span>
+<span class="line" id="L931"><a href="#L931" aria-label="931행">931</a></span>
+<span class="line" id="L932"><a href="#L932" aria-label="932행">932</a>    def test_show_prints_one_complete_message_only(self) -&gt; None:</span>
+<span class="line" id="L933"><a href="#L933" aria-label="933행">933</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L934"><a href="#L934" aria-label="934행">934</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L935"><a href="#L935" aria-label="935행">935</a>            self.assertEqual(initialize(thread).returncode, 0)</span>
+<span class="line" id="L936"><a href="#L936" aria-label="936행">936</a>            self.assertEqual(append_message(thread, 0, body=&quot;first unique&quot;).returncode, 0)</span>
+<span class="line" id="L937"><a href="#L937" aria-label="937행">937</a>            self.assertEqual(append_message(thread, 1, body=&quot;second unique&quot;).returncode, 0)</span>
+<span class="line" id="L938"><a href="#L938" aria-label="938행">938</a>            shown = run_helper(&quot;--thread&quot;, str(thread), &quot;show&quot;, &quot;--number&quot;, &quot;1&quot;)</span>
+<span class="line" id="L939"><a href="#L939" aria-label="939행">939</a>            self.assertEqual(shown.returncode, 0, shown.stderr)</span>
+<span class="line" id="L940"><a href="#L940" aria-label="940행">940</a>            self.assertIn(&quot;first unique&quot;, shown.stdout)</span>
+<span class="line" id="L941"><a href="#L941" aria-label="941행">941</a>            self.assertNotIn(&quot;second unique&quot;, shown.stdout)</span>
+<span class="line" id="L942"><a href="#L942" aria-label="942행">942</a></span>
+<span class="line" id="L943"><a href="#L943" aria-label="943행">943</a>    def test_show_with_links_follows_structured_prior_chain(self) -&gt; None:</span>
+<span class="line" id="L944"><a href="#L944" aria-label="944행">944</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L945"><a href="#L945" aria-label="945행">945</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L946"><a href="#L946" aria-label="946행">946</a>            self.assertEqual(initialize(thread).returncode, 0)</span>
+<span class="line" id="L947"><a href="#L947" aria-label="947행">947</a>            self.assertEqual(append_message(thread, 0, body=&quot;root evidence&quot;).returncode, 0)</span>
+<span class="line" id="L948"><a href="#L948" aria-label="948행">948</a>            self.assertEqual(</span>
+<span class="line" id="L949"><a href="#L949" aria-label="949행">949</a>                append_message(thread, 1, body=&quot;middle reply&quot;, in_reply_to=&quot;1&quot;).returncode,</span>
+<span class="line" id="L950"><a href="#L950" aria-label="950행">950</a>                0,</span>
+<span class="line" id="L951"><a href="#L951" aria-label="951행">951</a>            )</span>
+<span class="line" id="L952"><a href="#L952" aria-label="952행">952</a>            self.assertEqual(</span>
+<span class="line" id="L953"><a href="#L953" aria-label="953행">953</a>                append_message(thread, 2, body=&quot;latest reply&quot;, in_reply_to=&quot;2&quot;).returncode,</span>
+<span class="line" id="L954"><a href="#L954" aria-label="954행">954</a>                0,</span>
+<span class="line" id="L955"><a href="#L955" aria-label="955행">955</a>            )</span>
+<span class="line" id="L956"><a href="#L956" aria-label="956행">956</a>            shown = run_helper(</span>
+<span class="line" id="L957"><a href="#L957" aria-label="957행">957</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L958"><a href="#L958" aria-label="958행">958</a>                str(thread),</span>
+<span class="line" id="L959"><a href="#L959" aria-label="959행">959</a>                &quot;show&quot;,</span>
+<span class="line" id="L960"><a href="#L960" aria-label="960행">960</a>                &quot;--number&quot;,</span>
+<span class="line" id="L961"><a href="#L961" aria-label="961행">961</a>                &quot;3&quot;,</span>
+<span class="line" id="L962"><a href="#L962" aria-label="962행">962</a>                &quot;--with-links&quot;,</span>
+<span class="line" id="L963"><a href="#L963" aria-label="963행">963</a>                &quot;--depth&quot;,</span>
+<span class="line" id="L964"><a href="#L964" aria-label="964행">964</a>                &quot;2&quot;,</span>
+<span class="line" id="L965"><a href="#L965" aria-label="965행">965</a>            )</span>
+<span class="line" id="L966"><a href="#L966" aria-label="966행">966</a>            self.assertEqual(shown.returncode, 0, shown.stderr)</span>
+<span class="line" id="L967"><a href="#L967" aria-label="967행">967</a>            self.assertIn(&quot;LINKED-PRIOR #0001&quot;, shown.stdout)</span>
+<span class="line" id="L968"><a href="#L968" aria-label="968행">968</a>            self.assertIn(&quot;LINKED-PRIOR #0002&quot;, shown.stdout)</span>
+<span class="line" id="L969"><a href="#L969" aria-label="969행">969</a>            self.assertIn(&quot;REQUESTED #0003&quot;, shown.stdout)</span>
+<span class="line" id="L970"><a href="#L970" aria-label="970행">970</a>            self.assertLess(shown.stdout.index(&quot;root evidence&quot;), shown.stdout.index(&quot;latest reply&quot;))</span>
+<span class="line" id="L971"><a href="#L971" aria-label="971행">971</a></span>
+<span class="line" id="L972"><a href="#L972" aria-label="972행">972</a>    def test_append_long_body_is_always_refused(self) -&gt; None:</span>
+<span class="line" id="L973"><a href="#L973" aria-label="973행">973</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L974"><a href="#L974" aria-label="974행">974</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L975"><a href="#L975" aria-label="975행">975</a>            self.assertEqual(initialize(thread).returncode, 0)</span>
+<span class="line" id="L976"><a href="#L976" aria-label="976행">976</a>            body = &quot;x&quot; * 6001</span>
+<span class="line" id="L977"><a href="#L977" aria-label="977행">977</a>            refused = append_message(thread, 0, body=body)</span>
+<span class="line" id="L978"><a href="#L978" aria-label="978행">978</a>            self.assertEqual(refused.returncode, 6)</span>
+<span class="line" id="L979"><a href="#L979" aria-label="979행">979</a>            self.assertIn(&quot;default maximum is 6000&quot;, refused.stderr)</span>
+<span class="line" id="L980"><a href="#L980" aria-label="980행">980</a>            self.assertIn(&quot;--artifact&quot;, refused.stderr)</span>
+<span class="line" id="L981"><a href="#L981" aria-label="981행">981</a>            self.assertIn(&quot;--in-reply-to&quot;, refused.stderr)</span>
+<span class="line" id="L982"><a href="#L982" aria-label="982행">982</a></span>
+<span class="line" id="L983"><a href="#L983" aria-label="983행">983</a>    def test_artifact_requires_and_records_reply_target(self) -&gt; None:</span>
+<span class="line" id="L984"><a href="#L984" aria-label="984행">984</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L985"><a href="#L985" aria-label="985행">985</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L986"><a href="#L986" aria-label="986행">986</a>            self.assertEqual(initialize(thread).returncode, 0)</span>
+<span class="line" id="L987"><a href="#L987" aria-label="987행">987</a>            self.assertEqual(append_message(thread, 0).returncode, 0)</span>
+<span class="line" id="L988"><a href="#L988" aria-label="988행">988</a>            missing_link = append_message(thread, 1, artifact=&quot;D:\\report.md&quot;, reply=&quot;N&quot;)</span>
+<span class="line" id="L989"><a href="#L989" aria-label="989행">989</a>            linked = append_message(</span>
+<span class="line" id="L990"><a href="#L990" aria-label="990행">990</a>                thread,</span>
+<span class="line" id="L991"><a href="#L991" aria-label="991행">991</a>                1,</span>
+<span class="line" id="L992"><a href="#L992" aria-label="992행">992</a>                artifact=&quot;D:\\report.md&quot;,</span>
+<span class="line" id="L993"><a href="#L993" aria-label="993행">993</a>                in_reply_to=&quot;1&quot;,</span>
+<span class="line" id="L994"><a href="#L994" aria-label="994행">994</a>                reply=&quot;N&quot;,</span>
+<span class="line" id="L995"><a href="#L995" aria-label="995행">995</a>            )</span>
+<span class="line" id="L996"><a href="#L996" aria-label="996행">996</a>            self.assertEqual(missing_link.returncode, 2)</span>
+<span class="line" id="L997"><a href="#L997" aria-label="997행">997</a>            self.assertIn(&quot;requires --in-reply-to&quot;, missing_link.stderr)</span>
+<span class="line" id="L998"><a href="#L998" aria-label="998행">998</a>            self.assertEqual(linked.returncode, 0, linked.stderr)</span>
+<span class="line" id="L999"><a href="#L999" aria-label="999행">999</a>            text = thread.read_text(encoding=&quot;utf-8&quot;)</span>
+<span class="line" id="L1000"><a href="#L1000" aria-label="1000행">1000</a>            self.assertIn(&quot;- 회신대상: #0001&quot;, text)</span>
+<span class="line" id="L1001"><a href="#L1001" aria-label="1001행">1001</a>            self.assertIn(&quot;- 산출물: D:\\report.md&quot;, text)</span>
+<span class="line" id="L1002"><a href="#L1002" aria-label="1002행">1002</a></span>
+<span class="line" id="L1003"><a href="#L1003" aria-label="1003행">1003</a>    def test_awaiting_does_not_block_mutation_commands(self) -&gt; None:</span>
+<span class="line" id="L1004"><a href="#L1004" aria-label="1004행">1004</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L1005"><a href="#L1005" aria-label="1005행">1005</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L1006"><a href="#L1006" aria-label="1006행">1006</a>            self.assertEqual(initialize(thread, &quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L1007"><a href="#L1007" aria-label="1007행">1007</a>            self.assertEqual(append_message(thread, 0, expected_mode=&quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L1008"><a href="#L1008" aria-label="1008행">1008</a>            second = append_message(thread, 1, expected_mode=&quot;GIT&quot;, reply=&quot;N&quot;)</span>
+<span class="line" id="L1009"><a href="#L1009" aria-label="1009행">1009</a>            resolved = run_helper(</span>
+<span class="line" id="L1010"><a href="#L1010" aria-label="1010행">1010</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L1011"><a href="#L1011" aria-label="1011행">1011</a>                str(thread),</span>
+<span class="line" id="L1012"><a href="#L1012" aria-label="1012행">1012</a>                &quot;resolve&quot;,</span>
+<span class="line" id="L1013"><a href="#L1013" aria-label="1013행">1013</a>                &quot;--number&quot;,</span>
+<span class="line" id="L1014"><a href="#L1014" aria-label="1014행">1014</a>                &quot;2&quot;,</span>
+<span class="line" id="L1015"><a href="#L1015" aria-label="1015행">1015</a>                &quot;--status&quot;,</span>
+<span class="line" id="L1016"><a href="#L1016" aria-label="1016행">1016</a>                &quot;DONE&quot;,</span>
+<span class="line" id="L1017"><a href="#L1017" aria-label="1017행">1017</a>                &quot;--expect-mode&quot;,</span>
+<span class="line" id="L1018"><a href="#L1018" aria-label="1018행">1018</a>                &quot;GIT&quot;,</span>
+<span class="line" id="L1019"><a href="#L1019" aria-label="1019행">1019</a>            )</span>
+<span class="line" id="L1020"><a href="#L1020" aria-label="1020행">1020</a>            pinned = run_helper(</span>
+<span class="line" id="L1021"><a href="#L1021" aria-label="1021행">1021</a>                &quot;--thread&quot;, str(thread), &quot;pin&quot;, &quot;--show-hash&quot;, &quot;--expect-mode&quot;, &quot;GIT&quot;</span>
+<span class="line" id="L1022"><a href="#L1022" aria-label="1022행">1022</a>            )</span>
+<span class="line" id="L1023"><a href="#L1023" aria-label="1023행">1023</a>            shown = run_helper(&quot;--thread&quot;, str(thread), &quot;mode&quot;, &quot;--show&quot;)</span>
+<span class="line" id="L1024"><a href="#L1024" aria-label="1024행">1024</a>            for result in (second, resolved, pinned, shown):</span>
+<span class="line" id="L1025"><a href="#L1025" aria-label="1025행">1025</a>                self.assertEqual(result.returncode, 0, result.stderr)</span>
+<span class="line" id="L1026"><a href="#L1026" aria-label="1026행">1026</a>                self.assertIn(&quot;awaiting_reply=1&quot;, result.stdout)</span>
+<span class="line" id="L1027"><a href="#L1027" aria-label="1027행">1027</a></span>
+<span class="line" id="L1028"><a href="#L1028" aria-label="1028행">1028</a>    def test_done_is_terminal_but_review_does_not_imply_a_reply(self) -&gt; None:</span>
+<span class="line" id="L1029"><a href="#L1029" aria-label="1029행">1029</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L1030"><a href="#L1030" aria-label="1030행">1030</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L1031"><a href="#L1031" aria-label="1031행">1031</a>            self.assertEqual(initialize(thread, &quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L1032"><a href="#L1032" aria-label="1032행">1032</a>            self.assertEqual(append_message(thread, 0, expected_mode=&quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L1033"><a href="#L1033" aria-label="1033행">1033</a>            review = run_helper(</span>
+<span class="line" id="L1034"><a href="#L1034" aria-label="1034행">1034</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L1035"><a href="#L1035" aria-label="1035행">1035</a>                str(thread),</span>
+<span class="line" id="L1036"><a href="#L1036" aria-label="1036행">1036</a>                &quot;resolve&quot;,</span>
+<span class="line" id="L1037"><a href="#L1037" aria-label="1037행">1037</a>                &quot;--number&quot;,</span>
+<span class="line" id="L1038"><a href="#L1038" aria-label="1038행">1038</a>                &quot;1&quot;,</span>
+<span class="line" id="L1039"><a href="#L1039" aria-label="1039행">1039</a>                &quot;--status&quot;,</span>
+<span class="line" id="L1040"><a href="#L1040" aria-label="1040행">1040</a>                &quot;REVIEW&quot;,</span>
+<span class="line" id="L1041"><a href="#L1041" aria-label="1041행">1041</a>                &quot;--expect-mode&quot;,</span>
+<span class="line" id="L1042"><a href="#L1042" aria-label="1042행">1042</a>                &quot;GIT&quot;,</span>
+<span class="line" id="L1043"><a href="#L1043" aria-label="1043행">1043</a>            )</span>
+<span class="line" id="L1044"><a href="#L1044" aria-label="1044행">1044</a>            done = run_helper(</span>
+<span class="line" id="L1045"><a href="#L1045" aria-label="1045행">1045</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L1046"><a href="#L1046" aria-label="1046행">1046</a>                str(thread),</span>
+<span class="line" id="L1047"><a href="#L1047" aria-label="1047행">1047</a>                &quot;resolve&quot;,</span>
+<span class="line" id="L1048"><a href="#L1048" aria-label="1048행">1048</a>                &quot;--number&quot;,</span>
+<span class="line" id="L1049"><a href="#L1049" aria-label="1049행">1049</a>                &quot;1&quot;,</span>
+<span class="line" id="L1050"><a href="#L1050" aria-label="1050행">1050</a>                &quot;--status&quot;,</span>
+<span class="line" id="L1051"><a href="#L1051" aria-label="1051행">1051</a>                &quot;DONE&quot;,</span>
+<span class="line" id="L1052"><a href="#L1052" aria-label="1052행">1052</a>                &quot;--expect-mode&quot;,</span>
+<span class="line" id="L1053"><a href="#L1053" aria-label="1053행">1053</a>                &quot;GIT&quot;,</span>
+<span class="line" id="L1054"><a href="#L1054" aria-label="1054행">1054</a>            )</span>
+<span class="line" id="L1055"><a href="#L1055" aria-label="1055행">1055</a>            self.assertIn(&quot;awaiting_reply=1&quot;, review.stdout)</span>
+<span class="line" id="L1056"><a href="#L1056" aria-label="1056행">1056</a>            self.assertIn(&quot;awaiting_reply=0&quot;, done.stdout)</span>
+<span class="line" id="L1057"><a href="#L1057" aria-label="1057행">1057</a></span>
+<span class="line" id="L1058"><a href="#L1058" aria-label="1058행">1058</a>    def test_read_only_awaiting_checks_preserve_legacy_message_bytes(self) -&gt; None:</span>
+<span class="line" id="L1059"><a href="#L1059" aria-label="1059행">1059</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L1060"><a href="#L1060" aria-label="1060행">1060</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L1061"><a href="#L1061" aria-label="1061행">1061</a>            self.assertEqual(initialize(thread, &quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L1062"><a href="#L1062" aria-label="1062행">1062</a>            self.assertEqual(</span>
+<span class="line" id="L1063"><a href="#L1063" aria-label="1063행">1063</a>                append_message(</span>
+<span class="line" id="L1064"><a href="#L1064" aria-label="1064행">1064</a>                    thread,</span>
+<span class="line" id="L1065"><a href="#L1065" aria-label="1065행">1065</a>                    0,</span>
+<span class="line" id="L1066"><a href="#L1066" aria-label="1066행">1066</a>                    body=&quot;처리한 메시지: #9999 완료가 아니라 단순 문장입니다.&quot;,</span>
+<span class="line" id="L1067"><a href="#L1067" aria-label="1067행">1067</a>                    expected_mode=&quot;GIT&quot;,</span>
+<span class="line" id="L1068"><a href="#L1068" aria-label="1068행">1068</a>                ).returncode,</span>
+<span class="line" id="L1069"><a href="#L1069" aria-label="1069행">1069</a>                0,</span>
+<span class="line" id="L1070"><a href="#L1070" aria-label="1070행">1070</a>            )</span>
+<span class="line" id="L1071"><a href="#L1071" aria-label="1071행">1071</a>            before = thread.read_bytes()</span>
+<span class="line" id="L1072"><a href="#L1072" aria-label="1072행">1072</a>            validated = run_helper(&quot;--thread&quot;, str(thread), &quot;validate&quot;)</span>
+<span class="line" id="L1073"><a href="#L1073" aria-label="1073행">1073</a>            opened = run_helper(&quot;--thread&quot;, str(thread), &quot;open&quot;, &quot;--awaiting&quot;)</span>
+<span class="line" id="L1074"><a href="#L1074" aria-label="1074행">1074</a>            self.assertEqual(validated.returncode, 0, validated.stderr)</span>
+<span class="line" id="L1075"><a href="#L1075" aria-label="1075행">1075</a>            self.assertEqual(opened.returncode, 0, opened.stderr)</span>
+<span class="line" id="L1076"><a href="#L1076" aria-label="1076행">1076</a>            self.assertEqual(thread.read_bytes(), before)</span>
+<span class="line" id="L1077"><a href="#L1077" aria-label="1077행">1077</a>            self.assertIn(&quot;awaiting_reply=1&quot;, opened.stdout)</span>
+<span class="line" id="L1078"><a href="#L1078" aria-label="1078행">1078</a></span>
+<span class="line" id="L1079"><a href="#L1079" aria-label="1079행">1079</a>    def test_removed_terms_and_old_version_are_absent(self) -&gt; None:</span>
+<span class="line" id="L1080"><a href="#L1080" aria-label="1080행">1080</a>        checked = [</span>
+<span class="line" id="L1081"><a href="#L1081" aria-label="1081행">1081</a>            HELPER,</span>
+<span class="line" id="L1082"><a href="#L1082" aria-label="1082행">1082</a>            SKILL_ROOT / &quot;SKILL.md&quot;,</span>
+<span class="line" id="L1083"><a href="#L1083" aria-label="1083행">1083</a>            SKILL_ROOT / &quot;agents&quot; / &quot;openai.yaml&quot;,</span>
+<span class="line" id="L1084"><a href="#L1084" aria-label="1084행">1084</a>            SKILL_ROOT / &quot;references&quot; / &quot;operating-rules.md&quot;,</span>
+<span class="line" id="L1085"><a href="#L1085" aria-label="1085행">1085</a>        ]</span>
+<span class="line" id="L1086"><a href="#L1086" aria-label="1086행">1086</a>        combined = &quot;\n&quot;.join(path.read_text(encoding=&quot;utf-8&quot;) for path in checked)</span>
+<span class="line" id="L1087"><a href="#L1087" aria-label="1087행">1087</a>        self.assertNotIn(&quot;reply_&quot; + &quot;pending&quot;, combined)</span>
+<span class="line" id="L1088"><a href="#L1088" aria-label="1088행">1088</a>        self.assertNotIn(&#x27;TOOL_VERSION = &quot;&#x27; + &quot;0.4.0&quot; + &#x27;&quot;&#x27;, combined)</span>
+<span class="line" id="L1089"><a href="#L1089" aria-label="1089행">1089</a>        self.assertNotIn(&quot;process only the newest relevant message&quot;, combined)</span>
+<span class="line" id="L1090"><a href="#L1090" aria-label="1090행">1090</a>        self.assertNotIn(&#x27;TOOL_VERSION = &quot;&#x27; + &quot;0.6.0&quot; + &#x27;&quot;&#x27;, combined)</span>
+<span class="line" id="L1091"><a href="#L1091" aria-label="1091행">1091</a></span>
+<span class="line" id="L1092"><a href="#L1092" aria-label="1092행">1092</a>    def test_agent_examples_list_every_receiver_token(self) -&gt; None:</span>
+<span class="line" id="L1093"><a href="#L1093" aria-label="1093행">1093</a>        &quot;&quot;&quot;`--agent &lt;...&gt;` 예시가 실제 토큰 하나라도 빠뜨리면 실패한다.</span>
+<span class="line" id="L1094"><a href="#L1094" aria-label="1094행">1094</a></span>
+<span class="line" id="L1095"><a href="#L1095" aria-label="1095행">1095</a>        0.7 문서는 CODEX 를 빠뜨린 예시를 실었다. 그대로 실행하면 CODEX 앞으로 온</span>
+<span class="line" id="L1096"><a href="#L1096" aria-label="1096행">1096</a>        메시지가 matched 0 으로 조용히 누락된다.</span>
+<span class="line" id="L1097"><a href="#L1097" aria-label="1097행">1097</a>        &quot;&quot;&quot;</span>
+<span class="line" id="L1098"><a href="#L1098" aria-label="1098행">1098</a>        text = (SKILL_ROOT / &quot;SKILL.md&quot;).read_text(encoding=&quot;utf-8&quot;)</span>
+<span class="line" id="L1099"><a href="#L1099" aria-label="1099행">1099</a>        examples = re.findall(r&quot;--agent &lt;([^&gt;]+)&gt;&quot;, text)</span>
+<span class="line" id="L1100"><a href="#L1100" aria-label="1100행">1100</a>        self.assertTrue(examples, &quot;SKILL.md 에 --agent 예시가 없다&quot;)</span>
+<span class="line" id="L1101"><a href="#L1101" aria-label="1101행">1101</a>        required = {&quot;CODEX&quot;, &quot;CODEX-BUILD&quot;, &quot;CODEX-REVIEW&quot;, &quot;CLAUDE&quot;}</span>
+<span class="line" id="L1102"><a href="#L1102" aria-label="1102행">1102</a>        for example in examples:</span>
+<span class="line" id="L1103"><a href="#L1103" aria-label="1103행">1103</a>            tokens = {token.strip() for token in example.split(&quot;|&quot;)}</span>
+<span class="line" id="L1104"><a href="#L1104" aria-label="1104행">1104</a>            self.assertEqual(</span>
+<span class="line" id="L1105"><a href="#L1105" aria-label="1105행">1105</a>                required - tokens,</span>
+<span class="line" id="L1106"><a href="#L1106" aria-label="1106행">1106</a>                set(),</span>
+<span class="line" id="L1107"><a href="#L1107" aria-label="1107행">1107</a>                f&quot;--agent 예시에 빠진 토큰: {sorted(required - tokens)} (예시: {example})&quot;,</span>
+<span class="line" id="L1108"><a href="#L1108" aria-label="1108행">1108</a>            )</span>
+<span class="line" id="L1109"><a href="#L1109" aria-label="1109행">1109</a></span>
+<span class="line" id="L1110"><a href="#L1110" aria-label="1110행">1110</a>    def test_mode_metadata_hygiene(self) -&gt; None:</span>
+<span class="line" id="L1111"><a href="#L1111" aria-label="1111행">1111</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L1112"><a href="#L1112" aria-label="1112행">1112</a>            base = Path(temp_dir)</span>
+<span class="line" id="L1113"><a href="#L1113" aria-label="1113행">1113</a>            for index, (setter, reason) in enumerate(</span>
+<span class="line" id="L1114"><a href="#L1114" aria-label="1114행">1114</a>                ((&quot;A\nB&quot;, &quot;reason&quot;), (&quot;OWNER&quot;, &quot;THREAD:PINNED:START&quot;)), start=1</span>
+<span class="line" id="L1115"><a href="#L1115" aria-label="1115행">1115</a>            ):</span>
+<span class="line" id="L1116"><a href="#L1116" aria-label="1116행">1116</a>                thread = base / f&quot;thread-{index}.md&quot;</span>
+<span class="line" id="L1117"><a href="#L1117" aria-label="1117행">1117</a>                self.assertEqual(initialize(thread).returncode, 0)</span>
+<span class="line" id="L1118"><a href="#L1118" aria-label="1118행">1118</a>                result = run_helper(</span>
+<span class="line" id="L1119"><a href="#L1119" aria-label="1119행">1119</a>                    &quot;--thread&quot;,</span>
+<span class="line" id="L1120"><a href="#L1120" aria-label="1120행">1120</a>                    str(thread),</span>
+<span class="line" id="L1121"><a href="#L1121" aria-label="1121행">1121</a>                    &quot;mode&quot;,</span>
+<span class="line" id="L1122"><a href="#L1122" aria-label="1122행">1122</a>                    &quot;--set&quot;,</span>
+<span class="line" id="L1123"><a href="#L1123" aria-label="1123행">1123</a>                    &quot;GIT&quot;,</span>
+<span class="line" id="L1124"><a href="#L1124" aria-label="1124행">1124</a>                    &quot;--by&quot;,</span>
+<span class="line" id="L1125"><a href="#L1125" aria-label="1125행">1125</a>                    setter,</span>
+<span class="line" id="L1126"><a href="#L1126" aria-label="1126행">1126</a>                    &quot;--reason&quot;,</span>
+<span class="line" id="L1127"><a href="#L1127" aria-label="1127행">1127</a>                    reason,</span>
+<span class="line" id="L1128"><a href="#L1128" aria-label="1128행">1128</a>                )</span>
+<span class="line" id="L1129"><a href="#L1129" aria-label="1129행">1129</a>                self.assertNotEqual(result.returncode, 0)</span>
+<span class="line" id="L1130"><a href="#L1130" aria-label="1130행">1130</a></span>
+<span class="line" id="L1131"><a href="#L1131" aria-label="1131행">1131</a>    def test_concurrent_mode_set_has_one_winner(self) -&gt; None:</span>
+<span class="line" id="L1132"><a href="#L1132" aria-label="1132행">1132</a>        with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="line" id="L1133"><a href="#L1133" aria-label="1133행">1133</a>            thread = Path(temp_dir) / &quot;THREAD.md&quot;</span>
+<span class="line" id="L1134"><a href="#L1134" aria-label="1134행">1134</a>            self.assertEqual(initialize(thread, &quot;GIT&quot;).returncode, 0)</span>
+<span class="line" id="L1135"><a href="#L1135" aria-label="1135행">1135</a>            command = [</span>
+<span class="line" id="L1136"><a href="#L1136" aria-label="1136행">1136</a>                sys.executable,</span>
+<span class="line" id="L1137"><a href="#L1137" aria-label="1137행">1137</a>                str(HELPER),</span>
+<span class="line" id="L1138"><a href="#L1138" aria-label="1138행">1138</a>                &quot;--thread&quot;,</span>
+<span class="line" id="L1139"><a href="#L1139" aria-label="1139행">1139</a>                str(thread),</span>
+<span class="line" id="L1140"><a href="#L1140" aria-label="1140행">1140</a>                &quot;mode&quot;,</span>
+<span class="line" id="L1141"><a href="#L1141" aria-label="1141행">1141</a>                &quot;--set&quot;,</span>
+<span class="line" id="L1142"><a href="#L1142" aria-label="1142행">1142</a>                &quot;LOCAL&quot;,</span>
+<span class="line" id="L1143"><a href="#L1143" aria-label="1143행">1143</a>                &quot;--by&quot;,</span>
+<span class="line" id="L1144"><a href="#L1144" aria-label="1144행">1144</a>                &quot;OWNER&quot;,</span>
+<span class="line" id="L1145"><a href="#L1145" aria-label="1145행">1145</a>                &quot;--reason&quot;,</span>
+<span class="line" id="L1146"><a href="#L1146" aria-label="1146행">1146</a>                &quot;concurrent&quot;,</span>
+<span class="line" id="L1147"><a href="#L1147" aria-label="1147행">1147</a>                &quot;--expect-current-mode&quot;,</span>
+<span class="line" id="L1148"><a href="#L1148" aria-label="1148행">1148</a>                &quot;GIT&quot;,</span>
+<span class="line" id="L1149"><a href="#L1149" aria-label="1149행">1149</a>            ]</span>
+<span class="line" id="L1150"><a href="#L1150" aria-label="1150행">1150</a>            first = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding=&quot;utf-8&quot;)</span>
+<span class="line" id="L1151"><a href="#L1151" aria-label="1151행">1151</a>            second = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding=&quot;utf-8&quot;)</span>
+<span class="line" id="L1152"><a href="#L1152" aria-label="1152행">1152</a>            first.communicate(timeout=20)</span>
+<span class="line" id="L1153"><a href="#L1153" aria-label="1153행">1153</a>            second.communicate(timeout=20)</span>
+<span class="line" id="L1154"><a href="#L1154" aria-label="1154행">1154</a>            self.assertEqual(sorted((first.returncode, second.returncode)), [0, 5])</span>
+<span class="line" id="L1155"><a href="#L1155" aria-label="1155행">1155</a>            shown = run_helper(&quot;--thread&quot;, str(thread), &quot;mode&quot;, &quot;--show&quot;)</span>
+<span class="line" id="L1156"><a href="#L1156" aria-label="1156행">1156</a>            self.assertIn(&quot;mode LOCAL&quot;, shown.stdout)</span>
+<span class="line" id="L1157"><a href="#L1157" aria-label="1157행">1157</a></span>
+<span class="line" id="L1158"><a href="#L1158" aria-label="1158행">1158</a></span>
+<span class="line" id="L1159"><a href="#L1159" aria-label="1159행">1159</a>if __name__ == &quot;__main__&quot;:</span>
+<span class="line" id="L1160"><a href="#L1160" aria-label="1160행">1160</a>    unittest.main()</span></code></pre></main></html>

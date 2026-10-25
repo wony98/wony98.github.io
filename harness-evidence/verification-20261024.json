@@ -1,0 +1,33 @@
+{
+  "executed_at": "2026-10-24T05:39:58.512746+00:00",
+  "environment": {
+    "os": "nt",
+    "python": "3.12.10"
+  },
+  "regression": {
+    "command": "python -B skill/scripts/test_thread_mailbox.py -v",
+    "exit_code": 0,
+    "total": 36,
+    "skipped": 1,
+    "passed": 35,
+    "seconds": 42.388,
+    "log": "regression-20261024.txt",
+    "skip_reason": "Personal Claude pointer is intentionally not packaged"
+  },
+  "guard_fixtures": {
+    "command": "python -B check_guards.py",
+    "exit_code": 0,
+    "total": 4,
+    "passed": 4,
+    "details": "guards-20261024.json"
+  },
+  "historical_result": "verification-20261023.json is a prior summary, not a result of this run",
+  "earlier_attempt": {
+    "status": "INCOMPLETE_TIMEOUT",
+    "timeout_seconds": 180,
+    "environment": "restricted sandbox",
+    "counts_verified": false
+  },
+  "installed_skill_modified": false,
+  "real_mailboxes_used_in_tests": false
+}

@@ -1,0 +1,1528 @@
+<!doctype html><html lang="ko"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
+<title>검사 도구 코드 | 하네스 근거</title><link rel="stylesheet" href="evidence.css">
+<main><a href="index.html">← 근거 요약</a><h1>검사 도구 코드</h1>
+<p>버전 0.7.0의 변경 없는 사본입니다. <a href="skill/scripts/thread_mailbox.py">Python 원문</a></p>
+<pre class="source"><code><span class="line" id="L1"><a href="#L1" aria-label="1행">1</a># -*- coding: utf-8 -*-</span>
+<span class="line" id="L2"><a href="#L2" aria-label="2행">2</a>&quot;&quot;&quot;Create and safely operate repository-backed agent collaboration threads.&quot;&quot;&quot;</span>
+<span class="line" id="L3"><a href="#L3" aria-label="3행">3</a></span>
+<span class="line" id="L4"><a href="#L4" aria-label="4행">4</a>from __future__ import annotations</span>
+<span class="line" id="L5"><a href="#L5" aria-label="5행">5</a></span>
+<span class="line" id="L6"><a href="#L6" aria-label="6행">6</a>import argparse</span>
+<span class="line" id="L7"><a href="#L7" aria-label="7행">7</a>import contextlib</span>
+<span class="line" id="L8"><a href="#L8" aria-label="8행">8</a>import datetime as dt</span>
+<span class="line" id="L9"><a href="#L9" aria-label="9행">9</a>import hashlib</span>
+<span class="line" id="L10"><a href="#L10" aria-label="10행">10</a>import os</span>
+<span class="line" id="L11"><a href="#L11" aria-label="11행">11</a>import re</span>
+<span class="line" id="L12"><a href="#L12" aria-label="12행">12</a>import stat</span>
+<span class="line" id="L13"><a href="#L13" aria-label="13행">13</a>import sys</span>
+<span class="line" id="L14"><a href="#L14" aria-label="14행">14</a>import tempfile</span>
+<span class="line" id="L15"><a href="#L15" aria-label="15행">15</a>import time</span>
+<span class="line" id="L16"><a href="#L16" aria-label="16행">16</a>from dataclasses import dataclass</span>
+<span class="line" id="L17"><a href="#L17" aria-label="17행">17</a>from pathlib import Path</span>
+<span class="line" id="L18"><a href="#L18" aria-label="18행">18</a>from typing import Iterator</span>
+<span class="line" id="L19"><a href="#L19" aria-label="19행">19</a></span>
+<span class="line" id="L20"><a href="#L20" aria-label="20행">20</a></span>
+<span class="line" id="L21"><a href="#L21" aria-label="21행">21</a>HEADER_RE = re.compile(r&quot;^###\s+\[[^\]]+\].*?·\s+#(?P&lt;num&gt;\d{4})\b&quot;)</span>
+<span class="line" id="L22"><a href="#L22" aria-label="22행">22</a>HEADER_DETAIL_RE = re.compile(</span>
+<span class="line" id="L23"><a href="#L23" aria-label="23행">23</a>    r&quot;^###\s+\[(?P&lt;sender&gt;[^\]]+?)\s+→\s+(?P&lt;receiver&gt;[^\]]+?)\]&quot;</span>
+<span class="line" id="L24"><a href="#L24" aria-label="24행">24</a>    r&quot;.*?·\s+#(?P&lt;num&gt;\d{4})\b.*?·\s+\[[^\]]+\]\s*(?P&lt;title&gt;.*)$&quot;</span>
+<span class="line" id="L25"><a href="#L25" aria-label="25행">25</a>)</span>
+<span class="line" id="L26"><a href="#L26" aria-label="26행">26</a>LEGACY_REPLY_LINE_RE = re.compile(</span>
+<span class="line" id="L27"><a href="#L27" aria-label="27행">27</a>    r&quot;^처리한 메시지:\s+`?#\d{4}`?(?:\s*,\s*`?#\d{4}`?)*$&quot;</span>
+<span class="line" id="L28"><a href="#L28" aria-label="28행">28</a>)</span>
+<span class="line" id="L29"><a href="#L29" aria-label="29행">29</a>REPLY_NUMBER_RE = re.compile(r&quot;#(?P&lt;num&gt;\d{4})&quot;)</span>
+<span class="line" id="L30"><a href="#L30" aria-label="30행">30</a>STATUSES = (&quot;OPEN&quot;, &quot;REVIEW&quot;, &quot;DONE&quot;, &quot;BLOCKED&quot;)</span>
+<span class="line" id="L31"><a href="#L31" aria-label="31행">31</a>PENDING_STATUSES = (&quot;OPEN&quot;, &quot;REVIEW&quot;, &quot;BLOCKED&quot;)</span>
+<span class="line" id="L32"><a href="#L32" aria-label="32행">32</a>TYPES = (&quot;ASK&quot;, &quot;REPORT&quot;, &quot;VERIFY-REQ&quot;, &quot;VERIFY-RESULT&quot;, &quot;DECISION&quot;, &quot;FYI&quot;)</span>
+<span class="line" id="L33"><a href="#L33" aria-label="33행">33</a>PIN_START = &quot;&lt;!-- THREAD:PINNED:START --&gt;&quot;</span>
+<span class="line" id="L34"><a href="#L34" aria-label="34행">34</a>PIN_END = &quot;&lt;!-- THREAD:PINNED:END --&gt;&quot;</span>
+<span class="line" id="L35"><a href="#L35" aria-label="35행">35</a>MODE_START = &quot;&lt;!-- THREAD:MODE:START --&gt;&quot;</span>
+<span class="line" id="L36"><a href="#L36" aria-label="36행">36</a>MODE_END = &quot;&lt;!-- THREAD:MODE:END --&gt;&quot;</span>
+<span class="line" id="L37"><a href="#L37" aria-label="37행">37</a>MODES = (&quot;GIT&quot;, &quot;LOCAL&quot;)</span>
+<span class="line" id="L38"><a href="#L38" aria-label="38행">38</a>TOOL_VERSION = &quot;0.7.0&quot;</span>
+<span class="line" id="L39"><a href="#L39" aria-label="39행">39</a>LOCK_TIMEOUT_SECONDS = 15.0</span>
+<span class="line" id="L40"><a href="#L40" aria-label="40행">40</a>MAX_INLINE_BODY_CHARS = 6000</span>
+<span class="line" id="L41"><a href="#L41" aria-label="41행">41</a></span>
+<span class="line" id="L42"><a href="#L42" aria-label="42행">42</a></span>
+<span class="line" id="L43"><a href="#L43" aria-label="43행">43</a>class ThreadArgumentParser(argparse.ArgumentParser):</span>
+<span class="line" id="L44"><a href="#L44" aria-label="44행">44</a>    def error(self, message: str) -&gt; None:</span>
+<span class="line" id="L45"><a href="#L45" aria-label="45행">45</a>        if &quot;--reply&quot; in message and &quot;required&quot; in message:</span>
+<span class="line" id="L46"><a href="#L46" aria-label="46행">46</a>            message += &quot;; --reply 안내: 질문·검증 요청은 Y, 완료 보고·공유는 N&quot;</span>
+<span class="line" id="L47"><a href="#L47" aria-label="47행">47</a>        super().error(message)</span>
+<span class="line" id="L48"><a href="#L48" aria-label="48행">48</a></span>
+<span class="line" id="L49"><a href="#L49" aria-label="49행">49</a></span>
+<span class="line" id="L50"><a href="#L50" aria-label="50행">50</a>@dataclass(frozen=True)</span>
+<span class="line" id="L51"><a href="#L51" aria-label="51행">51</a>class MarkerRegion:</span>
+<span class="line" id="L52"><a href="#L52" aria-label="52행">52</a>    start: int</span>
+<span class="line" id="L53"><a href="#L53" aria-label="53행">53</a>    body_start: int</span>
+<span class="line" id="L54"><a href="#L54" aria-label="54행">54</a>    body_end: int</span>
+<span class="line" id="L55"><a href="#L55" aria-label="55행">55</a>    end_after: int</span>
+<span class="line" id="L56"><a href="#L56" aria-label="56행">56</a>    body: bytes</span>
+<span class="line" id="L57"><a href="#L57" aria-label="57행">57</a></span>
+<span class="line" id="L58"><a href="#L58" aria-label="58행">58</a></span>
+<span class="line" id="L59"><a href="#L59" aria-label="59행">59</a>@dataclass(frozen=True)</span>
+<span class="line" id="L60"><a href="#L60" aria-label="60행">60</a>class ThreadLayout:</span>
+<span class="line" id="L61"><a href="#L61" aria-label="61행">61</a>    first_message: int</span>
+<span class="line" id="L62"><a href="#L62" aria-label="62행">62</a>    mode: MarkerRegion | None</span>
+<span class="line" id="L63"><a href="#L63" aria-label="63행">63</a>    pin: MarkerRegion | None</span>
+<span class="line" id="L64"><a href="#L64" aria-label="64행">64</a></span>
+<span class="line" id="L65"><a href="#L65" aria-label="65행">65</a></span>
+<span class="line" id="L66"><a href="#L66" aria-label="66행">66</a>@dataclass(frozen=True)</span>
+<span class="line" id="L67"><a href="#L67" aria-label="67행">67</a>class ModeInfo:</span>
+<span class="line" id="L68"><a href="#L68" aria-label="68행">68</a>    value: str</span>
+<span class="line" id="L69"><a href="#L69" aria-label="69행">69</a>    setter: str</span>
+<span class="line" id="L70"><a href="#L70" aria-label="70행">70</a>    reason: str</span>
+<span class="line" id="L71"><a href="#L71" aria-label="71행">71</a>    body_hash: str</span>
+<span class="line" id="L72"><a href="#L72" aria-label="72행">72</a></span>
+<span class="line" id="L73"><a href="#L73" aria-label="73행">73</a></span>
+<span class="line" id="L74"><a href="#L74" aria-label="74행">74</a>@dataclass(frozen=True)</span>
+<span class="line" id="L75"><a href="#L75" aria-label="75행">75</a>class MessageInfo:</span>
+<span class="line" id="L76"><a href="#L76" aria-label="76행">76</a>    number: int</span>
+<span class="line" id="L77"><a href="#L77" aria-label="77행">77</a>    line_no: int</span>
+<span class="line" id="L78"><a href="#L78" aria-label="78행">78</a>    sender: str</span>
+<span class="line" id="L79"><a href="#L79" aria-label="79행">79</a>    receiver: str</span>
+<span class="line" id="L80"><a href="#L80" aria-label="80행">80</a>    title: str</span>
+<span class="line" id="L81"><a href="#L81" aria-label="81행">81</a>    status: str</span>
+<span class="line" id="L82"><a href="#L82" aria-label="82행">82</a>    reply_required: bool</span>
+<span class="line" id="L83"><a href="#L83" aria-label="83행">83</a>    reply_targets: tuple[int, ...]</span>
+<span class="line" id="L84"><a href="#L84" aria-label="84행">84</a></span>
+<span class="line" id="L85"><a href="#L85" aria-label="85행">85</a></span>
+<span class="line" id="L86"><a href="#L86" aria-label="86행">86</a>def parse_headers(text: str) -&gt; list[tuple[int, int]]:</span>
+<span class="line" id="L87"><a href="#L87" aria-label="87행">87</a>    found: list[tuple[int, int]] = []</span>
+<span class="line" id="L88"><a href="#L88" aria-label="88행">88</a>    for line_no, line in enumerate(text.splitlines(), start=1):</span>
+<span class="line" id="L89"><a href="#L89" aria-label="89행">89</a>        match = HEADER_RE.match(line.strip())</span>
+<span class="line" id="L90"><a href="#L90" aria-label="90행">90</a>        if match:</span>
+<span class="line" id="L91"><a href="#L91" aria-label="91행">91</a>            found.append((int(match.group(&quot;num&quot;)), line_no))</span>
+<span class="line" id="L92"><a href="#L92" aria-label="92행">92</a>    return found</span>
+<span class="line" id="L93"><a href="#L93" aria-label="93행">93</a></span>
+<span class="line" id="L94"><a href="#L94" aria-label="94행">94</a></span>
+<span class="line" id="L95"><a href="#L95" aria-label="95행">95</a>def read_bytes(path: Path) -&gt; bytes:</span>
+<span class="line" id="L96"><a href="#L96" aria-label="96행">96</a>    return path.read_bytes()</span>
+<span class="line" id="L97"><a href="#L97" aria-label="97행">97</a></span>
+<span class="line" id="L98"><a href="#L98" aria-label="98행">98</a></span>
+<span class="line" id="L99"><a href="#L99" aria-label="99행">99</a>def decode_utf8(raw: bytes) -&gt; str:</span>
+<span class="line" id="L100"><a href="#L100" aria-label="100행">100</a>    &quot;&quot;&quot;Decode strictly so a mutation never replaces undecodable bytes.&quot;&quot;&quot;</span>
+<span class="line" id="L101"><a href="#L101" aria-label="101행">101</a>    return raw.decode(&quot;utf-8&quot;)</span>
+<span class="line" id="L102"><a href="#L102" aria-label="102행">102</a></span>
+<span class="line" id="L103"><a href="#L103" aria-label="103행">103</a></span>
+<span class="line" id="L104"><a href="#L104" aria-label="104행">104</a>def read_text(path: Path) -&gt; str:</span>
+<span class="line" id="L105"><a href="#L105" aria-label="105행">105</a>    return decode_utf8(read_bytes(path))</span>
+<span class="line" id="L106"><a href="#L106" aria-label="106행">106</a></span>
+<span class="line" id="L107"><a href="#L107" aria-label="107행">107</a></span>
+<span class="line" id="L108"><a href="#L108" aria-label="108행">108</a>def first_message_offset(raw: bytes) -&gt; int:</span>
+<span class="line" id="L109"><a href="#L109" aria-label="109행">109</a>    &quot;&quot;&quot;Return the first numbered-message byte offset, or EOF when none exists.&quot;&quot;&quot;</span>
+<span class="line" id="L110"><a href="#L110" aria-label="110행">110</a>    offset = 0</span>
+<span class="line" id="L111"><a href="#L111" aria-label="111행">111</a>    for raw_line in raw.splitlines(keepends=True):</span>
+<span class="line" id="L112"><a href="#L112" aria-label="112행">112</a>        line = decode_utf8(raw_line).strip()</span>
+<span class="line" id="L113"><a href="#L113" aria-label="113행">113</a>        if HEADER_RE.match(line):</span>
+<span class="line" id="L114"><a href="#L114" aria-label="114행">114</a>            return offset</span>
+<span class="line" id="L115"><a href="#L115" aria-label="115행">115</a>        offset += len(raw_line)</span>
+<span class="line" id="L116"><a href="#L116" aria-label="116행">116</a>    return len(raw)</span>
+<span class="line" id="L117"><a href="#L117" aria-label="117행">117</a></span>
+<span class="line" id="L118"><a href="#L118" aria-label="118행">118</a></span>
+<span class="line" id="L119"><a href="#L119" aria-label="119행">119</a>def marker_region_in_prefix(</span>
+<span class="line" id="L120"><a href="#L120" aria-label="120행">120</a>    prefix: bytes,</span>
+<span class="line" id="L121"><a href="#L121" aria-label="121행">121</a>    start_text: str,</span>
+<span class="line" id="L122"><a href="#L122" aria-label="122행">122</a>    end_text: str,</span>
+<span class="line" id="L123"><a href="#L123" aria-label="123행">123</a>    label: str,</span>
+<span class="line" id="L124"><a href="#L124" aria-label="124행">124</a>) -&gt; MarkerRegion | None:</span>
+<span class="line" id="L125"><a href="#L125" aria-label="125행">125</a>    start_marker = start_text.encode(&quot;ascii&quot;)</span>
+<span class="line" id="L126"><a href="#L126" aria-label="126행">126</a>    end_marker = end_text.encode(&quot;ascii&quot;)</span>
+<span class="line" id="L127"><a href="#L127" aria-label="127행">127</a>    start_count = prefix.count(start_marker)</span>
+<span class="line" id="L128"><a href="#L128" aria-label="128행">128</a>    end_count = prefix.count(end_marker)</span>
+<span class="line" id="L129"><a href="#L129" aria-label="129행">129</a>    if start_count == 0 and end_count == 0:</span>
+<span class="line" id="L130"><a href="#L130" aria-label="130행">130</a>        return None</span>
+<span class="line" id="L131"><a href="#L131" aria-label="131행">131</a>    if start_count != 1 or end_count != 1:</span>
+<span class="line" id="L132"><a href="#L132" aria-label="132행">132</a>        raise ValueError(</span>
+<span class="line" id="L133"><a href="#L133" aria-label="133행">133</a>            f&quot;{label} requires exactly one start marker and one end marker &quot;</span>
+<span class="line" id="L134"><a href="#L134" aria-label="134행">134</a>            f&quot;in the pre-message region (start={start_count}, end={end_count})&quot;</span>
+<span class="line" id="L135"><a href="#L135" aria-label="135행">135</a>        )</span>
+<span class="line" id="L136"><a href="#L136" aria-label="136행">136</a>    start_index = prefix.index(start_marker)</span>
+<span class="line" id="L137"><a href="#L137" aria-label="137행">137</a>    end_index = prefix.index(end_marker)</span>
+<span class="line" id="L138"><a href="#L138" aria-label="138행">138</a>    if end_index &lt;= start_index:</span>
+<span class="line" id="L139"><a href="#L139" aria-label="139행">139</a>        raise ValueError(f&quot;{label} markers are out of order&quot;)</span>
+<span class="line" id="L140"><a href="#L140" aria-label="140행">140</a>    if start_index and prefix[start_index - 1 : start_index] != b&quot;\n&quot;:</span>
+<span class="line" id="L141"><a href="#L141" aria-label="141행">141</a>        raise ValueError(f&quot;{label} start marker must begin on its own line&quot;)</span>
+<span class="line" id="L142"><a href="#L142" aria-label="142행">142</a>    if end_index and prefix[end_index - 1 : end_index] != b&quot;\n&quot;:</span>
+<span class="line" id="L143"><a href="#L143" aria-label="143행">143</a>        raise ValueError(f&quot;{label} end marker must begin on its own line&quot;)</span>
+<span class="line" id="L144"><a href="#L144" aria-label="144행">144</a>    start_line_end = prefix.find(b&quot;\n&quot;, start_index)</span>
+<span class="line" id="L145"><a href="#L145" aria-label="145행">145</a>    if start_line_end == -1 or start_line_end &gt;= end_index:</span>
+<span class="line" id="L146"><a href="#L146" aria-label="146행">146</a>        raise ValueError(f&quot;{label} start marker has no line ending&quot;)</span>
+<span class="line" id="L147"><a href="#L147" aria-label="147행">147</a>    end_line_end = prefix.find(b&quot;\n&quot;, end_index)</span>
+<span class="line" id="L148"><a href="#L148" aria-label="148행">148</a>    end_after = len(prefix) if end_line_end == -1 else end_line_end + 1</span>
+<span class="line" id="L149"><a href="#L149" aria-label="149행">149</a>    body_start = start_line_end + 1</span>
+<span class="line" id="L150"><a href="#L150" aria-label="150행">150</a>    body = prefix[body_start:end_index]</span>
+<span class="line" id="L151"><a href="#L151" aria-label="151행">151</a>    return MarkerRegion(start_index, body_start, end_index, end_after, body)</span>
+<span class="line" id="L152"><a href="#L152" aria-label="152행">152</a></span>
+<span class="line" id="L153"><a href="#L153" aria-label="153행">153</a></span>
+<span class="line" id="L154"><a href="#L154" aria-label="154행">154</a>def thread_layout(raw: bytes) -&gt; ThreadLayout:</span>
+<span class="line" id="L155"><a href="#L155" aria-label="155행">155</a>    first_message = first_message_offset(raw)</span>
+<span class="line" id="L156"><a href="#L156" aria-label="156행">156</a>    prefix = raw[:first_message]</span>
+<span class="line" id="L157"><a href="#L157" aria-label="157행">157</a>    mode = marker_region_in_prefix(prefix, MODE_START, MODE_END, &quot;mode&quot;)</span>
+<span class="line" id="L158"><a href="#L158" aria-label="158행">158</a>    pin_region = marker_region_in_prefix(prefix, PIN_START, PIN_END, &quot;pin&quot;)</span>
+<span class="line" id="L159"><a href="#L159" aria-label="159행">159</a>    if mode is not None and pin_region is None:</span>
+<span class="line" id="L160"><a href="#L160" aria-label="160행">160</a>        raise ValueError(&quot;mode block requires a separate pinned block after it&quot;)</span>
+<span class="line" id="L161"><a href="#L161" aria-label="161행">161</a>    if mode is not None and pin_region is not None and mode.end_after &gt; pin_region.start:</span>
+<span class="line" id="L162"><a href="#L162" aria-label="162행">162</a>        raise ValueError(&quot;mode block must appear before the pinned block without nesting&quot;)</span>
+<span class="line" id="L163"><a href="#L163" aria-label="163행">163</a>    return ThreadLayout(first_message=first_message, mode=mode, pin=pin_region)</span>
+<span class="line" id="L164"><a href="#L164" aria-label="164행">164</a></span>
+<span class="line" id="L165"><a href="#L165" aria-label="165행">165</a></span>
+<span class="line" id="L166"><a href="#L166" aria-label="166행">166</a>def parse_mode_body(body: bytes) -&gt; tuple[str, str, str]:</span>
+<span class="line" id="L167"><a href="#L167" aria-label="167행">167</a>    text = decode_utf8(body).replace(&quot;\r\n&quot;, &quot;\n&quot;).replace(&quot;\r&quot;, &quot;\n&quot;)</span>
+<span class="line" id="L168"><a href="#L168" aria-label="168행">168</a>    lines = [line for line in text.split(&quot;\n&quot;) if line]</span>
+<span class="line" id="L169"><a href="#L169" aria-label="169행">169</a>    prefixes = (&quot;- 모드: &quot;, &quot;- 설정: &quot;, &quot;- 사유: &quot;)</span>
+<span class="line" id="L170"><a href="#L170" aria-label="170행">170</a>    values: dict[str, str] = {}</span>
+<span class="line" id="L171"><a href="#L171" aria-label="171행">171</a>    for prefix in prefixes:</span>
+<span class="line" id="L172"><a href="#L172" aria-label="172행">172</a>        matching = [line for line in lines if line.startswith(prefix)]</span>
+<span class="line" id="L173"><a href="#L173" aria-label="173행">173</a>        if len(matching) != 1:</span>
+<span class="line" id="L174"><a href="#L174" aria-label="174행">174</a>            raise ValueError(f&quot;mode field {prefix.strip()!r} occurs {len(matching)} times&quot;)</span>
+<span class="line" id="L175"><a href="#L175" aria-label="175행">175</a>        values[prefix] = matching[0][len(prefix) :]</span>
+<span class="line" id="L176"><a href="#L176" aria-label="176행">176</a>    if len(lines) != len(prefixes):</span>
+<span class="line" id="L177"><a href="#L177" aria-label="177행">177</a>        raise ValueError(&quot;mode block contains unexpected or duplicate fields&quot;)</span>
+<span class="line" id="L178"><a href="#L178" aria-label="178행">178</a>    mode_value = values[&quot;- 모드: &quot;]</span>
+<span class="line" id="L179"><a href="#L179" aria-label="179행">179</a>    if mode_value not in MODES:</span>
+<span class="line" id="L180"><a href="#L180" aria-label="180행">180</a>        raise ValueError(f&quot;invalid mode value {mode_value!r}; expected GIT or LOCAL&quot;)</span>
+<span class="line" id="L181"><a href="#L181" aria-label="181행">181</a>    setting = values[&quot;- 설정: &quot;]</span>
+<span class="line" id="L182"><a href="#L182" aria-label="182행">182</a>    setter = setting.split(&quot; · &quot;, 1)[0].strip()</span>
+<span class="line" id="L183"><a href="#L183" aria-label="183행">183</a>    reason = values[&quot;- 사유: &quot;].strip()</span>
+<span class="line" id="L184"><a href="#L184" aria-label="184행">184</a>    if not setter or not reason:</span>
+<span class="line" id="L185"><a href="#L185" aria-label="185행">185</a>        raise ValueError(&quot;mode setter and reason must not be empty&quot;)</span>
+<span class="line" id="L186"><a href="#L186" aria-label="186행">186</a>    return mode_value, setter, reason</span>
+<span class="line" id="L187"><a href="#L187" aria-label="187행">187</a></span>
+<span class="line" id="L188"><a href="#L188" aria-label="188행">188</a></span>
+<span class="line" id="L189"><a href="#L189" aria-label="189행">189</a>def mode_info(raw: bytes, *, reject_message_only_markers: bool = False) -&gt; ModeInfo | None:</span>
+<span class="line" id="L190"><a href="#L190" aria-label="190행">190</a>    layout = thread_layout(raw)</span>
+<span class="line" id="L191"><a href="#L191" aria-label="191행">191</a>    if layout.mode is None:</span>
+<span class="line" id="L192"><a href="#L192" aria-label="192행">192</a>        if reject_message_only_markers:</span>
+<span class="line" id="L193"><a href="#L193" aria-label="193행">193</a>            message_region = raw[layout.first_message :]</span>
+<span class="line" id="L194"><a href="#L194" aria-label="194행">194</a>            if MODE_START.encode(&quot;ascii&quot;) in message_region or MODE_END.encode(&quot;ascii&quot;) in message_region:</span>
+<span class="line" id="L195"><a href="#L195" aria-label="195행">195</a>                raise ValueError(&quot;mode markers exist only in the message region&quot;)</span>
+<span class="line" id="L196"><a href="#L196" aria-label="196행">196</a>        return None</span>
+<span class="line" id="L197"><a href="#L197" aria-label="197행">197</a>    value, setter, reason = parse_mode_body(layout.mode.body)</span>
+<span class="line" id="L198"><a href="#L198" aria-label="198행">198</a>    return ModeInfo(</span>
+<span class="line" id="L199"><a href="#L199" aria-label="199행">199</a>        value=value,</span>
+<span class="line" id="L200"><a href="#L200" aria-label="200행">200</a>        setter=setter,</span>
+<span class="line" id="L201"><a href="#L201" aria-label="201행">201</a>        reason=reason,</span>
+<span class="line" id="L202"><a href="#L202" aria-label="202행">202</a>        body_hash=hashlib.sha256(layout.mode.body).hexdigest(),</span>
+<span class="line" id="L203"><a href="#L203" aria-label="203행">203</a>    )</span>
+<span class="line" id="L204"><a href="#L204" aria-label="204행">204</a></span>
+<span class="line" id="L205"><a href="#L205" aria-label="205행">205</a></span>
+<span class="line" id="L206"><a href="#L206" aria-label="206행">206</a>def validate_raw(raw: bytes, expected_last: int | None = None) -&gt; tuple[bool, list[str], int]:</span>
+<span class="line" id="L207"><a href="#L207" aria-label="207행">207</a>    text = decode_utf8(raw)</span>
+<span class="line" id="L208"><a href="#L208" aria-label="208행">208</a>    ok, problems, last = validate_text(text, expected_last=expected_last)</span>
+<span class="line" id="L209"><a href="#L209" aria-label="209행">209</a>    try:</span>
+<span class="line" id="L210"><a href="#L210" aria-label="210행">210</a>        layout = thread_layout(raw)</span>
+<span class="line" id="L211"><a href="#L211" aria-label="211행">211</a>        if layout.mode is not None:</span>
+<span class="line" id="L212"><a href="#L212" aria-label="212행">212</a>            parse_mode_body(layout.mode.body)</span>
+<span class="line" id="L213"><a href="#L213" aria-label="213행">213</a>    except ValueError as error:</span>
+<span class="line" id="L214"><a href="#L214" aria-label="214행">214</a>        problems.append(str(error))</span>
+<span class="line" id="L215"><a href="#L215" aria-label="215행">215</a>    return not problems and ok, problems, last</span>
+<span class="line" id="L216"><a href="#L216" aria-label="216행">216</a></span>
+<span class="line" id="L217"><a href="#L217" aria-label="217행">217</a></span>
+<span class="line" id="L218"><a href="#L218" aria-label="218행">218</a>def newline_counts(text: str) -&gt; tuple[int, int, int]:</span>
+<span class="line" id="L219"><a href="#L219" aria-label="219행">219</a>    crlf = text.count(&quot;\r\n&quot;)</span>
+<span class="line" id="L220"><a href="#L220" aria-label="220행">220</a>    without_crlf = text.replace(&quot;\r\n&quot;, &quot;&quot;)</span>
+<span class="line" id="L221"><a href="#L221" aria-label="221행">221</a>    lf_only = without_crlf.count(&quot;\n&quot;)</span>
+<span class="line" id="L222"><a href="#L222" aria-label="222행">222</a>    stray_cr = without_crlf.count(&quot;\r&quot;)</span>
+<span class="line" id="L223"><a href="#L223" aria-label="223행">223</a>    return crlf, lf_only, stray_cr</span>
+<span class="line" id="L224"><a href="#L224" aria-label="224행">224</a></span>
+<span class="line" id="L225"><a href="#L225" aria-label="225행">225</a></span>
+<span class="line" id="L226"><a href="#L226" aria-label="226행">226</a>def newline_label(text: str) -&gt; str:</span>
+<span class="line" id="L227"><a href="#L227" aria-label="227행">227</a>    crlf, lf_only, stray_cr = newline_counts(text)</span>
+<span class="line" id="L228"><a href="#L228" aria-label="228행">228</a>    if crlf and lf_only:</span>
+<span class="line" id="L229"><a href="#L229" aria-label="229행">229</a>        return &quot;MIXED&quot;</span>
+<span class="line" id="L230"><a href="#L230" aria-label="230행">230</a>    if crlf:</span>
+<span class="line" id="L231"><a href="#L231" aria-label="231행">231</a>        return &quot;CRLF&quot;</span>
+<span class="line" id="L232"><a href="#L232" aria-label="232행">232</a>    if lf_only:</span>
+<span class="line" id="L233"><a href="#L233" aria-label="233행">233</a>        return &quot;LF&quot;</span>
+<span class="line" id="L234"><a href="#L234" aria-label="234행">234</a>    return &quot;NONE&quot;</span>
+<span class="line" id="L235"><a href="#L235" aria-label="235행">235</a></span>
+<span class="line" id="L236"><a href="#L236" aria-label="236행">236</a></span>
+<span class="line" id="L237"><a href="#L237" aria-label="237행">237</a>def newline_sequence(text: str) -&gt; str:</span>
+<span class="line" id="L238"><a href="#L238" aria-label="238행">238</a>    label = newline_label(text)</span>
+<span class="line" id="L239"><a href="#L239" aria-label="239행">239</a>    if label == &quot;MIXED&quot;:</span>
+<span class="line" id="L240"><a href="#L240" aria-label="240행">240</a>        raise ValueError(&quot;thread contains mixed or stray line endings&quot;)</span>
+<span class="line" id="L241"><a href="#L241" aria-label="241행">241</a>    return &quot;\r\n&quot; if label == &quot;CRLF&quot; else &quot;\n&quot;</span>
+<span class="line" id="L242"><a href="#L242" aria-label="242행">242</a></span>
+<span class="line" id="L243"><a href="#L243" aria-label="243행">243</a></span>
+<span class="line" id="L244"><a href="#L244" aria-label="244행">244</a>def metadata_field_lines(</span>
+<span class="line" id="L245"><a href="#L245" aria-label="245행">245</a>    lines: list[str], start: int, end: int, prefix: str</span>
+<span class="line" id="L246"><a href="#L246" aria-label="246행">246</a>) -&gt; list[int]:</span>
+<span class="line" id="L247"><a href="#L247" aria-label="247행">247</a>    &quot;&quot;&quot;Return matching rows only from the header metadata block, never the body.&quot;&quot;&quot;</span>
+<span class="line" id="L248"><a href="#L248" aria-label="248행">248</a>    matches: list[int] = []</span>
+<span class="line" id="L249"><a href="#L249" aria-label="249행">249</a>    for index in range(start + 1, end):</span>
+<span class="line" id="L250"><a href="#L250" aria-label="250행">250</a>        stripped = lines[index].rstrip(&quot;\r\n&quot;)</span>
+<span class="line" id="L251"><a href="#L251" aria-label="251행">251</a>        if stripped == &quot;- 본문:&quot;:</span>
+<span class="line" id="L252"><a href="#L252" aria-label="252행">252</a>            break</span>
+<span class="line" id="L253"><a href="#L253" aria-label="253행">253</a>        if stripped.startswith(prefix):</span>
+<span class="line" id="L254"><a href="#L254" aria-label="254행">254</a>            matches.append(index)</span>
+<span class="line" id="L255"><a href="#L255" aria-label="255행">255</a>    return matches</span>
+<span class="line" id="L256"><a href="#L256" aria-label="256행">256</a></span>
+<span class="line" id="L257"><a href="#L257" aria-label="257행">257</a></span>
+<span class="line" id="L258"><a href="#L258" aria-label="258행">258</a>def metadata_state_lines(lines: list[str], start: int, end: int) -&gt; list[int]:</span>
+<span class="line" id="L259"><a href="#L259" aria-label="259행">259</a>    return metadata_field_lines(lines, start, end, &quot;- 상태: &quot;)</span>
+<span class="line" id="L260"><a href="#L260" aria-label="260행">260</a></span>
+<span class="line" id="L261"><a href="#L261" aria-label="261행">261</a></span>
+<span class="line" id="L262"><a href="#L262" aria-label="262행">262</a>def parse_structured_reply_targets(value: str) -&gt; tuple[int, ...]:</span>
+<span class="line" id="L263"><a href="#L263" aria-label="263행">263</a>    stripped = value.strip()</span>
+<span class="line" id="L264"><a href="#L264" aria-label="264행">264</a>    if not re.fullmatch(r&quot;#\d{4}(?:\s*,\s*#\d{4})*&quot;, stripped):</span>
+<span class="line" id="L265"><a href="#L265" aria-label="265행">265</a>        raise ValueError(</span>
+<span class="line" id="L266"><a href="#L266" aria-label="266행">266</a>            &quot;reply targets must use #NNNN comma-separated form, for example #0001,#0002&quot;</span>
+<span class="line" id="L267"><a href="#L267" aria-label="267행">267</a>        )</span>
+<span class="line" id="L268"><a href="#L268" aria-label="268행">268</a>    numbers = tuple(int(match.group(&quot;num&quot;)) for match in REPLY_NUMBER_RE.finditer(stripped))</span>
+<span class="line" id="L269"><a href="#L269" aria-label="269행">269</a>    if len(numbers) != len(set(numbers)):</span>
+<span class="line" id="L270"><a href="#L270" aria-label="270행">270</a>        raise ValueError(&quot;reply targets must not contain duplicates&quot;)</span>
+<span class="line" id="L271"><a href="#L271" aria-label="271행">271</a>    return numbers</span>
+<span class="line" id="L272"><a href="#L272" aria-label="272행">272</a></span>
+<span class="line" id="L273"><a href="#L273" aria-label="273행">273</a></span>
+<span class="line" id="L274"><a href="#L274" aria-label="274행">274</a>def parse_cli_reply_targets(value: str | None) -&gt; tuple[int, ...]:</span>
+<span class="line" id="L275"><a href="#L275" aria-label="275행">275</a>    if value is None:</span>
+<span class="line" id="L276"><a href="#L276" aria-label="276행">276</a>        return ()</span>
+<span class="line" id="L277"><a href="#L277" aria-label="277행">277</a>    stripped = value.strip()</span>
+<span class="line" id="L278"><a href="#L278" aria-label="278행">278</a>    if not re.fullmatch(r&quot;\d+(?:\s*,\s*\d+)*&quot;, stripped):</span>
+<span class="line" id="L279"><a href="#L279" aria-label="279행">279</a>        raise ValueError(&quot;--in-reply-to must be a comma-separated list of message numbers&quot;)</span>
+<span class="line" id="L280"><a href="#L280" aria-label="280행">280</a>    numbers = tuple(int(part.strip()) for part in stripped.split(&quot;,&quot;))</span>
+<span class="line" id="L281"><a href="#L281" aria-label="281행">281</a>    if len(numbers) != len(set(numbers)):</span>
+<span class="line" id="L282"><a href="#L282" aria-label="282행">282</a>        raise ValueError(&quot;--in-reply-to must not contain duplicate message numbers&quot;)</span>
+<span class="line" id="L283"><a href="#L283" aria-label="283행">283</a>    return numbers</span>
+<span class="line" id="L284"><a href="#L284" aria-label="284행">284</a></span>
+<span class="line" id="L285"><a href="#L285" aria-label="285행">285</a></span>
+<span class="line" id="L286"><a href="#L286" aria-label="286행">286</a>def legacy_reply_targets(lines: list[str], body_start: int, end: int) -&gt; tuple[int, ...]:</span>
+<span class="line" id="L287"><a href="#L287" aria-label="287행">287</a>    numbers: list[int] = []</span>
+<span class="line" id="L288"><a href="#L288" aria-label="288행">288</a>    for index in range(body_start, end):</span>
+<span class="line" id="L289"><a href="#L289" aria-label="289행">289</a>        stripped = lines[index].rstrip(&quot;\r\n&quot;)</span>
+<span class="line" id="L290"><a href="#L290" aria-label="290행">290</a>        if not LEGACY_REPLY_LINE_RE.fullmatch(stripped):</span>
+<span class="line" id="L291"><a href="#L291" aria-label="291행">291</a>            continue</span>
+<span class="line" id="L292"><a href="#L292" aria-label="292행">292</a>        numbers.extend(int(match.group(&quot;num&quot;)) for match in REPLY_NUMBER_RE.finditer(stripped))</span>
+<span class="line" id="L293"><a href="#L293" aria-label="293행">293</a>    return tuple(dict.fromkeys(numbers))</span>
+<span class="line" id="L294"><a href="#L294" aria-label="294행">294</a></span>
+<span class="line" id="L295"><a href="#L295" aria-label="295행">295</a></span>
+<span class="line" id="L296"><a href="#L296" aria-label="296행">296</a>def message_infos(text: str) -&gt; list[MessageInfo]:</span>
+<span class="line" id="L297"><a href="#L297" aria-label="297행">297</a>    lines = text.splitlines(keepends=True)</span>
+<span class="line" id="L298"><a href="#L298" aria-label="298행">298</a>    found = parse_headers(text)</span>
+<span class="line" id="L299"><a href="#L299" aria-label="299행">299</a>    existing_numbers = {number for number, _ in found}</span>
+<span class="line" id="L300"><a href="#L300" aria-label="300행">300</a>    messages: list[MessageInfo] = []</span>
+<span class="line" id="L301"><a href="#L301" aria-label="301행">301</a>    for index, (number, line_no) in enumerate(found):</span>
+<span class="line" id="L302"><a href="#L302" aria-label="302행">302</a>        start = line_no - 1</span>
+<span class="line" id="L303"><a href="#L303" aria-label="303행">303</a>        end = found[index + 1][1] - 1 if index + 1 &lt; len(found) else len(lines)</span>
+<span class="line" id="L304"><a href="#L304" aria-label="304행">304</a>        header = lines[start].rstrip(&quot;\r\n&quot;)</span>
+<span class="line" id="L305"><a href="#L305" aria-label="305행">305</a>        detail = HEADER_DETAIL_RE.match(header)</span>
+<span class="line" id="L306"><a href="#L306" aria-label="306행">306</a>        if detail is None:</span>
+<span class="line" id="L307"><a href="#L307" aria-label="307행">307</a>            sender, receiver, title = &quot;?&quot;, &quot;?&quot;, header</span>
+<span class="line" id="L308"><a href="#L308" aria-label="308행">308</a>        else:</span>
+<span class="line" id="L309"><a href="#L309" aria-label="309행">309</a>            sender = detail.group(&quot;sender&quot;).strip()</span>
+<span class="line" id="L310"><a href="#L310" aria-label="310행">310</a>            receiver = detail.group(&quot;receiver&quot;).strip()</span>
+<span class="line" id="L311"><a href="#L311" aria-label="311행">311</a>            title = detail.group(&quot;title&quot;).strip()</span>
+<span class="line" id="L312"><a href="#L312" aria-label="312행">312</a></span>
+<span class="line" id="L313"><a href="#L313" aria-label="313행">313</a>        reply_rows = metadata_field_lines(lines, start, end, &quot;- 답필요: &quot;)</span>
+<span class="line" id="L314"><a href="#L314" aria-label="314행">314</a>        reply_required = len(reply_rows) == 1 and (</span>
+<span class="line" id="L315"><a href="#L315" aria-label="315행">315</a>            lines[reply_rows[0]].rstrip(&quot;\r\n&quot;).removeprefix(&quot;- 답필요: &quot;) == &quot;Y&quot;</span>
+<span class="line" id="L316"><a href="#L316" aria-label="316행">316</a>        )</span>
+<span class="line" id="L317"><a href="#L317" aria-label="317행">317</a></span>
+<span class="line" id="L318"><a href="#L318" aria-label="318행">318</a>        state_rows = metadata_state_lines(lines, start, end)</span>
+<span class="line" id="L319"><a href="#L319" aria-label="319행">319</a>        status = (</span>
+<span class="line" id="L320"><a href="#L320" aria-label="320행">320</a>            lines[state_rows[0]].rstrip(&quot;\r\n&quot;).removeprefix(&quot;- 상태: &quot;)</span>
+<span class="line" id="L321"><a href="#L321" aria-label="321행">321</a>            if len(state_rows) == 1</span>
+<span class="line" id="L322"><a href="#L322" aria-label="322행">322</a>            else &quot;&quot;</span>
+<span class="line" id="L323"><a href="#L323" aria-label="323행">323</a>        )</span>
+<span class="line" id="L324"><a href="#L324" aria-label="324행">324</a></span>
+<span class="line" id="L325"><a href="#L325" aria-label="325행">325</a>        target_rows = metadata_field_lines(lines, start, end, &quot;- 회신대상: &quot;)</span>
+<span class="line" id="L326"><a href="#L326" aria-label="326행">326</a>        if target_rows:</span>
+<span class="line" id="L327"><a href="#L327" aria-label="327행">327</a>            value = lines[target_rows[0]].rstrip(&quot;\r\n&quot;).removeprefix(&quot;- 회신대상: &quot;)</span>
+<span class="line" id="L328"><a href="#L328" aria-label="328행">328</a>            targets = parse_structured_reply_targets(value)</span>
+<span class="line" id="L329"><a href="#L329" aria-label="329행">329</a>        else:</span>
+<span class="line" id="L330"><a href="#L330" aria-label="330행">330</a>            body_marker = next(</span>
+<span class="line" id="L331"><a href="#L331" aria-label="331행">331</a>                (</span>
+<span class="line" id="L332"><a href="#L332" aria-label="332행">332</a>                    row</span>
+<span class="line" id="L333"><a href="#L333" aria-label="333행">333</a>                    for row in range(start + 1, end)</span>
+<span class="line" id="L334"><a href="#L334" aria-label="334행">334</a>                    if lines[row].rstrip(&quot;\r\n&quot;) == &quot;- 본문:&quot;</span>
+<span class="line" id="L335"><a href="#L335" aria-label="335행">335</a>                ),</span>
+<span class="line" id="L336"><a href="#L336" aria-label="336행">336</a>                None,</span>
+<span class="line" id="L337"><a href="#L337" aria-label="337행">337</a>            )</span>
+<span class="line" id="L338"><a href="#L338" aria-label="338행">338</a>            body_start = body_marker + 1 if body_marker is not None else end</span>
+<span class="line" id="L339"><a href="#L339" aria-label="339행">339</a>            targets = legacy_reply_targets(lines, body_start, end)</span>
+<span class="line" id="L340"><a href="#L340" aria-label="340행">340</a></span>
+<span class="line" id="L341"><a href="#L341" aria-label="341행">341</a>        valid_targets = tuple(</span>
+<span class="line" id="L342"><a href="#L342" aria-label="342행">342</a>            target for target in targets if target in existing_numbers and target &lt; number</span>
+<span class="line" id="L343"><a href="#L343" aria-label="343행">343</a>        )</span>
+<span class="line" id="L344"><a href="#L344" aria-label="344행">344</a>        messages.append(</span>
+<span class="line" id="L345"><a href="#L345" aria-label="345행">345</a>            MessageInfo(</span>
+<span class="line" id="L346"><a href="#L346" aria-label="346행">346</a>                number=number,</span>
+<span class="line" id="L347"><a href="#L347" aria-label="347행">347</a>                line_no=line_no,</span>
+<span class="line" id="L348"><a href="#L348" aria-label="348행">348</a>                sender=sender,</span>
+<span class="line" id="L349"><a href="#L349" aria-label="349행">349</a>                receiver=receiver,</span>
+<span class="line" id="L350"><a href="#L350" aria-label="350행">350</a>                title=title,</span>
+<span class="line" id="L351"><a href="#L351" aria-label="351행">351</a>                status=status,</span>
+<span class="line" id="L352"><a href="#L352" aria-label="352행">352</a>                reply_required=reply_required,</span>
+<span class="line" id="L353"><a href="#L353" aria-label="353행">353</a>                reply_targets=valid_targets,</span>
+<span class="line" id="L354"><a href="#L354" aria-label="354행">354</a>            )</span>
+<span class="line" id="L355"><a href="#L355" aria-label="355행">355</a>        )</span>
+<span class="line" id="L356"><a href="#L356" aria-label="356행">356</a>    return messages</span>
+<span class="line" id="L357"><a href="#L357" aria-label="357행">357</a></span>
+<span class="line" id="L358"><a href="#L358" aria-label="358행">358</a></span>
+<span class="line" id="L359"><a href="#L359" aria-label="359행">359</a>def message_block(text: str, number: int) -&gt; str:</span>
+<span class="line" id="L360"><a href="#L360" aria-label="360행">360</a>    &quot;&quot;&quot;Return one complete numbered message without reading unrelated history.&quot;&quot;&quot;</span>
+<span class="line" id="L361"><a href="#L361" aria-label="361행">361</a>    lines = text.splitlines(keepends=True)</span>
+<span class="line" id="L362"><a href="#L362" aria-label="362행">362</a>    found = parse_headers(text)</span>
+<span class="line" id="L363"><a href="#L363" aria-label="363행">363</a>    for index, (candidate, line_no) in enumerate(found):</span>
+<span class="line" id="L364"><a href="#L364" aria-label="364행">364</a>        if candidate != number:</span>
+<span class="line" id="L365"><a href="#L365" aria-label="365행">365</a>            continue</span>
+<span class="line" id="L366"><a href="#L366" aria-label="366행">366</a>        start = line_no - 1</span>
+<span class="line" id="L367"><a href="#L367" aria-label="367행">367</a>        end = found[index + 1][1] - 1 if index + 1 &lt; len(found) else len(lines)</span>
+<span class="line" id="L368"><a href="#L368" aria-label="368행">368</a>        return &quot;&quot;.join(lines[start:end]).rstrip(&quot;\r\n&quot;)</span>
+<span class="line" id="L369"><a href="#L369" aria-label="369행">369</a>    raise ValueError(f&quot;message not found: #{number:04d}&quot;)</span>
+<span class="line" id="L370"><a href="#L370" aria-label="370행">370</a></span>
+<span class="line" id="L371"><a href="#L371" aria-label="371행">371</a></span>
+<span class="line" id="L372"><a href="#L372" aria-label="372행">372</a>def message_body(text: str, number: int) -&gt; str:</span>
+<span class="line" id="L373"><a href="#L373" aria-label="373행">373</a>    block = message_block(text, number)</span>
+<span class="line" id="L374"><a href="#L374" aria-label="374행">374</a>    marker = &quot;- 본문:&quot;</span>
+<span class="line" id="L375"><a href="#L375" aria-label="375행">375</a>    lines = block.splitlines()</span>
+<span class="line" id="L376"><a href="#L376" aria-label="376행">376</a>    try:</span>
+<span class="line" id="L377"><a href="#L377" aria-label="377행">377</a>        index = lines.index(marker)</span>
+<span class="line" id="L378"><a href="#L378" aria-label="378행">378</a>    except ValueError:</span>
+<span class="line" id="L379"><a href="#L379" aria-label="379행">379</a>        return &quot;&quot;</span>
+<span class="line" id="L380"><a href="#L380" aria-label="380행">380</a>    return &quot;\n&quot;.join(lines[index + 1 :]).strip()</span>
+<span class="line" id="L381"><a href="#L381" aria-label="381행">381</a></span>
+<span class="line" id="L382"><a href="#L382" aria-label="382행">382</a></span>
+<span class="line" id="L383"><a href="#L383" aria-label="383행">383</a>def receiver_matches(receiver: str, agent: str | None) -&gt; bool:</span>
+<span class="line" id="L384"><a href="#L384" aria-label="384행">384</a>    if not agent:</span>
+<span class="line" id="L385"><a href="#L385" aria-label="385행">385</a>        return True</span>
+<span class="line" id="L386"><a href="#L386" aria-label="386행">386</a>    tokens = {</span>
+<span class="line" id="L387"><a href="#L387" aria-label="387행">387</a>        token</span>
+<span class="line" id="L388"><a href="#L388" aria-label="388행">388</a>        for token in re.split(r&quot;[^A-Za-z0-9_-]+&quot;, receiver.upper())</span>
+<span class="line" id="L389"><a href="#L389" aria-label="389행">389</a>        if token</span>
+<span class="line" id="L390"><a href="#L390" aria-label="390행">390</a>    }</span>
+<span class="line" id="L391"><a href="#L391" aria-label="391행">391</a>    wanted = agent.upper()</span>
+<span class="line" id="L392"><a href="#L392" aria-label="392행">392</a>    return wanted in tokens or &quot;ALL&quot; in tokens</span>
+<span class="line" id="L393"><a href="#L393" aria-label="393행">393</a></span>
+<span class="line" id="L394"><a href="#L394" aria-label="394행">394</a></span>
+<span class="line" id="L395"><a href="#L395" aria-label="395행">395</a>def clipped(value: str, limit: int) -&gt; str:</span>
+<span class="line" id="L396"><a href="#L396" aria-label="396행">396</a>    if limit &lt; 1 or len(value) &lt;= limit:</span>
+<span class="line" id="L397"><a href="#L397" aria-label="397행">397</a>        return value</span>
+<span class="line" id="L398"><a href="#L398" aria-label="398행">398</a>    omitted = len(value) - limit</span>
+<span class="line" id="L399"><a href="#L399" aria-label="399행">399</a>    return f&quot;{value[:limit].rstrip()}\n[thread] ... truncated {omitted} chars&quot;</span>
+<span class="line" id="L400"><a href="#L400" aria-label="400행">400</a></span>
+<span class="line" id="L401"><a href="#L401" aria-label="401행">401</a></span>
+<span class="line" id="L402"><a href="#L402" aria-label="402행">402</a>def read_only_validation(raw: bytes, command: str) -&gt; tuple[str, int] | None:</span>
+<span class="line" id="L403"><a href="#L403" aria-label="403행">403</a>    text = decode_utf8(raw)</span>
+<span class="line" id="L404"><a href="#L404" aria-label="404행">404</a>    ok, problems, last = validate_raw(raw)</span>
+<span class="line" id="L405"><a href="#L405" aria-label="405행">405</a>    structural = [</span>
+<span class="line" id="L406"><a href="#L406" aria-label="406행">406</a>        problem for problem in problems if not problem.startswith(&quot;mixed line endings:&quot;)</span>
+<span class="line" id="L407"><a href="#L407" aria-label="407행">407</a>    ]</span>
+<span class="line" id="L408"><a href="#L408" aria-label="408행">408</a>    if structural:</span>
+<span class="line" id="L409"><a href="#L409" aria-label="409행">409</a>        for problem in structural:</span>
+<span class="line" id="L410"><a href="#L410" aria-label="410행">410</a>            print(problem, file=sys.stderr)</span>
+<span class="line" id="L411"><a href="#L411" aria-label="411행">411</a>        return None</span>
+<span class="line" id="L412"><a href="#L412" aria-label="412행">412</a>    if not ok:</span>
+<span class="line" id="L413"><a href="#L413" aria-label="413행">413</a>        print(</span>
+<span class="line" id="L414"><a href="#L414" aria-label="414행">414</a>            f&quot;[thread] warning: mixed newlines detected; read-only {command} is allowed, &quot;</span>
+<span class="line" id="L415"><a href="#L415" aria-label="415행">415</a>            &quot;mutation commands will refuse&quot;,</span>
+<span class="line" id="L416"><a href="#L416" aria-label="416행">416</a>            file=sys.stderr,</span>
+<span class="line" id="L417"><a href="#L417" aria-label="417행">417</a>        )</span>
+<span class="line" id="L418"><a href="#L418" aria-label="418행">418</a>    return text, last</span>
+<span class="line" id="L419"><a href="#L419" aria-label="419행">419</a></span>
+<span class="line" id="L420"><a href="#L420" aria-label="420행">420</a></span>
+<span class="line" id="L421"><a href="#L421" aria-label="421행">421</a>def intake(path: Path, args: argparse.Namespace) -&gt; int:</span>
+<span class="line" id="L422"><a href="#L422" aria-label="422행">422</a>    &quot;&quot;&quot;Emit one bounded mailbox snapshot for the common read/process path.&quot;&quot;&quot;</span>
+<span class="line" id="L423"><a href="#L423" aria-label="423행">423</a>    raw = read_bytes(path)</span>
+<span class="line" id="L424"><a href="#L424" aria-label="424행">424</a>    validated = read_only_validation(raw, &quot;intake&quot;)</span>
+<span class="line" id="L425"><a href="#L425" aria-label="425행">425</a>    if validated is None:</span>
+<span class="line" id="L426"><a href="#L426" aria-label="426행">426</a>        return 1</span>
+<span class="line" id="L427"><a href="#L427" aria-label="427행">427</a>    text, last = validated</span>
+<span class="line" id="L428"><a href="#L428" aria-label="428행">428</a>    messages = message_infos(text)</span>
+<span class="line" id="L429"><a href="#L429" aria-label="429행">429</a>    awaiting_all = awaiting_reply_messages(text)</span>
+<span class="line" id="L430"><a href="#L430" aria-label="430행">430</a>    relevant_pending = [</span>
+<span class="line" id="L431"><a href="#L431" aria-label="431행">431</a>        message</span>
+<span class="line" id="L432"><a href="#L432" aria-label="432행">432</a>        for message in messages</span>
+<span class="line" id="L433"><a href="#L433" aria-label="433행">433</a>        if message.status in PENDING_STATUSES</span>
+<span class="line" id="L434"><a href="#L434" aria-label="434행">434</a>        and receiver_matches(message.receiver, args.agent)</span>
+<span class="line" id="L435"><a href="#L435" aria-label="435행">435</a>    ]</span>
+<span class="line" id="L436"><a href="#L436" aria-label="436행">436</a>    relevant_awaiting = [</span>
+<span class="line" id="L437"><a href="#L437" aria-label="437행">437</a>        message</span>
+<span class="line" id="L438"><a href="#L438" aria-label="438행">438</a>        for message in awaiting_all</span>
+<span class="line" id="L439"><a href="#L439" aria-label="439행">439</a>        if receiver_matches(message.receiver, args.agent)</span>
+<span class="line" id="L440"><a href="#L440" aria-label="440행">440</a>    ]</span>
+<span class="line" id="L441"><a href="#L441" aria-label="441행">441</a></span>
+<span class="line" id="L442"><a href="#L442" aria-label="442행">442</a>    latest_by_status: dict[str, MessageInfo] = {}</span>
+<span class="line" id="L443"><a href="#L443" aria-label="443행">443</a>    for message in relevant_pending:</span>
+<span class="line" id="L444"><a href="#L444" aria-label="444행">444</a>        latest_by_status[message.status] = message</span>
+<span class="line" id="L445"><a href="#L445" aria-label="445행">445</a></span>
+<span class="line" id="L446"><a href="#L446" aria-label="446행">446</a>    incremental_summary: str | None = None</span>
+<span class="line" id="L447"><a href="#L447" aria-label="447행">447</a>    if args.known_last is not None:</span>
+<span class="line" id="L448"><a href="#L448" aria-label="448행">448</a>        if args.known_last &lt; 0:</span>
+<span class="line" id="L449"><a href="#L449" aria-label="449행">449</a>            print(&quot;[thread] intake refused: --known-last must be 0 or greater&quot;, file=sys.stderr)</span>
+<span class="line" id="L450"><a href="#L450" aria-label="450행">450</a>            return 2</span>
+<span class="line" id="L451"><a href="#L451" aria-label="451행">451</a>        if args.known_last &gt; last:</span>
+<span class="line" id="L452"><a href="#L452" aria-label="452행">452</a>            print(</span>
+<span class="line" id="L453"><a href="#L453" aria-label="453행">453</a>                f&quot;[thread] intake refused: --known-last #{args.known_last:04d} &quot;</span>
+<span class="line" id="L454"><a href="#L454" aria-label="454행">454</a>                f&quot;is greater than actual last #{last:04d}&quot;,</span>
+<span class="line" id="L455"><a href="#L455" aria-label="455행">455</a>                file=sys.stderr,</span>
+<span class="line" id="L456"><a href="#L456" aria-label="456행">456</a>            )</span>
+<span class="line" id="L457"><a href="#L457" aria-label="457행">457</a>            return 2</span>
+<span class="line" id="L458"><a href="#L458" aria-label="458행">458</a>        if args.limit &lt; 1:</span>
+<span class="line" id="L459"><a href="#L459" aria-label="459행">459</a>            print(</span>
+<span class="line" id="L460"><a href="#L460" aria-label="460행">460</a>                &quot;[thread] intake refused: --limit must be at least 1 with --known-last&quot;,</span>
+<span class="line" id="L461"><a href="#L461" aria-label="461행">461</a>                file=sys.stderr,</span>
+<span class="line" id="L462"><a href="#L462" aria-label="462행">462</a>            )</span>
+<span class="line" id="L463"><a href="#L463" aria-label="463행">463</a>            return 2</span>
+<span class="line" id="L464"><a href="#L464" aria-label="464행">464</a>        incremental = [</span>
+<span class="line" id="L465"><a href="#L465" aria-label="465행">465</a>            message</span>
+<span class="line" id="L466"><a href="#L466" aria-label="466행">466</a>            for message in messages</span>
+<span class="line" id="L467"><a href="#L467" aria-label="467행">467</a>            if message.number &gt; args.known_last</span>
+<span class="line" id="L468"><a href="#L468" aria-label="468행">468</a>            and receiver_matches(message.receiver, args.agent)</span>
+<span class="line" id="L469"><a href="#L469" aria-label="469행">469</a>        ]</span>
+<span class="line" id="L470"><a href="#L470" aria-label="470행">470</a>        shown = incremental[: args.limit]</span>
+<span class="line" id="L471"><a href="#L471" aria-label="471행">471</a>        remaining = len(incremental) - len(shown)</span>
+<span class="line" id="L472"><a href="#L472" aria-label="472행">472</a>        next_after = shown[-1].number if shown else args.known_last</span>
+<span class="line" id="L473"><a href="#L473" aria-label="473행">473</a>        next_range = (</span>
+<span class="line" id="L474"><a href="#L474" aria-label="474행">474</a>            f&quot;#{incremental[len(shown)].number:04d}-#{incremental[-1].number:04d}&quot;</span>
+<span class="line" id="L475"><a href="#L475" aria-label="475행">475</a>            if remaining</span>
+<span class="line" id="L476"><a href="#L476" aria-label="476행">476</a>            else &quot;NONE&quot;</span>
+<span class="line" id="L477"><a href="#L477" aria-label="477행">477</a>        )</span>
+<span class="line" id="L478"><a href="#L478" aria-label="478행">478</a>        incremental_summary = (</span>
+<span class="line" id="L479"><a href="#L479" aria-label="479행">479</a>            f&quot;[thread] incremental agent={args.agent} after=#{args.known_last:04d} &quot;</span>
+<span class="line" id="L480"><a href="#L480" aria-label="480행">480</a>            f&quot;matched={len(incremental)} shown={len(shown)} remaining={remaining} &quot;</span>
+<span class="line" id="L481"><a href="#L481" aria-label="481행">481</a>            f&quot;next_after=#{next_after:04d} next_range={next_range}&quot;</span>
+<span class="line" id="L482"><a href="#L482" aria-label="482행">482</a>        )</span>
+<span class="line" id="L483"><a href="#L483" aria-label="483행">483</a>        selected_numbers = {message.number for message in shown}</span>
+<span class="line" id="L484"><a href="#L484" aria-label="484행">484</a>    else:</span>
+<span class="line" id="L485"><a href="#L485" aria-label="485행">485</a>        selected_numbers = {</span>
+<span class="line" id="L486"><a href="#L486" aria-label="486행">486</a>            message.number for message in relevant_pending[-max(0, args.limit) :]</span>
+<span class="line" id="L487"><a href="#L487" aria-label="487행">487</a>        }</span>
+<span class="line" id="L488"><a href="#L488" aria-label="488행">488</a>        selected_numbers.update(</span>
+<span class="line" id="L489"><a href="#L489" aria-label="489행">489</a>            message.number for message in latest_by_status.values()</span>
+<span class="line" id="L490"><a href="#L490" aria-label="490행">490</a>        )</span>
+<span class="line" id="L491"><a href="#L491" aria-label="491행">491</a>        if args.recent:</span>
+<span class="line" id="L492"><a href="#L492" aria-label="492행">492</a>            selected_numbers.update(</span>
+<span class="line" id="L493"><a href="#L493" aria-label="493행">493</a>                message.number for message in messages[-max(0, args.recent) :]</span>
+<span class="line" id="L494"><a href="#L494" aria-label="494행">494</a>            )</span>
+<span class="line" id="L495"><a href="#L495" aria-label="495행">495</a>    selected = [</span>
+<span class="line" id="L496"><a href="#L496" aria-label="496행">496</a>        message for message in messages if message.number in selected_numbers</span>
+<span class="line" id="L497"><a href="#L497" aria-label="497행">497</a>    ]</span>
+<span class="line" id="L498"><a href="#L498" aria-label="498행">498</a></span>
+<span class="line" id="L499"><a href="#L499" aria-label="499행">499</a>    info = mode_info(raw)</span>
+<span class="line" id="L500"><a href="#L500" aria-label="500행">500</a>    mode_label = info.value if info is not None else &quot;UNDECLARED&quot;</span>
+<span class="line" id="L501"><a href="#L501" aria-label="501행">501</a>    layout = thread_layout(raw)</span>
+<span class="line" id="L502"><a href="#L502" aria-label="502행">502</a>    pin_digest = (</span>
+<span class="line" id="L503"><a href="#L503" aria-label="503행">503</a>        hashlib.sha256(layout.pin.body).hexdigest()</span>
+<span class="line" id="L504"><a href="#L504" aria-label="504행">504</a>        if layout.pin is not None</span>
+<span class="line" id="L505"><a href="#L505" aria-label="505행">505</a>        else &quot;NONE&quot;</span>
+<span class="line" id="L506"><a href="#L506" aria-label="506행">506</a>    )</span>
+<span class="line" id="L507"><a href="#L507" aria-label="507행">507</a>    if args.known_pinned_hash is None:</span>
+<span class="line" id="L508"><a href="#L508" aria-label="508행">508</a>        pinned_changed = &quot;UNKNOWN&quot;</span>
+<span class="line" id="L509"><a href="#L509" aria-label="509행">509</a>    else:</span>
+<span class="line" id="L510"><a href="#L510" aria-label="510행">510</a>        pinned_changed = (</span>
+<span class="line" id="L511"><a href="#L511" aria-label="511행">511</a>            &quot;NO&quot;</span>
+<span class="line" id="L512"><a href="#L512" aria-label="512행">512</a>            if args.known_pinned_hash.strip().lower() == pin_digest.lower()</span>
+<span class="line" id="L513"><a href="#L513" aria-label="513행">513</a>            else &quot;YES&quot;</span>
+<span class="line" id="L514"><a href="#L514" aria-label="514행">514</a>        )</span>
+<span class="line" id="L515"><a href="#L515" aria-label="515행">515</a>    latest_labels = &quot; &quot;.join(</span>
+<span class="line" id="L516"><a href="#L516" aria-label="516행">516</a>        f&quot;latest_{status}=#{latest_by_status[status].number:04d}&quot;</span>
+<span class="line" id="L517"><a href="#L517" aria-label="517행">517</a>        if status in latest_by_status</span>
+<span class="line" id="L518"><a href="#L518" aria-label="518행">518</a>        else f&quot;latest_{status}=NONE&quot;</span>
+<span class="line" id="L519"><a href="#L519" aria-label="519행">519</a>        for status in PENDING_STATUSES</span>
+<span class="line" id="L520"><a href="#L520" aria-label="520행">520</a>    )</span>
+<span class="line" id="L521"><a href="#L521" aria-label="521행">521</a>    print(</span>
+<span class="line" id="L522"><a href="#L522" aria-label="522행">522</a>        f&quot;[thread] intake mode={mode_label} last=#{last:04d} messages={len(messages)} &quot;</span>
+<span class="line" id="L523"><a href="#L523" aria-label="523행">523</a>        f&quot;pinned_hash={pin_digest} pinned_changed={pinned_changed} &quot;</span>
+<span class="line" id="L524"><a href="#L524" aria-label="524행">524</a>        f&quot;pending_for={len(relevant_pending)} awaiting_for={len(relevant_awaiting)} &quot;</span>
+<span class="line" id="L525"><a href="#L525" aria-label="525행">525</a>        f&quot;awaiting_total={len(awaiting_all)}&quot;</span>
+<span class="line" id="L526"><a href="#L526" aria-label="526행">526</a>    )</span>
+<span class="line" id="L527"><a href="#L527" aria-label="527행">527</a>    print(f&quot;[thread] {latest_labels}&quot;)</span>
+<span class="line" id="L528"><a href="#L528" aria-label="528행">528</a>    if incremental_summary is not None:</span>
+<span class="line" id="L529"><a href="#L529" aria-label="529행">529</a>        print(incremental_summary)</span>
+<span class="line" id="L530"><a href="#L530" aria-label="530행">530</a></span>
+<span class="line" id="L531"><a href="#L531" aria-label="531행">531</a>    if not args.no_pinned:</span>
+<span class="line" id="L532"><a href="#L532" aria-label="532행">532</a>        if layout.pin is None:</span>
+<span class="line" id="L533"><a href="#L533" aria-label="533행">533</a>            print(&quot;[PINNED] unavailable&quot;)</span>
+<span class="line" id="L534"><a href="#L534" aria-label="534행">534</a>        elif pinned_changed == &quot;NO&quot;:</span>
+<span class="line" id="L535"><a href="#L535" aria-label="535행">535</a>            print(&quot;[PINNED] unchanged; body omitted&quot;)</span>
+<span class="line" id="L536"><a href="#L536" aria-label="536행">536</a>        else:</span>
+<span class="line" id="L537"><a href="#L537" aria-label="537행">537</a>            pin_text = decode_utf8(layout.pin.body).strip()</span>
+<span class="line" id="L538"><a href="#L538" aria-label="538행">538</a>            print(f&quot;[PINNED sha256={pin_digest}]&quot;)</span>
+<span class="line" id="L539"><a href="#L539" aria-label="539행">539</a>            print(clipped(pin_text, args.pinned_chars) or &quot;(empty)&quot;)</span>
+<span class="line" id="L540"><a href="#L540" aria-label="540행">540</a></span>
+<span class="line" id="L541"><a href="#L541" aria-label="541행">541</a>    if not selected:</span>
+<span class="line" id="L542"><a href="#L542" aria-label="542행">542</a>        print(&quot;[MESSAGES] none selected&quot;)</span>
+<span class="line" id="L543"><a href="#L543" aria-label="543행">543</a>        return 0</span>
+<span class="line" id="L544"><a href="#L544" aria-label="544행">544</a>    for message in selected:</span>
+<span class="line" id="L545"><a href="#L545" aria-label="545행">545</a>        flags = []</span>
+<span class="line" id="L546"><a href="#L546" aria-label="546행">546</a>        if message in relevant_awaiting:</span>
+<span class="line" id="L547"><a href="#L547" aria-label="547행">547</a>            flags.append(&quot;AWAITING&quot;)</span>
+<span class="line" id="L548"><a href="#L548" aria-label="548행">548</a>        if message.status in PENDING_STATUSES:</span>
+<span class="line" id="L549"><a href="#L549" aria-label="549행">549</a>            flags.append(message.status)</span>
+<span class="line" id="L550"><a href="#L550" aria-label="550행">550</a>        flag_text = &quot;,&quot;.join(dict.fromkeys(flags)) or message.status or &quot;UNKNOWN&quot;</span>
+<span class="line" id="L551"><a href="#L551" aria-label="551행">551</a>        print(</span>
+<span class="line" id="L552"><a href="#L552" aria-label="552행">552</a>            f&quot;[MESSAGE #{message.number:04d} {flag_text}] &quot;</span>
+<span class="line" id="L553"><a href="#L553" aria-label="553행">553</a>            f&quot;{message.sender} -&gt; {message.receiver} | {message.title}&quot;</span>
+<span class="line" id="L554"><a href="#L554" aria-label="554행">554</a>        )</span>
+<span class="line" id="L555"><a href="#L555" aria-label="555행">555</a>        print(clipped(message_body(text, message.number), args.body_chars) or &quot;(empty body)&quot;)</span>
+<span class="line" id="L556"><a href="#L556" aria-label="556행">556</a>    return 0</span>
+<span class="line" id="L557"><a href="#L557" aria-label="557행">557</a></span>
+<span class="line" id="L558"><a href="#L558" aria-label="558행">558</a></span>
+<span class="line" id="L559"><a href="#L559" aria-label="559행">559</a>def linked_message_numbers(</span>
+<span class="line" id="L560"><a href="#L560" aria-label="560행">560</a>    messages: list[MessageInfo], number: int, depth: int</span>
+<span class="line" id="L561"><a href="#L561" aria-label="561행">561</a>) -&gt; list[int]:</span>
+<span class="line" id="L562"><a href="#L562" aria-label="562행">562</a>    by_number = {message.number: message for message in messages}</span>
+<span class="line" id="L563"><a href="#L563" aria-label="563행">563</a>    if number not in by_number:</span>
+<span class="line" id="L564"><a href="#L564" aria-label="564행">564</a>        raise ValueError(f&quot;message not found: #{number:04d}&quot;)</span>
+<span class="line" id="L565"><a href="#L565" aria-label="565행">565</a>    ordered: list[int] = []</span>
+<span class="line" id="L566"><a href="#L566" aria-label="566행">566</a>    seen: set[int] = set()</span>
+<span class="line" id="L567"><a href="#L567" aria-label="567행">567</a></span>
+<span class="line" id="L568"><a href="#L568" aria-label="568행">568</a>    def visit(current: int, remaining: int) -&gt; None:</span>
+<span class="line" id="L569"><a href="#L569" aria-label="569행">569</a>        if current in seen:</span>
+<span class="line" id="L570"><a href="#L570" aria-label="570행">570</a>            return</span>
+<span class="line" id="L571"><a href="#L571" aria-label="571행">571</a>        seen.add(current)</span>
+<span class="line" id="L572"><a href="#L572" aria-label="572행">572</a>        message = by_number[current]</span>
+<span class="line" id="L573"><a href="#L573" aria-label="573행">573</a>        if remaining &gt; 0:</span>
+<span class="line" id="L574"><a href="#L574" aria-label="574행">574</a>            for target in message.reply_targets:</span>
+<span class="line" id="L575"><a href="#L575" aria-label="575행">575</a>                visit(target, remaining - 1)</span>
+<span class="line" id="L576"><a href="#L576" aria-label="576행">576</a>        ordered.append(current)</span>
+<span class="line" id="L577"><a href="#L577" aria-label="577행">577</a></span>
+<span class="line" id="L578"><a href="#L578" aria-label="578행">578</a>    visit(number, max(0, depth))</span>
+<span class="line" id="L579"><a href="#L579" aria-label="579행">579</a>    return ordered</span>
+<span class="line" id="L580"><a href="#L580" aria-label="580행">580</a></span>
+<span class="line" id="L581"><a href="#L581" aria-label="581행">581</a></span>
+<span class="line" id="L582"><a href="#L582" aria-label="582행">582</a>def show_message(path: Path, number: int, with_links: bool, depth: int) -&gt; int:</span>
+<span class="line" id="L583"><a href="#L583" aria-label="583행">583</a>    raw = read_bytes(path)</span>
+<span class="line" id="L584"><a href="#L584" aria-label="584행">584</a>    validated = read_only_validation(raw, &quot;show&quot;)</span>
+<span class="line" id="L585"><a href="#L585" aria-label="585행">585</a>    if validated is None:</span>
+<span class="line" id="L586"><a href="#L586" aria-label="586행">586</a>        return 1</span>
+<span class="line" id="L587"><a href="#L587" aria-label="587행">587</a>    text, _ = validated</span>
+<span class="line" id="L588"><a href="#L588" aria-label="588행">588</a>    numbers = (</span>
+<span class="line" id="L589"><a href="#L589" aria-label="589행">589</a>        linked_message_numbers(message_infos(text), number, depth)</span>
+<span class="line" id="L590"><a href="#L590" aria-label="590행">590</a>        if with_links</span>
+<span class="line" id="L591"><a href="#L591" aria-label="591행">591</a>        else [number]</span>
+<span class="line" id="L592"><a href="#L592" aria-label="592행">592</a>    )</span>
+<span class="line" id="L593"><a href="#L593" aria-label="593행">593</a>    for index, selected in enumerate(numbers):</span>
+<span class="line" id="L594"><a href="#L594" aria-label="594행">594</a>        if index:</span>
+<span class="line" id="L595"><a href="#L595" aria-label="595행">595</a>            print(&quot;\n---\n&quot;)</span>
+<span class="line" id="L596"><a href="#L596" aria-label="596행">596</a>        label = &quot;REQUESTED&quot; if selected == number else &quot;LINKED-PRIOR&quot;</span>
+<span class="line" id="L597"><a href="#L597" aria-label="597행">597</a>        print(f&quot;[thread] {label} #{selected:04d}&quot;)</span>
+<span class="line" id="L598"><a href="#L598" aria-label="598행">598</a>        print(message_block(text, selected))</span>
+<span class="line" id="L599"><a href="#L599" aria-label="599행">599</a>    return 0</span>
+<span class="line" id="L600"><a href="#L600" aria-label="600행">600</a></span>
+<span class="line" id="L601"><a href="#L601" aria-label="601행">601</a></span>
+<span class="line" id="L602"><a href="#L602" aria-label="602행">602</a>def awaiting_reply_messages(text: str) -&gt; list[MessageInfo]:</span>
+<span class="line" id="L603"><a href="#L603" aria-label="603행">603</a>    messages = message_infos(text)</span>
+<span class="line" id="L604"><a href="#L604" aria-label="604행">604</a>    answered = {target for message in messages for target in message.reply_targets}</span>
+<span class="line" id="L605"><a href="#L605" aria-label="605행">605</a>    return [</span>
+<span class="line" id="L606"><a href="#L606" aria-label="606행">606</a>        message</span>
+<span class="line" id="L607"><a href="#L607" aria-label="607행">607</a>        for message in messages</span>
+<span class="line" id="L608"><a href="#L608" aria-label="608행">608</a>        if message.reply_required</span>
+<span class="line" id="L609"><a href="#L609" aria-label="609행">609</a>        and message.status != &quot;DONE&quot;</span>
+<span class="line" id="L610"><a href="#L610" aria-label="610행">610</a>        and message.number not in answered</span>
+<span class="line" id="L611"><a href="#L611" aria-label="611행">611</a>    ]</span>
+<span class="line" id="L612"><a href="#L612" aria-label="612행">612</a></span>
+<span class="line" id="L613"><a href="#L613" aria-label="613행">613</a></span>
+<span class="line" id="L614"><a href="#L614" aria-label="614행">614</a>def awaiting_reply_count(text: str) -&gt; int:</span>
+<span class="line" id="L615"><a href="#L615" aria-label="615행">615</a>    return len(awaiting_reply_messages(text))</span>
+<span class="line" id="L616"><a href="#L616" aria-label="616행">616</a></span>
+<span class="line" id="L617"><a href="#L617" aria-label="617행">617</a></span>
+<span class="line" id="L618"><a href="#L618" aria-label="618행">618</a>def with_awaiting(output: str, text: str) -&gt; str:</span>
+<span class="line" id="L619"><a href="#L619" aria-label="619행">619</a>    return f&quot;{output} awaiting_reply={awaiting_reply_count(text)}&quot;</span>
+<span class="line" id="L620"><a href="#L620" aria-label="620행">620</a></span>
+<span class="line" id="L621"><a href="#L621" aria-label="621행">621</a></span>
+<span class="line" id="L622"><a href="#L622" aria-label="622행">622</a>def validate_text(text: str, expected_last: int | None = None) -&gt; tuple[bool, list[str], int]:</span>
+<span class="line" id="L623"><a href="#L623" aria-label="623행">623</a>    problems: list[str] = []</span>
+<span class="line" id="L624"><a href="#L624" aria-label="624행">624</a>    crlf, lf_only, stray_cr = newline_counts(text)</span>
+<span class="line" id="L625"><a href="#L625" aria-label="625행">625</a>    if crlf and lf_only:</span>
+<span class="line" id="L626"><a href="#L626" aria-label="626행">626</a>        problems.append(f&quot;mixed line endings: crlf={crlf}, lf_only={lf_only}&quot;)</span>
+<span class="line" id="L627"><a href="#L627" aria-label="627행">627</a>    # Standalone CR bytes can occur inside preserved historical message bodies.</span>
+<span class="line" id="L628"><a href="#L628" aria-label="628행">628</a>    # Report their count, but reject only an actual CRLF/LF newline mixture.</span>
+<span class="line" id="L629"><a href="#L629" aria-label="629행">629</a></span>
+<span class="line" id="L630"><a href="#L630" aria-label="630행">630</a>    found = parse_headers(text)</span>
+<span class="line" id="L631"><a href="#L631" aria-label="631행">631</a>    if not found:</span>
+<span class="line" id="L632"><a href="#L632" aria-label="632행">632</a>        if expected_last not in (None, 0):</span>
+<span class="line" id="L633"><a href="#L633" aria-label="633행">633</a>            problems.append(f&quot;expected last #{expected_last:04d}, got #{0:04d}&quot;)</span>
+<span class="line" id="L634"><a href="#L634" aria-label="634행">634</a>        return not problems, problems, 0</span>
+<span class="line" id="L635"><a href="#L635" aria-label="635행">635</a></span>
+<span class="line" id="L636"><a href="#L636" aria-label="636행">636</a>    seen: dict[int, list[int]] = {}</span>
+<span class="line" id="L637"><a href="#L637" aria-label="637행">637</a>    for number, line_no in found:</span>
+<span class="line" id="L638"><a href="#L638" aria-label="638행">638</a>        seen.setdefault(number, []).append(line_no)</span>
+<span class="line" id="L639"><a href="#L639" aria-label="639행">639</a>    for number, line_numbers in sorted(seen.items()):</span>
+<span class="line" id="L640"><a href="#L640" aria-label="640행">640</a>        if len(line_numbers) &gt; 1:</span>
+<span class="line" id="L641"><a href="#L641" aria-label="641행">641</a>            problems.append(f&quot;duplicate message #{number:04d}: lines {line_numbers}&quot;)</span>
+<span class="line" id="L642"><a href="#L642" aria-label="642행">642</a></span>
+<span class="line" id="L643"><a href="#L643" aria-label="643행">643</a>    numbers = [number for number, _ in found]</span>
+<span class="line" id="L644"><a href="#L644" aria-label="644행">644</a>    for previous, current in zip(numbers, numbers[1:]):</span>
+<span class="line" id="L645"><a href="#L645" aria-label="645행">645</a>        if current &lt;= previous:</span>
+<span class="line" id="L646"><a href="#L646" aria-label="646행">646</a>            problems.append(f&quot;message order inversion: #{previous:04d} then #{current:04d}&quot;)</span>
+<span class="line" id="L647"><a href="#L647" aria-label="647행">647</a>    last = numbers[-1]</span>
+<span class="line" id="L648"><a href="#L648" aria-label="648행">648</a>    if last != max(numbers):</span>
+<span class="line" id="L649"><a href="#L649" aria-label="649행">649</a>        problems.append(f&quot;last message #{last:04d} is not maximum #{max(numbers):04d}&quot;)</span>
+<span class="line" id="L650"><a href="#L650" aria-label="650행">650</a>    if expected_last is not None and last != expected_last:</span>
+<span class="line" id="L651"><a href="#L651" aria-label="651행">651</a>        problems.append(f&quot;expected last #{expected_last:04d}, got #{last:04d}&quot;)</span>
+<span class="line" id="L652"><a href="#L652" aria-label="652행">652</a></span>
+<span class="line" id="L653"><a href="#L653" aria-label="653행">653</a>    lines = text.splitlines(keepends=True)</span>
+<span class="line" id="L654"><a href="#L654" aria-label="654행">654</a>    for index, (number, line_no) in enumerate(found):</span>
+<span class="line" id="L655"><a href="#L655" aria-label="655행">655</a>        start = line_no - 1</span>
+<span class="line" id="L656"><a href="#L656" aria-label="656행">656</a>        end = found[index + 1][1] - 1 if index + 1 &lt; len(found) else len(lines)</span>
+<span class="line" id="L657"><a href="#L657" aria-label="657행">657</a>        state_rows = metadata_state_lines(lines, start, end)</span>
+<span class="line" id="L658"><a href="#L658" aria-label="658행">658</a>        if len(state_rows) != 1:</span>
+<span class="line" id="L659"><a href="#L659" aria-label="659행">659</a>            problems.append(f&quot;message #{number:04d} has {len(state_rows)} metadata status rows&quot;)</span>
+<span class="line" id="L660"><a href="#L660" aria-label="660행">660</a>            continue</span>
+<span class="line" id="L661"><a href="#L661" aria-label="661행">661</a>        state_value = lines[state_rows[0]].rstrip(&quot;\r\n&quot;).removeprefix(&quot;- 상태: &quot;)</span>
+<span class="line" id="L662"><a href="#L662" aria-label="662행">662</a>        if state_value not in STATUSES:</span>
+<span class="line" id="L663"><a href="#L663" aria-label="663행">663</a>            problems.append(f&quot;message #{number:04d} has invalid status {state_value!r}&quot;)</span>
+<span class="line" id="L664"><a href="#L664" aria-label="664행">664</a></span>
+<span class="line" id="L665"><a href="#L665" aria-label="665행">665</a>        reply_rows = metadata_field_lines(lines, start, end, &quot;- 답필요: &quot;)</span>
+<span class="line" id="L666"><a href="#L666" aria-label="666행">666</a>        if len(reply_rows) != 1:</span>
+<span class="line" id="L667"><a href="#L667" aria-label="667행">667</a>            problems.append(f&quot;message #{number:04d} has {len(reply_rows)} reply-required rows&quot;)</span>
+<span class="line" id="L668"><a href="#L668" aria-label="668행">668</a>        else:</span>
+<span class="line" id="L669"><a href="#L669" aria-label="669행">669</a>            reply_value = (</span>
+<span class="line" id="L670"><a href="#L670" aria-label="670행">670</a>                lines[reply_rows[0]].rstrip(&quot;\r\n&quot;).removeprefix(&quot;- 답필요: &quot;)</span>
+<span class="line" id="L671"><a href="#L671" aria-label="671행">671</a>            )</span>
+<span class="line" id="L672"><a href="#L672" aria-label="672행">672</a>            if reply_value not in (&quot;Y&quot;, &quot;N&quot;):</span>
+<span class="line" id="L673"><a href="#L673" aria-label="673행">673</a>                problems.append(</span>
+<span class="line" id="L674"><a href="#L674" aria-label="674행">674</a>                    f&quot;message #{number:04d} has invalid reply-required value {reply_value!r}&quot;</span>
+<span class="line" id="L675"><a href="#L675" aria-label="675행">675</a>                )</span>
+<span class="line" id="L676"><a href="#L676" aria-label="676행">676</a></span>
+<span class="line" id="L677"><a href="#L677" aria-label="677행">677</a>        target_rows = metadata_field_lines(lines, start, end, &quot;- 회신대상: &quot;)</span>
+<span class="line" id="L678"><a href="#L678" aria-label="678행">678</a>        if len(target_rows) &gt; 1:</span>
+<span class="line" id="L679"><a href="#L679" aria-label="679행">679</a>            problems.append(f&quot;message #{number:04d} has {len(target_rows)} reply-target rows&quot;)</span>
+<span class="line" id="L680"><a href="#L680" aria-label="680행">680</a>        elif target_rows:</span>
+<span class="line" id="L681"><a href="#L681" aria-label="681행">681</a>            value = (</span>
+<span class="line" id="L682"><a href="#L682" aria-label="682행">682</a>                lines[target_rows[0]].rstrip(&quot;\r\n&quot;).removeprefix(&quot;- 회신대상: &quot;)</span>
+<span class="line" id="L683"><a href="#L683" aria-label="683행">683</a>            )</span>
+<span class="line" id="L684"><a href="#L684" aria-label="684행">684</a>            try:</span>
+<span class="line" id="L685"><a href="#L685" aria-label="685행">685</a>                targets = parse_structured_reply_targets(value)</span>
+<span class="line" id="L686"><a href="#L686" aria-label="686행">686</a>            except ValueError as error:</span>
+<span class="line" id="L687"><a href="#L687" aria-label="687행">687</a>                problems.append(f&quot;message #{number:04d} has invalid reply targets: {error}&quot;)</span>
+<span class="line" id="L688"><a href="#L688" aria-label="688행">688</a>            else:</span>
+<span class="line" id="L689"><a href="#L689" aria-label="689행">689</a>                prior_numbers = {prior for prior, _ in found[:index]}</span>
+<span class="line" id="L690"><a href="#L690" aria-label="690행">690</a>                for target in targets:</span>
+<span class="line" id="L691"><a href="#L691" aria-label="691행">691</a>                    if target not in prior_numbers:</span>
+<span class="line" id="L692"><a href="#L692" aria-label="692행">692</a>                        problems.append(</span>
+<span class="line" id="L693"><a href="#L693" aria-label="693행">693</a>                            f&quot;message #{number:04d} reply target #{target:04d} &quot;</span>
+<span class="line" id="L694"><a href="#L694" aria-label="694행">694</a>                            &quot;must reference an existing earlier message&quot;</span>
+<span class="line" id="L695"><a href="#L695" aria-label="695행">695</a>                        )</span>
+<span class="line" id="L696"><a href="#L696" aria-label="696행">696</a>    return not problems, problems, last</span>
+<span class="line" id="L697"><a href="#L697" aria-label="697행">697</a></span>
+<span class="line" id="L698"><a href="#L698" aria-label="698행">698</a></span>
+<span class="line" id="L699"><a href="#L699" aria-label="699행">699</a>def validate(path: Path, expected_last: int | None = None) -&gt; tuple[bool, list[str], int]:</span>
+<span class="line" id="L700"><a href="#L700" aria-label="700행">700</a>    if not path.exists():</span>
+<span class="line" id="L701"><a href="#L701" aria-label="701행">701</a>        return False, [f&quot;thread not found: {path}&quot;], 0</span>
+<span class="line" id="L702"><a href="#L702" aria-label="702행">702</a>    return validate_raw(read_bytes(path), expected_last=expected_last)</span>
+<span class="line" id="L703"><a href="#L703" aria-label="703행">703</a></span>
+<span class="line" id="L704"><a href="#L704" aria-label="704행">704</a></span>
+<span class="line" id="L705"><a href="#L705" aria-label="705행">705</a>def newline_summary(text: str) -&gt; str:</span>
+<span class="line" id="L706"><a href="#L706" aria-label="706행">706</a>    crlf, lf_only, stray_cr = newline_counts(text)</span>
+<span class="line" id="L707"><a href="#L707" aria-label="707행">707</a>    return f&quot;newline={newline_label(text)} crlf={crlf} lf_only={lf_only} stray_cr={stray_cr}&quot;</span>
+<span class="line" id="L708"><a href="#L708" aria-label="708행">708</a></span>
+<span class="line" id="L709"><a href="#L709" aria-label="709행">709</a></span>
+<span class="line" id="L710"><a href="#L710" aria-label="710행">710</a>@contextlib.contextmanager</span>
+<span class="line" id="L711"><a href="#L711" aria-label="711행">711</a>def mutation_lock(path: Path, timeout: float = LOCK_TIMEOUT_SECONDS) -&gt; Iterator[None]:</span>
+<span class="line" id="L712"><a href="#L712" aria-label="712행">712</a>    &quot;&quot;&quot;Serialize helper mutations with an exclusive sidecar lock.&quot;&quot;&quot;</span>
+<span class="line" id="L713"><a href="#L713" aria-label="713행">713</a>    lock_path = path.with_name(f&quot;.{path.name}.mailbox.lock&quot;)</span>
+<span class="line" id="L714"><a href="#L714" aria-label="714행">714</a>    deadline = time.monotonic() + timeout</span>
+<span class="line" id="L715"><a href="#L715" aria-label="715행">715</a>    descriptor: int | None = None</span>
+<span class="line" id="L716"><a href="#L716" aria-label="716행">716</a>    while descriptor is None:</span>
+<span class="line" id="L717"><a href="#L717" aria-label="717행">717</a>        try:</span>
+<span class="line" id="L718"><a href="#L718" aria-label="718행">718</a>            descriptor = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)</span>
+<span class="line" id="L719"><a href="#L719" aria-label="719행">719</a>        except FileExistsError:</span>
+<span class="line" id="L720"><a href="#L720" aria-label="720행">720</a>            if time.monotonic() &gt;= deadline:</span>
+<span class="line" id="L721"><a href="#L721" aria-label="721행">721</a>                raise TimeoutError(f&quot;timed out waiting for mutation lock: {lock_path}&quot;)</span>
+<span class="line" id="L722"><a href="#L722" aria-label="722행">722</a>            time.sleep(0.05)</span>
+<span class="line" id="L723"><a href="#L723" aria-label="723행">723</a>    try:</span>
+<span class="line" id="L724"><a href="#L724" aria-label="724행">724</a>        os.write(descriptor, f&quot;pid={os.getpid()} created={dt.datetime.now().isoformat()}\n&quot;.encode(&quot;ascii&quot;))</span>
+<span class="line" id="L725"><a href="#L725" aria-label="725행">725</a>        os.fsync(descriptor)</span>
+<span class="line" id="L726"><a href="#L726" aria-label="726행">726</a>        yield</span>
+<span class="line" id="L727"><a href="#L727" aria-label="727행">727</a>    finally:</span>
+<span class="line" id="L728"><a href="#L728" aria-label="728행">728</a>        if descriptor is not None:</span>
+<span class="line" id="L729"><a href="#L729" aria-label="729행">729</a>            os.close(descriptor)</span>
+<span class="line" id="L730"><a href="#L730" aria-label="730행">730</a>        try:</span>
+<span class="line" id="L731"><a href="#L731" aria-label="731행">731</a>            lock_path.unlink()</span>
+<span class="line" id="L732"><a href="#L732" aria-label="732행">732</a>        except FileNotFoundError:</span>
+<span class="line" id="L733"><a href="#L733" aria-label="733행">733</a>            pass</span>
+<span class="line" id="L734"><a href="#L734" aria-label="734행">734</a></span>
+<span class="line" id="L735"><a href="#L735" aria-label="735행">735</a></span>
+<span class="line" id="L736"><a href="#L736" aria-label="736행">736</a>def atomic_write(path: Path, raw: bytes) -&gt; None:</span>
+<span class="line" id="L737"><a href="#L737" aria-label="737행">737</a>    &quot;&quot;&quot;Replace a file from the same directory after flushing the candidate.&quot;&quot;&quot;</span>
+<span class="line" id="L738"><a href="#L738" aria-label="738행">738</a>    original_mode = stat.S_IMODE(path.stat().st_mode) if path.exists() else None</span>
+<span class="line" id="L739"><a href="#L739" aria-label="739행">739</a>    file_descriptor, temporary_name = tempfile.mkstemp(</span>
+<span class="line" id="L740"><a href="#L740" aria-label="740행">740</a>        prefix=f&quot;.{path.name}.&quot;, suffix=&quot;.tmp&quot;, dir=path.parent</span>
+<span class="line" id="L741"><a href="#L741" aria-label="741행">741</a>    )</span>
+<span class="line" id="L742"><a href="#L742" aria-label="742행">742</a>    temporary_path = Path(temporary_name)</span>
+<span class="line" id="L743"><a href="#L743" aria-label="743행">743</a>    try:</span>
+<span class="line" id="L744"><a href="#L744" aria-label="744행">744</a>        with os.fdopen(file_descriptor, &quot;wb&quot;) as stream:</span>
+<span class="line" id="L745"><a href="#L745" aria-label="745행">745</a>            stream.write(raw)</span>
+<span class="line" id="L746"><a href="#L746" aria-label="746행">746</a>            stream.flush()</span>
+<span class="line" id="L747"><a href="#L747" aria-label="747행">747</a>            os.fsync(stream.fileno())</span>
+<span class="line" id="L748"><a href="#L748" aria-label="748행">748</a>        if original_mode is not None:</span>
+<span class="line" id="L749"><a href="#L749" aria-label="749행">749</a>            os.chmod(temporary_path, original_mode)</span>
+<span class="line" id="L750"><a href="#L750" aria-label="750행">750</a>        os.replace(temporary_path, path)</span>
+<span class="line" id="L751"><a href="#L751" aria-label="751행">751</a>    finally:</span>
+<span class="line" id="L752"><a href="#L752" aria-label="752행">752</a>        try:</span>
+<span class="line" id="L753"><a href="#L753" aria-label="753행">753</a>            temporary_path.unlink()</span>
+<span class="line" id="L754"><a href="#L754" aria-label="754행">754</a>        except FileNotFoundError:</span>
+<span class="line" id="L755"><a href="#L755" aria-label="755행">755</a>            pass</span>
+<span class="line" id="L756"><a href="#L756" aria-label="756행">756</a></span>
+<span class="line" id="L757"><a href="#L757" aria-label="757행">757</a></span>
+<span class="line" id="L758"><a href="#L758" aria-label="758행">758</a>def template_path() -&gt; Path:</span>
+<span class="line" id="L759"><a href="#L759" aria-label="759행">759</a>    return Path(__file__).resolve().parent.parent / &quot;templates&quot; / &quot;thread-header.md&quot;</span>
+<span class="line" id="L760"><a href="#L760" aria-label="760행">760</a></span>
+<span class="line" id="L761"><a href="#L761" aria-label="761행">761</a></span>
+<span class="line" id="L762"><a href="#L762" aria-label="762행">762</a>def sanitize_mode_metadata(value: str, field: str) -&gt; str:</span>
+<span class="line" id="L763"><a href="#L763" aria-label="763행">763</a>    cleaned = value.strip()</span>
+<span class="line" id="L764"><a href="#L764" aria-label="764행">764</a>    if not cleaned:</span>
+<span class="line" id="L765"><a href="#L765" aria-label="765행">765</a>        raise ValueError(f&quot;mode {field} must not be empty&quot;)</span>
+<span class="line" id="L766"><a href="#L766" aria-label="766행">766</a>    if &quot;\r&quot; in value or &quot;\n&quot; in value:</span>
+<span class="line" id="L767"><a href="#L767" aria-label="767행">767</a>        raise ValueError(f&quot;mode {field} must not contain newlines&quot;)</span>
+<span class="line" id="L768"><a href="#L768" aria-label="768행">768</a>    if &quot;THREAD:MODE:&quot; in value or &quot;THREAD:PINNED:&quot; in value:</span>
+<span class="line" id="L769"><a href="#L769" aria-label="769행">769</a>        raise ValueError(f&quot;mode {field} must not contain marker text&quot;)</span>
+<span class="line" id="L770"><a href="#L770" aria-label="770행">770</a>    return cleaned</span>
+<span class="line" id="L771"><a href="#L771" aria-label="771행">771</a></span>
+<span class="line" id="L772"><a href="#L772" aria-label="772행">772</a></span>
+<span class="line" id="L773"><a href="#L773" aria-label="773행">773</a>def formatted_mode_body(</span>
+<span class="line" id="L774"><a href="#L774" aria-label="774행">774</a>    mode_value: str,</span>
+<span class="line" id="L775"><a href="#L775" aria-label="775행">775</a>    setter: str,</span>
+<span class="line" id="L776"><a href="#L776" aria-label="776행">776</a>    reason: str,</span>
+<span class="line" id="L777"><a href="#L777" aria-label="777행">777</a>    newline: str,</span>
+<span class="line" id="L778"><a href="#L778" aria-label="778행">778</a>    timestamp: str | None = None,</span>
+<span class="line" id="L779"><a href="#L779" aria-label="779행">779</a>) -&gt; bytes:</span>
+<span class="line" id="L780"><a href="#L780" aria-label="780행">780</a>    if mode_value not in MODES:</span>
+<span class="line" id="L781"><a href="#L781" aria-label="781행">781</a>        raise ValueError(f&quot;invalid mode value {mode_value!r}; expected GIT or LOCAL&quot;)</span>
+<span class="line" id="L782"><a href="#L782" aria-label="782행">782</a>    setter = sanitize_mode_metadata(setter, &quot;setter&quot;)</span>
+<span class="line" id="L783"><a href="#L783" aria-label="783행">783</a>    reason = sanitize_mode_metadata(reason, &quot;reason&quot;)</span>
+<span class="line" id="L784"><a href="#L784" aria-label="784행">784</a>    when = timestamp or dt.datetime.now().strftime(&quot;%Y-%m-%d %H:%M KST&quot;)</span>
+<span class="line" id="L785"><a href="#L785" aria-label="785행">785</a>    body = (</span>
+<span class="line" id="L786"><a href="#L786" aria-label="786행">786</a>        f&quot;- 모드: {mode_value}{newline}&quot;</span>
+<span class="line" id="L787"><a href="#L787" aria-label="787행">787</a>        f&quot;- 설정: {setter} · {when}{newline}&quot;</span>
+<span class="line" id="L788"><a href="#L788" aria-label="788행">788</a>        f&quot;- 사유: {reason}{newline}&quot;</span>
+<span class="line" id="L789"><a href="#L789" aria-label="789행">789</a>    )</span>
+<span class="line" id="L790"><a href="#L790" aria-label="790행">790</a>    return body.encode(&quot;utf-8&quot;)</span>
+<span class="line" id="L791"><a href="#L791" aria-label="791행">791</a></span>
+<span class="line" id="L792"><a href="#L792" aria-label="792행">792</a></span>
+<span class="line" id="L793"><a href="#L793" aria-label="793행">793</a>def formatted_mode_block(</span>
+<span class="line" id="L794"><a href="#L794" aria-label="794행">794</a>    mode_value: str,</span>
+<span class="line" id="L795"><a href="#L795" aria-label="795행">795</a>    setter: str,</span>
+<span class="line" id="L796"><a href="#L796" aria-label="796행">796</a>    reason: str,</span>
+<span class="line" id="L797"><a href="#L797" aria-label="797행">797</a>    newline: str,</span>
+<span class="line" id="L798"><a href="#L798" aria-label="798행">798</a>    timestamp: str | None = None,</span>
+<span class="line" id="L799"><a href="#L799" aria-label="799행">799</a>) -&gt; bytes:</span>
+<span class="line" id="L800"><a href="#L800" aria-label="800행">800</a>    body = formatted_mode_body(mode_value, setter, reason, newline, timestamp)</span>
+<span class="line" id="L801"><a href="#L801" aria-label="801행">801</a>    return (</span>
+<span class="line" id="L802"><a href="#L802" aria-label="802행">802</a>        MODE_START.encode(&quot;ascii&quot;)</span>
+<span class="line" id="L803"><a href="#L803" aria-label="803행">803</a>        + newline.encode(&quot;ascii&quot;)</span>
+<span class="line" id="L804"><a href="#L804" aria-label="804행">804</a>        + body</span>
+<span class="line" id="L805"><a href="#L805" aria-label="805행">805</a>        + MODE_END.encode(&quot;ascii&quot;)</span>
+<span class="line" id="L806"><a href="#L806" aria-label="806행">806</a>        + newline.encode(&quot;ascii&quot;) * 2</span>
+<span class="line" id="L807"><a href="#L807" aria-label="807행">807</a>    )</span>
+<span class="line" id="L808"><a href="#L808" aria-label="808행">808</a></span>
+<span class="line" id="L809"><a href="#L809" aria-label="809행">809</a></span>
+<span class="line" id="L810"><a href="#L810" aria-label="810행">810</a>def init_thread(path: Path, title: str, mode_value: str | None = None) -&gt; int:</span>
+<span class="line" id="L811"><a href="#L811" aria-label="811행">811</a>    if path.exists():</span>
+<span class="line" id="L812"><a href="#L812" aria-label="812행">812</a>        print(f&quot;[thread] refusing to overwrite existing file: {path}&quot;, file=sys.stderr)</span>
+<span class="line" id="L813"><a href="#L813" aria-label="813행">813</a>        return 2</span>
+<span class="line" id="L814"><a href="#L814" aria-label="814행">814</a>    template = template_path()</span>
+<span class="line" id="L815"><a href="#L815" aria-label="815행">815</a>    if not template.exists():</span>
+<span class="line" id="L816"><a href="#L816" aria-label="816행">816</a>        print(f&quot;[thread] template not found: {template}&quot;, file=sys.stderr)</span>
+<span class="line" id="L817"><a href="#L817" aria-label="817행">817</a>        return 2</span>
+<span class="line" id="L818"><a href="#L818" aria-label="818행">818</a>    content = template.read_text(encoding=&quot;utf-8&quot;).replace(&quot;{{TITLE}}&quot;, title)</span>
+<span class="line" id="L819"><a href="#L819" aria-label="819행">819</a>    raw = content.encode(&quot;utf-8&quot;)</span>
+<span class="line" id="L820"><a href="#L820" aria-label="820행">820</a>    if mode_value is not None:</span>
+<span class="line" id="L821"><a href="#L821" aria-label="821행">821</a>        layout = thread_layout(raw)</span>
+<span class="line" id="L822"><a href="#L822" aria-label="822행">822</a>        if layout.pin is None:</span>
+<span class="line" id="L823"><a href="#L823" aria-label="823행">823</a>            print(&quot;[thread] init template has no pinned markers&quot;, file=sys.stderr)</span>
+<span class="line" id="L824"><a href="#L824" aria-label="824행">824</a>            return 3</span>
+<span class="line" id="L825"><a href="#L825" aria-label="825행">825</a>        newline = newline_sequence(content)</span>
+<span class="line" id="L826"><a href="#L826" aria-label="826행">826</a>        block = formatted_mode_block(mode_value, &quot;OWNER&quot;, &quot;init --mode&quot;, newline)</span>
+<span class="line" id="L827"><a href="#L827" aria-label="827행">827</a>        raw = raw[: layout.pin.start] + block + raw[layout.pin.start :]</span>
+<span class="line" id="L828"><a href="#L828" aria-label="828행">828</a>    ok, problems, _ = validate_raw(raw)</span>
+<span class="line" id="L829"><a href="#L829" aria-label="829행">829</a>    if not ok:</span>
+<span class="line" id="L830"><a href="#L830" aria-label="830행">830</a>        for problem in problems:</span>
+<span class="line" id="L831"><a href="#L831" aria-label="831행">831</a>            print(problem, file=sys.stderr)</span>
+<span class="line" id="L832"><a href="#L832" aria-label="832행">832</a>        return 3</span>
+<span class="line" id="L833"><a href="#L833" aria-label="833행">833</a>    path.parent.mkdir(parents=True, exist_ok=True)</span>
+<span class="line" id="L834"><a href="#L834" aria-label="834행">834</a>    atomic_write(path, raw)</span>
+<span class="line" id="L835"><a href="#L835" aria-label="835행">835</a>    print(f&quot;[thread] initialized -&gt; {path}&quot;)</span>
+<span class="line" id="L836"><a href="#L836" aria-label="836행">836</a>    return 0</span>
+<span class="line" id="L837"><a href="#L837" aria-label="837행">837</a></span>
+<span class="line" id="L838"><a href="#L838" aria-label="838행">838</a></span>
+<span class="line" id="L839"><a href="#L839" aria-label="839행">839</a>def messages_with_status(path: Path, statuses: tuple[str, ...]) -&gt; list[tuple[int, str, str]]:</span>
+<span class="line" id="L840"><a href="#L840" aria-label="840행">840</a>    text = read_text(path)</span>
+<span class="line" id="L841"><a href="#L841" aria-label="841행">841</a>    lines = text.splitlines(keepends=True)</span>
+<span class="line" id="L842"><a href="#L842" aria-label="842행">842</a>    found = parse_headers(text)</span>
+<span class="line" id="L843"><a href="#L843" aria-label="843행">843</a>    pending: list[tuple[int, str, str]] = []</span>
+<span class="line" id="L844"><a href="#L844" aria-label="844행">844</a>    for index, (number, line_no) in enumerate(found):</span>
+<span class="line" id="L845"><a href="#L845" aria-label="845행">845</a>        end = found[index + 1][1] - 1 if index + 1 &lt; len(found) else len(lines)</span>
+<span class="line" id="L846"><a href="#L846" aria-label="846행">846</a>        start = line_no - 1</span>
+<span class="line" id="L847"><a href="#L847" aria-label="847행">847</a>        state_rows = metadata_state_lines(lines, start, end)</span>
+<span class="line" id="L848"><a href="#L848" aria-label="848행">848</a>        if len(state_rows) != 1:</span>
+<span class="line" id="L849"><a href="#L849" aria-label="849행">849</a>            continue</span>
+<span class="line" id="L850"><a href="#L850" aria-label="850행">850</a>        state_value = lines[state_rows[0]].strip().removeprefix(&quot;- 상태: &quot;)</span>
+<span class="line" id="L851"><a href="#L851" aria-label="851행">851</a>        if state_value in statuses:</span>
+<span class="line" id="L852"><a href="#L852" aria-label="852행">852</a>            pending.append((number, state_value, lines[start].rstrip(&quot;\r\n&quot;)))</span>
+<span class="line" id="L853"><a href="#L853" aria-label="853행">853</a>    return pending</span>
+<span class="line" id="L854"><a href="#L854" aria-label="854행">854</a></span>
+<span class="line" id="L855"><a href="#L855" aria-label="855행">855</a></span>
+<span class="line" id="L856"><a href="#L856" aria-label="856행">856</a>def enforce_expected_mode(raw: bytes, expected_mode: str | None, command: str) -&gt; int:</span>
+<span class="line" id="L857"><a href="#L857" aria-label="857행">857</a>    info = mode_info(raw)</span>
+<span class="line" id="L858"><a href="#L858" aria-label="858행">858</a>    if info is None:</span>
+<span class="line" id="L859"><a href="#L859" aria-label="859행">859</a>        if expected_mode is not None:</span>
+<span class="line" id="L860"><a href="#L860" aria-label="860행">860</a>            print(</span>
+<span class="line" id="L861"><a href="#L861" aria-label="861행">861</a>                f&quot;[thread] {command} refused: --expect-mode was provided but no mode block exists&quot;,</span>
+<span class="line" id="L862"><a href="#L862" aria-label="862행">862</a>                file=sys.stderr,</span>
+<span class="line" id="L863"><a href="#L863" aria-label="863행">863</a>            )</span>
+<span class="line" id="L864"><a href="#L864" aria-label="864행">864</a>            return 5</span>
+<span class="line" id="L865"><a href="#L865" aria-label="865행">865</a>        return 0</span>
+<span class="line" id="L866"><a href="#L866" aria-label="866행">866</a>    if expected_mode is None:</span>
+<span class="line" id="L867"><a href="#L867" aria-label="867행">867</a>        print(</span>
+<span class="line" id="L868"><a href="#L868" aria-label="868행">868</a>            f&quot;[thread] {command} refused: mode block declares {info.value}; &quot;</span>
+<span class="line" id="L869"><a href="#L869" aria-label="869행">869</a>            &quot;--expect-mode is required&quot;,</span>
+<span class="line" id="L870"><a href="#L870" aria-label="870행">870</a>            file=sys.stderr,</span>
+<span class="line" id="L871"><a href="#L871" aria-label="871행">871</a>        )</span>
+<span class="line" id="L872"><a href="#L872" aria-label="872행">872</a>        return 5</span>
+<span class="line" id="L873"><a href="#L873" aria-label="873행">873</a>    if expected_mode != info.value:</span>
+<span class="line" id="L874"><a href="#L874" aria-label="874행">874</a>        print(</span>
+<span class="line" id="L875"><a href="#L875" aria-label="875행">875</a>            f&quot;[thread] {command} refused: expected mode {expected_mode}, &quot;</span>
+<span class="line" id="L876"><a href="#L876" aria-label="876행">876</a>            f&quot;declared mode {info.value}&quot;,</span>
+<span class="line" id="L877"><a href="#L877" aria-label="877행">877</a>            file=sys.stderr,</span>
+<span class="line" id="L878"><a href="#L878" aria-label="878행">878</a>        )</span>
+<span class="line" id="L879"><a href="#L879" aria-label="879행">879</a>        return 5</span>
+<span class="line" id="L880"><a href="#L880" aria-label="880행">880</a>    print(f&quot;[thread] mode={info.value}&quot;, file=sys.stderr)</span>
+<span class="line" id="L881"><a href="#L881" aria-label="881행">881</a>    return 0</span>
+<span class="line" id="L882"><a href="#L882" aria-label="882행">882</a></span>
+<span class="line" id="L883"><a href="#L883" aria-label="883행">883</a></span>
+<span class="line" id="L884"><a href="#L884" aria-label="884행">884</a>def resolve(path: Path, number: int, status_value: str, expected_mode: str | None) -&gt; int:</span>
+<span class="line" id="L885"><a href="#L885" aria-label="885행">885</a>    with mutation_lock(path):</span>
+<span class="line" id="L886"><a href="#L886" aria-label="886행">886</a>        raw = read_bytes(path)</span>
+<span class="line" id="L887"><a href="#L887" aria-label="887행">887</a>        text = decode_utf8(raw)</span>
+<span class="line" id="L888"><a href="#L888" aria-label="888행">888</a>        ok, problems, _ = validate_raw(raw)</span>
+<span class="line" id="L889"><a href="#L889" aria-label="889행">889</a>        if not ok:</span>
+<span class="line" id="L890"><a href="#L890" aria-label="890행">890</a>            for problem in problems:</span>
+<span class="line" id="L891"><a href="#L891" aria-label="891행">891</a>                print(problem, file=sys.stderr)</span>
+<span class="line" id="L892"><a href="#L892" aria-label="892행">892</a>            return 2</span>
+<span class="line" id="L893"><a href="#L893" aria-label="893행">893</a>        mode_result = enforce_expected_mode(raw, expected_mode, &quot;resolve&quot;)</span>
+<span class="line" id="L894"><a href="#L894" aria-label="894행">894</a>        if mode_result:</span>
+<span class="line" id="L895"><a href="#L895" aria-label="895행">895</a>            return mode_result</span>
+<span class="line" id="L896"><a href="#L896" aria-label="896행">896</a>        lines = text.splitlines(keepends=True)</span>
+<span class="line" id="L897"><a href="#L897" aria-label="897행">897</a>        found = parse_headers(text)</span>
+<span class="line" id="L898"><a href="#L898" aria-label="898행">898</a>        index = next((i for i, item in enumerate(found) if item[0] == number), None)</span>
+<span class="line" id="L899"><a href="#L899" aria-label="899행">899</a>        if index is None:</span>
+<span class="line" id="L900"><a href="#L900" aria-label="900행">900</a>            print(f&quot;[thread] message not found: #{number:04d}&quot;, file=sys.stderr)</span>
+<span class="line" id="L901"><a href="#L901" aria-label="901행">901</a>            return 2</span>
+<span class="line" id="L902"><a href="#L902" aria-label="902행">902</a>        start = found[index][1] - 1</span>
+<span class="line" id="L903"><a href="#L903" aria-label="903행">903</a>        end = found[index + 1][1] - 1 if index + 1 &lt; len(found) else len(lines)</span>
+<span class="line" id="L904"><a href="#L904" aria-label="904행">904</a>        state_lines = metadata_state_lines(lines, start, end)</span>
+<span class="line" id="L905"><a href="#L905" aria-label="905행">905</a>        if len(state_lines) != 1:</span>
+<span class="line" id="L906"><a href="#L906" aria-label="906행">906</a>            print(f&quot;[thread] #{number:04d} has {len(state_lines)} status lines; refusing&quot;, file=sys.stderr)</span>
+<span class="line" id="L907"><a href="#L907" aria-label="907행">907</a>            return 2</span>
+<span class="line" id="L908"><a href="#L908" aria-label="908행">908</a>        old_line = lines[state_lines[0]]</span>
+<span class="line" id="L909"><a href="#L909" aria-label="909행">909</a>        newline = &quot;\r\n&quot; if old_line.endswith(&quot;\r\n&quot;) else &quot;\n&quot; if old_line.endswith(&quot;\n&quot;) else &quot;&quot;</span>
+<span class="line" id="L910"><a href="#L910" aria-label="910행">910</a>        lines[state_lines[0]] = f&quot;- 상태: {status_value}{newline}&quot;</span>
+<span class="line" id="L911"><a href="#L911" aria-label="911행">911</a>        candidate = &quot;&quot;.join(lines)</span>
+<span class="line" id="L912"><a href="#L912" aria-label="912행">912</a>        candidate_raw = candidate.encode(&quot;utf-8&quot;)</span>
+<span class="line" id="L913"><a href="#L913" aria-label="913행">913</a>        ok, problems, _ = validate_raw(candidate_raw)</span>
+<span class="line" id="L914"><a href="#L914" aria-label="914행">914</a>        if not ok:</span>
+<span class="line" id="L915"><a href="#L915" aria-label="915행">915</a>            for problem in problems:</span>
+<span class="line" id="L916"><a href="#L916" aria-label="916행">916</a>                print(problem, file=sys.stderr)</span>
+<span class="line" id="L917"><a href="#L917" aria-label="917행">917</a>            return 3</span>
+<span class="line" id="L918"><a href="#L918" aria-label="918행">918</a>        atomic_write(path, candidate_raw)</span>
+<span class="line" id="L919"><a href="#L919" aria-label="919행">919</a>    print(with_awaiting(f&quot;[thread] resolved #{number:04d} -&gt; {status_value}&quot;, candidate))</span>
+<span class="line" id="L920"><a href="#L920" aria-label="920행">920</a>    return 0</span>
+<span class="line" id="L921"><a href="#L921" aria-label="921행">921</a></span>
+<span class="line" id="L922"><a href="#L922" aria-label="922행">922</a></span>
+<span class="line" id="L923"><a href="#L923" aria-label="923행">923</a>def read_body(args: argparse.Namespace) -&gt; str:</span>
+<span class="line" id="L924"><a href="#L924" aria-label="924행">924</a>    if args.body_file:</span>
+<span class="line" id="L925"><a href="#L925" aria-label="925행">925</a>        return Path(args.body_file).read_text(encoding=&quot;utf-8&quot;).strip()</span>
+<span class="line" id="L926"><a href="#L926" aria-label="926행">926</a>    if args.body:</span>
+<span class="line" id="L927"><a href="#L927" aria-label="927행">927</a>        return args.body.replace(&quot;\r\n&quot;, &quot;\n&quot;).strip()</span>
+<span class="line" id="L928"><a href="#L928" aria-label="928행">928</a>    if not sys.stdin.isatty():</span>
+<span class="line" id="L929"><a href="#L929" aria-label="929행">929</a>        return sys.stdin.read().strip()</span>
+<span class="line" id="L930"><a href="#L930" aria-label="930행">930</a>    raise SystemExit(&quot;body required: --body-file, --body, or stdin&quot;)</span>
+<span class="line" id="L931"><a href="#L931" aria-label="931행">931</a></span>
+<span class="line" id="L932"><a href="#L932" aria-label="932행">932</a></span>
+<span class="line" id="L933"><a href="#L933" aria-label="933행">933</a>def append(path: Path, args: argparse.Namespace) -&gt; int:</span>
+<span class="line" id="L934"><a href="#L934" aria-label="934행">934</a>    body = read_body(args)</span>
+<span class="line" id="L935"><a href="#L935" aria-label="935행">935</a>    if len(body) &gt; MAX_INLINE_BODY_CHARS:</span>
+<span class="line" id="L936"><a href="#L936" aria-label="936행">936</a>        print(</span>
+<span class="line" id="L937"><a href="#L937" aria-label="937행">937</a>            f&quot;[thread] append refused: body has {len(body)} chars; default maximum is &quot;</span>
+<span class="line" id="L938"><a href="#L938" aria-label="938행">938</a>            f&quot;{MAX_INLINE_BODY_CHARS}. Store the document in an artifact, then append a &quot;</span>
+<span class="line" id="L939"><a href="#L939" aria-label="939행">939</a>            &quot;short reply that links both --artifact and --in-reply-to.&quot;,</span>
+<span class="line" id="L940"><a href="#L940" aria-label="940행">940</a>            file=sys.stderr,</span>
+<span class="line" id="L941"><a href="#L941" aria-label="941행">941</a>        )</span>
+<span class="line" id="L942"><a href="#L942" aria-label="942행">942</a>        return 6</span>
+<span class="line" id="L943"><a href="#L943" aria-label="943행">943</a>    with mutation_lock(path):</span>
+<span class="line" id="L944"><a href="#L944" aria-label="944행">944</a>        existing_raw = read_bytes(path)</span>
+<span class="line" id="L945"><a href="#L945" aria-label="945행">945</a>        existing = decode_utf8(existing_raw)</span>
+<span class="line" id="L946"><a href="#L946" aria-label="946행">946</a>        ok, problems, last = validate_raw(existing_raw)</span>
+<span class="line" id="L947"><a href="#L947" aria-label="947행">947</a>        if not ok:</span>
+<span class="line" id="L948"><a href="#L948" aria-label="948행">948</a>            for problem in problems:</span>
+<span class="line" id="L949"><a href="#L949" aria-label="949행">949</a>                print(problem, file=sys.stderr)</span>
+<span class="line" id="L950"><a href="#L950" aria-label="950행">950</a>            return 2</span>
+<span class="line" id="L951"><a href="#L951" aria-label="951행">951</a>        mode_result = enforce_expected_mode(existing_raw, args.expect_mode, &quot;append&quot;)</span>
+<span class="line" id="L952"><a href="#L952" aria-label="952행">952</a>        if mode_result:</span>
+<span class="line" id="L953"><a href="#L953" aria-label="953행">953</a>            return mode_result</span>
+<span class="line" id="L954"><a href="#L954" aria-label="954행">954</a>        if args.expect_last is not None and last != args.expect_last:</span>
+<span class="line" id="L955"><a href="#L955" aria-label="955행">955</a>            print(</span>
+<span class="line" id="L956"><a href="#L956" aria-label="956행">956</a>                f&quot;[thread] append refused: expected last #{args.expect_last:04d}, &quot;</span>
+<span class="line" id="L957"><a href="#L957" aria-label="957행">957</a>                f&quot;actual last #{last:04d}; reread before retrying&quot;,</span>
+<span class="line" id="L958"><a href="#L958" aria-label="958행">958</a>                file=sys.stderr,</span>
+<span class="line" id="L959"><a href="#L959" aria-label="959행">959</a>            )</span>
+<span class="line" id="L960"><a href="#L960" aria-label="960행">960</a>            return 5</span>
+<span class="line" id="L961"><a href="#L961" aria-label="961행">961</a></span>
+<span class="line" id="L962"><a href="#L962" aria-label="962행">962</a>        number = last + 1</span>
+<span class="line" id="L963"><a href="#L963" aria-label="963행">963</a>        try:</span>
+<span class="line" id="L964"><a href="#L964" aria-label="964행">964</a>            reply_targets = parse_cli_reply_targets(args.in_reply_to)</span>
+<span class="line" id="L965"><a href="#L965" aria-label="965행">965</a>        except ValueError as error:</span>
+<span class="line" id="L966"><a href="#L966" aria-label="966행">966</a>            print(f&quot;[thread] append refused: {error}&quot;, file=sys.stderr)</span>
+<span class="line" id="L967"><a href="#L967" aria-label="967행">967</a>            return 2</span>
+<span class="line" id="L968"><a href="#L968" aria-label="968행">968</a>        artifacts = tuple(args.artifact or ())</span>
+<span class="line" id="L969"><a href="#L969" aria-label="969행">969</a>        if artifacts and not reply_targets:</span>
+<span class="line" id="L970"><a href="#L970" aria-label="970행">970</a>            print(</span>
+<span class="line" id="L971"><a href="#L971" aria-label="971행">971</a>                &quot;[thread] append refused: --artifact requires --in-reply-to so the &quot;</span>
+<span class="line" id="L972"><a href="#L972" aria-label="972행">972</a>                &quot;artifact is connected to its target message&quot;,</span>
+<span class="line" id="L973"><a href="#L973" aria-label="973행">973</a>                file=sys.stderr,</span>
+<span class="line" id="L974"><a href="#L974" aria-label="974행">974</a>            )</span>
+<span class="line" id="L975"><a href="#L975" aria-label="975행">975</a>            return 2</span>
+<span class="line" id="L976"><a href="#L976" aria-label="976행">976</a>        for artifact in artifacts:</span>
+<span class="line" id="L977"><a href="#L977" aria-label="977행">977</a>            if not artifact.strip() or &quot;\n&quot; in artifact or &quot;\r&quot; in artifact:</span>
+<span class="line" id="L978"><a href="#L978" aria-label="978행">978</a>                print(&quot;[thread] append refused: artifact references must be one non-empty line&quot;, file=sys.stderr)</span>
+<span class="line" id="L979"><a href="#L979" aria-label="979행">979</a>                return 2</span>
+<span class="line" id="L980"><a href="#L980" aria-label="980행">980</a>        existing_numbers = {message_number for message_number, _ in parse_headers(existing)}</span>
+<span class="line" id="L981"><a href="#L981" aria-label="981행">981</a>        for target in reply_targets:</span>
+<span class="line" id="L982"><a href="#L982" aria-label="982행">982</a>            if target not in existing_numbers or target &gt;= number:</span>
+<span class="line" id="L983"><a href="#L983" aria-label="983행">983</a>                print(</span>
+<span class="line" id="L984"><a href="#L984" aria-label="984행">984</a>                    f&quot;[thread] append refused: reply target #{target:04d} must reference &quot;</span>
+<span class="line" id="L985"><a href="#L985" aria-label="985행">985</a>                    &quot;an existing earlier message&quot;,</span>
+<span class="line" id="L986"><a href="#L986" aria-label="986행">986</a>                    file=sys.stderr,</span>
+<span class="line" id="L987"><a href="#L987" aria-label="987행">987</a>                )</span>
+<span class="line" id="L988"><a href="#L988" aria-label="988행">988</a>                return 2</span>
+<span class="line" id="L989"><a href="#L989" aria-label="989행">989</a></span>
+<span class="line" id="L990"><a href="#L990" aria-label="990행">990</a>        timestamp = args.date or dt.datetime.now().strftime(&quot;%Y-%m-%d %H:%M KST&quot;)</span>
+<span class="line" id="L991"><a href="#L991" aria-label="991행">991</a>        newline = newline_sequence(existing)</span>
+<span class="line" id="L992"><a href="#L992" aria-label="992행">992</a>        reply_target_line = &quot;&quot;</span>
+<span class="line" id="L993"><a href="#L993" aria-label="993행">993</a>        if reply_targets:</span>
+<span class="line" id="L994"><a href="#L994" aria-label="994행">994</a>            formatted_targets = &quot;,&quot;.join(f&quot;#{target:04d}&quot; for target in reply_targets)</span>
+<span class="line" id="L995"><a href="#L995" aria-label="995행">995</a>            reply_target_line = f&quot;- 회신대상: {formatted_targets}\n&quot;</span>
+<span class="line" id="L996"><a href="#L996" aria-label="996행">996</a>        artifact_lines = &quot;&quot;.join(</span>
+<span class="line" id="L997"><a href="#L997" aria-label="997행">997</a>            f&quot;- 산출물: {artifact.strip()}\n&quot; for artifact in artifacts</span>
+<span class="line" id="L998"><a href="#L998" aria-label="998행">998</a>        )</span>
+<span class="line" id="L999"><a href="#L999" aria-label="999행">999</a>        entry_lf = (</span>
+<span class="line" id="L1000"><a href="#L1000" aria-label="1000행">1000</a>            f&quot;### [{args.sender} → {args.receiver}] {timestamp} · {args.type} · &quot;</span>
+<span class="line" id="L1001"><a href="#L1001" aria-label="1001행">1001</a>            f&quot;#{number:04d} · [{args.tag}] {args.title}\n&quot;</span>
+<span class="line" id="L1002"><a href="#L1002" aria-label="1002행">1002</a>            f&quot;- 대상: {args.target}\n&quot;</span>
+<span class="line" id="L1003"><a href="#L1003" aria-label="1003행">1003</a>            f&quot;- 답필요: {args.reply}\n&quot;</span>
+<span class="line" id="L1004"><a href="#L1004" aria-label="1004행">1004</a>            f&quot;{reply_target_line}&quot;</span>
+<span class="line" id="L1005"><a href="#L1005" aria-label="1005행">1005</a>            f&quot;{artifact_lines}&quot;</span>
+<span class="line" id="L1006"><a href="#L1006" aria-label="1006행">1006</a>            f&quot;- 상태: {args.status}\n&quot;</span>
+<span class="line" id="L1007"><a href="#L1007" aria-label="1007행">1007</a>            &quot;- 본문:\n&quot;</span>
+<span class="line" id="L1008"><a href="#L1008" aria-label="1008행">1008</a>            f&quot;{body}\n&quot;</span>
+<span class="line" id="L1009"><a href="#L1009" aria-label="1009행">1009</a>        )</span>
+<span class="line" id="L1010"><a href="#L1010" aria-label="1010행">1010</a>        entry = entry_lf if newline == &quot;\n&quot; else entry_lf.replace(&quot;\n&quot;, &quot;\r\n&quot;)</span>
+<span class="line" id="L1011"><a href="#L1011" aria-label="1011행">1011</a>        if not existing or existing.endswith(newline * 2):</span>
+<span class="line" id="L1012"><a href="#L1012" aria-label="1012행">1012</a>            separator = &quot;&quot;</span>
+<span class="line" id="L1013"><a href="#L1013" aria-label="1013행">1013</a>        elif existing.endswith(newline):</span>
+<span class="line" id="L1014"><a href="#L1014" aria-label="1014행">1014</a>            separator = newline</span>
+<span class="line" id="L1015"><a href="#L1015" aria-label="1015행">1015</a>        else:</span>
+<span class="line" id="L1016"><a href="#L1016" aria-label="1016행">1016</a>            separator = newline * 2</span>
+<span class="line" id="L1017"><a href="#L1017" aria-label="1017행">1017</a>        candidate = existing + separator + entry</span>
+<span class="line" id="L1018"><a href="#L1018" aria-label="1018행">1018</a>        candidate_raw = candidate.encode(&quot;utf-8&quot;)</span>
+<span class="line" id="L1019"><a href="#L1019" aria-label="1019행">1019</a>        ok, problems, candidate_last = validate_raw(candidate_raw, expected_last=number)</span>
+<span class="line" id="L1020"><a href="#L1020" aria-label="1020행">1020</a>        if not ok or candidate_last != number:</span>
+<span class="line" id="L1021"><a href="#L1021" aria-label="1021행">1021</a>            for problem in problems:</span>
+<span class="line" id="L1022"><a href="#L1022" aria-label="1022행">1022</a>                print(problem, file=sys.stderr)</span>
+<span class="line" id="L1023"><a href="#L1023" aria-label="1023행">1023</a>            return 3</span>
+<span class="line" id="L1024"><a href="#L1024" aria-label="1024행">1024</a>        atomic_write(path, candidate_raw)</span>
+<span class="line" id="L1025"><a href="#L1025" aria-label="1025행">1025</a>    print(with_awaiting(f&quot;[thread] appended #{number:04d} -&gt; {path}&quot;, candidate))</span>
+<span class="line" id="L1026"><a href="#L1026" aria-label="1026행">1026</a>    return 0</span>
+<span class="line" id="L1027"><a href="#L1027" aria-label="1027행">1027</a></span>
+<span class="line" id="L1028"><a href="#L1028" aria-label="1028행">1028</a></span>
+<span class="line" id="L1029"><a href="#L1029" aria-label="1029행">1029</a>def pin_hash(raw: bytes) -&gt; str:</span>
+<span class="line" id="L1030"><a href="#L1030" aria-label="1030행">1030</a>    layout = thread_layout(raw)</span>
+<span class="line" id="L1031"><a href="#L1031" aria-label="1031행">1031</a>    if layout.pin is None:</span>
+<span class="line" id="L1032"><a href="#L1032" aria-label="1032행">1032</a>        raise ValueError(&quot;pin requires markers in the pre-message region&quot;)</span>
+<span class="line" id="L1033"><a href="#L1033" aria-label="1033행">1033</a>    return hashlib.sha256(layout.pin.body).hexdigest()</span>
+<span class="line" id="L1034"><a href="#L1034" aria-label="1034행">1034</a></span>
+<span class="line" id="L1035"><a href="#L1035" aria-label="1035행">1035</a></span>
+<span class="line" id="L1036"><a href="#L1036" aria-label="1036행">1036</a>def marker_block_bytes(raw: bytes, region: MarkerRegion | None) -&gt; bytes:</span>
+<span class="line" id="L1037"><a href="#L1037" aria-label="1037행">1037</a>    if region is None:</span>
+<span class="line" id="L1038"><a href="#L1038" aria-label="1038행">1038</a>        return b&quot;&quot;</span>
+<span class="line" id="L1039"><a href="#L1039" aria-label="1039행">1039</a>    return raw[region.start : region.end_after]</span>
+<span class="line" id="L1040"><a href="#L1040" aria-label="1040행">1040</a></span>
+<span class="line" id="L1041"><a href="#L1041" aria-label="1041행">1041</a></span>
+<span class="line" id="L1042"><a href="#L1042" aria-label="1042행">1042</a>def pin(path: Path, args: argparse.Namespace) -&gt; int:</span>
+<span class="line" id="L1043"><a href="#L1043" aria-label="1043행">1043</a>    if args.show_hash:</span>
+<span class="line" id="L1044"><a href="#L1044" aria-label="1044행">1044</a>        raw = read_bytes(path)</span>
+<span class="line" id="L1045"><a href="#L1045" aria-label="1045행">1045</a>        ok, problems, _ = validate_raw(raw)</span>
+<span class="line" id="L1046"><a href="#L1046" aria-label="1046행">1046</a>        if not ok:</span>
+<span class="line" id="L1047"><a href="#L1047" aria-label="1047행">1047</a>            for problem in problems:</span>
+<span class="line" id="L1048"><a href="#L1048" aria-label="1048행">1048</a>                print(problem, file=sys.stderr)</span>
+<span class="line" id="L1049"><a href="#L1049" aria-label="1049행">1049</a>            return 2</span>
+<span class="line" id="L1050"><a href="#L1050" aria-label="1050행">1050</a>        mode_result = enforce_expected_mode(raw, args.expect_mode, &quot;pin&quot;)</span>
+<span class="line" id="L1051"><a href="#L1051" aria-label="1051행">1051</a>        if mode_result:</span>
+<span class="line" id="L1052"><a href="#L1052" aria-label="1052행">1052</a>            return mode_result</span>
+<span class="line" id="L1053"><a href="#L1053" aria-label="1053행">1053</a>        try:</span>
+<span class="line" id="L1054"><a href="#L1054" aria-label="1054행">1054</a>            current_hash = pin_hash(raw)</span>
+<span class="line" id="L1055"><a href="#L1055" aria-label="1055행">1055</a>        except ValueError as error:</span>
+<span class="line" id="L1056"><a href="#L1056" aria-label="1056행">1056</a>            print(f&quot;[thread] pin refused: {error}&quot;, file=sys.stderr)</span>
+<span class="line" id="L1057"><a href="#L1057" aria-label="1057행">1057</a>            return 2</span>
+<span class="line" id="L1058"><a href="#L1058" aria-label="1058행">1058</a>        print(with_awaiting(f&quot;[thread] pin-hash {current_hash}&quot;, decode_utf8(raw)))</span>
+<span class="line" id="L1059"><a href="#L1059" aria-label="1059행">1059</a>        return 0</span>
+<span class="line" id="L1060"><a href="#L1060" aria-label="1060행">1060</a></span>
+<span class="line" id="L1061"><a href="#L1061" aria-label="1061행">1061</a>    if not args.expect_hash:</span>
+<span class="line" id="L1062"><a href="#L1062" aria-label="1062행">1062</a>        print(&quot;[thread] pin update requires --expect-hash&quot;, file=sys.stderr)</span>
+<span class="line" id="L1063"><a href="#L1063" aria-label="1063행">1063</a>        return 2</span>
+<span class="line" id="L1064"><a href="#L1064" aria-label="1064행">1064</a>    body = read_body(args)</span>
+<span class="line" id="L1065"><a href="#L1065" aria-label="1065행">1065</a>    with mutation_lock(path):</span>
+<span class="line" id="L1066"><a href="#L1066" aria-label="1066행">1066</a>        raw = read_bytes(path)</span>
+<span class="line" id="L1067"><a href="#L1067" aria-label="1067행">1067</a>        text = decode_utf8(raw)</span>
+<span class="line" id="L1068"><a href="#L1068" aria-label="1068행">1068</a>        ok, problems, _ = validate_raw(raw)</span>
+<span class="line" id="L1069"><a href="#L1069" aria-label="1069행">1069</a>        if not ok:</span>
+<span class="line" id="L1070"><a href="#L1070" aria-label="1070행">1070</a>            for problem in problems:</span>
+<span class="line" id="L1071"><a href="#L1071" aria-label="1071행">1071</a>                print(problem, file=sys.stderr)</span>
+<span class="line" id="L1072"><a href="#L1072" aria-label="1072행">1072</a>            return 2</span>
+<span class="line" id="L1073"><a href="#L1073" aria-label="1073행">1073</a>        mode_result = enforce_expected_mode(raw, args.expect_mode, &quot;pin&quot;)</span>
+<span class="line" id="L1074"><a href="#L1074" aria-label="1074행">1074</a>        if mode_result:</span>
+<span class="line" id="L1075"><a href="#L1075" aria-label="1075행">1075</a>            return mode_result</span>
+<span class="line" id="L1076"><a href="#L1076" aria-label="1076행">1076</a>        try:</span>
+<span class="line" id="L1077"><a href="#L1077" aria-label="1077행">1077</a>            layout_before = thread_layout(raw)</span>
+<span class="line" id="L1078"><a href="#L1078" aria-label="1078행">1078</a>            if layout_before.pin is None:</span>
+<span class="line" id="L1079"><a href="#L1079" aria-label="1079행">1079</a>                raise ValueError(&quot;pin requires markers in the pre-message region&quot;)</span>
+<span class="line" id="L1080"><a href="#L1080" aria-label="1080행">1080</a>            body_start = layout_before.pin.body_start</span>
+<span class="line" id="L1081"><a href="#L1081" aria-label="1081행">1081</a>            body_end = layout_before.pin.body_end</span>
+<span class="line" id="L1082"><a href="#L1082" aria-label="1082행">1082</a>            old_body = layout_before.pin.body</span>
+<span class="line" id="L1083"><a href="#L1083" aria-label="1083행">1083</a>        except ValueError as error:</span>
+<span class="line" id="L1084"><a href="#L1084" aria-label="1084행">1084</a>            print(f&quot;[thread] pin refused: {error}&quot;, file=sys.stderr)</span>
+<span class="line" id="L1085"><a href="#L1085" aria-label="1085행">1085</a>            return 2</span>
+<span class="line" id="L1086"><a href="#L1086" aria-label="1086행">1086</a>        current_hash = hashlib.sha256(old_body).hexdigest()</span>
+<span class="line" id="L1087"><a href="#L1087" aria-label="1087행">1087</a>        if current_hash != args.expect_hash:</span>
+<span class="line" id="L1088"><a href="#L1088" aria-label="1088행">1088</a>            print(</span>
+<span class="line" id="L1089"><a href="#L1089" aria-label="1089행">1089</a>                f&quot;[thread] pin refused: expected hash {args.expect_hash}, &quot;</span>
+<span class="line" id="L1090"><a href="#L1090" aria-label="1090행">1090</a>                f&quot;actual hash {current_hash}&quot;,</span>
+<span class="line" id="L1091"><a href="#L1091" aria-label="1091행">1091</a>                file=sys.stderr,</span>
+<span class="line" id="L1092"><a href="#L1092" aria-label="1092행">1092</a>            )</span>
+<span class="line" id="L1093"><a href="#L1093" aria-label="1093행">1093</a>            return 5</span>
+<span class="line" id="L1094"><a href="#L1094" aria-label="1094행">1094</a></span>
+<span class="line" id="L1095"><a href="#L1095" aria-label="1095행">1095</a>        newline = newline_sequence(text)</span>
+<span class="line" id="L1096"><a href="#L1096" aria-label="1096행">1096</a>        normalized_body = body.replace(&quot;\r\n&quot;, &quot;\n&quot;).replace(&quot;\r&quot;, &quot;\n&quot;).strip(&quot;\n&quot;)</span>
+<span class="line" id="L1097"><a href="#L1097" aria-label="1097행">1097</a>        if newline == &quot;\r\n&quot;:</span>
+<span class="line" id="L1098"><a href="#L1098" aria-label="1098행">1098</a>            normalized_body = normalized_body.replace(&quot;\n&quot;, &quot;\r\n&quot;)</span>
+<span class="line" id="L1099"><a href="#L1099" aria-label="1099행">1099</a>        replacement = (normalized_body + newline).encode(&quot;utf-8&quot;)</span>
+<span class="line" id="L1100"><a href="#L1100" aria-label="1100행">1100</a>        candidate_raw = raw[:body_start] + replacement + raw[body_end:]</span>
+<span class="line" id="L1101"><a href="#L1101" aria-label="1101행">1101</a>        try:</span>
+<span class="line" id="L1102"><a href="#L1102" aria-label="1102행">1102</a>            layout_after = thread_layout(candidate_raw)</span>
+<span class="line" id="L1103"><a href="#L1103" aria-label="1103행">1103</a>        except ValueError as error:</span>
+<span class="line" id="L1104"><a href="#L1104" aria-label="1104행">1104</a>            print(f&quot;[thread] pin refused: {error}&quot;, file=sys.stderr)</span>
+<span class="line" id="L1105"><a href="#L1105" aria-label="1105행">1105</a>            return 3</span>
+<span class="line" id="L1106"><a href="#L1106" aria-label="1106행">1106</a>        mode_before = marker_block_bytes(raw, layout_before.mode)</span>
+<span class="line" id="L1107"><a href="#L1107" aria-label="1107행">1107</a>        mode_after = marker_block_bytes(candidate_raw, layout_after.mode)</span>
+<span class="line" id="L1108"><a href="#L1108" aria-label="1108행">1108</a>        messages_before = raw[layout_before.first_message :]</span>
+<span class="line" id="L1109"><a href="#L1109" aria-label="1109행">1109</a>        messages_after = candidate_raw[layout_after.first_message :]</span>
+<span class="line" id="L1110"><a href="#L1110" aria-label="1110행">1110</a>        if mode_after != mode_before:</span>
+<span class="line" id="L1111"><a href="#L1111" aria-label="1111행">1111</a>            print(&quot;[thread] pin refused: mode bytes would change&quot;, file=sys.stderr)</span>
+<span class="line" id="L1112"><a href="#L1112" aria-label="1112행">1112</a>            return 3</span>
+<span class="line" id="L1113"><a href="#L1113" aria-label="1113행">1113</a>        if messages_after != messages_before:</span>
+<span class="line" id="L1114"><a href="#L1114" aria-label="1114행">1114</a>            print(&quot;[thread] pin refused: message bytes would change&quot;, file=sys.stderr)</span>
+<span class="line" id="L1115"><a href="#L1115" aria-label="1115행">1115</a>            return 3</span>
+<span class="line" id="L1116"><a href="#L1116" aria-label="1116행">1116</a>        ok, problems, _ = validate_raw(candidate_raw)</span>
+<span class="line" id="L1117"><a href="#L1117" aria-label="1117행">1117</a>        if not ok:</span>
+<span class="line" id="L1118"><a href="#L1118" aria-label="1118행">1118</a>            for problem in problems:</span>
+<span class="line" id="L1119"><a href="#L1119" aria-label="1119행">1119</a>                print(problem, file=sys.stderr)</span>
+<span class="line" id="L1120"><a href="#L1120" aria-label="1120행">1120</a>            return 3</span>
+<span class="line" id="L1121"><a href="#L1121" aria-label="1121행">1121</a>        atomic_write(path, candidate_raw)</span>
+<span class="line" id="L1122"><a href="#L1122" aria-label="1122행">1122</a>        updated_hash = pin_hash(candidate_raw)</span>
+<span class="line" id="L1123"><a href="#L1123" aria-label="1123행">1123</a>    print(</span>
+<span class="line" id="L1124"><a href="#L1124" aria-label="1124행">1124</a>        with_awaiting(</span>
+<span class="line" id="L1125"><a href="#L1125" aria-label="1125행">1125</a>            f&quot;[thread] pin updated hash={updated_hash}&quot;, decode_utf8(candidate_raw)</span>
+<span class="line" id="L1126"><a href="#L1126" aria-label="1126행">1126</a>        )</span>
+<span class="line" id="L1127"><a href="#L1127" aria-label="1127행">1127</a>    )</span>
+<span class="line" id="L1128"><a href="#L1128" aria-label="1128행">1128</a>    return 0</span>
+<span class="line" id="L1129"><a href="#L1129" aria-label="1129행">1129</a></span>
+<span class="line" id="L1130"><a href="#L1130" aria-label="1130행">1130</a></span>
+<span class="line" id="L1131"><a href="#L1131" aria-label="1131행">1131</a>def show_mode(path: Path, args: argparse.Namespace) -&gt; int:</span>
+<span class="line" id="L1132"><a href="#L1132" aria-label="1132행">1132</a>    if any((args.set_mode, args.by, args.reason, args.expect_current_mode, args.expect_hash)):</span>
+<span class="line" id="L1133"><a href="#L1133" aria-label="1133행">1133</a>        print(&quot;[thread] mode --show does not accept set-only arguments&quot;, file=sys.stderr)</span>
+<span class="line" id="L1134"><a href="#L1134" aria-label="1134행">1134</a>        return 2</span>
+<span class="line" id="L1135"><a href="#L1135" aria-label="1135행">1135</a>    raw = read_bytes(path)</span>
+<span class="line" id="L1136"><a href="#L1136" aria-label="1136행">1136</a>    ok, problems, _ = validate_raw(raw)</span>
+<span class="line" id="L1137"><a href="#L1137" aria-label="1137행">1137</a>    if not ok:</span>
+<span class="line" id="L1138"><a href="#L1138" aria-label="1138행">1138</a>        for problem in problems:</span>
+<span class="line" id="L1139"><a href="#L1139" aria-label="1139행">1139</a>            print(problem, file=sys.stderr)</span>
+<span class="line" id="L1140"><a href="#L1140" aria-label="1140행">1140</a>        return 2</span>
+<span class="line" id="L1141"><a href="#L1141" aria-label="1141행">1141</a>    try:</span>
+<span class="line" id="L1142"><a href="#L1142" aria-label="1142행">1142</a>        info = mode_info(raw, reject_message_only_markers=True)</span>
+<span class="line" id="L1143"><a href="#L1143" aria-label="1143행">1143</a>    except ValueError as error:</span>
+<span class="line" id="L1144"><a href="#L1144" aria-label="1144행">1144</a>        print(f&quot;[thread] mode refused: {error}&quot;, file=sys.stderr)</span>
+<span class="line" id="L1145"><a href="#L1145" aria-label="1145행">1145</a>        return 2</span>
+<span class="line" id="L1146"><a href="#L1146" aria-label="1146행">1146</a>    if info is None:</span>
+<span class="line" id="L1147"><a href="#L1147" aria-label="1147행">1147</a>        print(with_awaiting(&quot;[thread] mode UNDECLARED&quot;, decode_utf8(raw)))</span>
+<span class="line" id="L1148"><a href="#L1148" aria-label="1148행">1148</a>        return 0</span>
+<span class="line" id="L1149"><a href="#L1149" aria-label="1149행">1149</a>    print(</span>
+<span class="line" id="L1150"><a href="#L1150" aria-label="1150행">1150</a>        with_awaiting(</span>
+<span class="line" id="L1151"><a href="#L1151" aria-label="1151행">1151</a>            f&quot;[thread] mode {info.value} hash={info.body_hash} &quot;</span>
+<span class="line" id="L1152"><a href="#L1152" aria-label="1152행">1152</a>            f&quot;by={info.setter!r} reason={info.reason!r}&quot;,</span>
+<span class="line" id="L1153"><a href="#L1153" aria-label="1153행">1153</a>            decode_utf8(raw),</span>
+<span class="line" id="L1154"><a href="#L1154" aria-label="1154행">1154</a>        )</span>
+<span class="line" id="L1155"><a href="#L1155" aria-label="1155행">1155</a>    )</span>
+<span class="line" id="L1156"><a href="#L1156" aria-label="1156행">1156</a>    return 0</span>
+<span class="line" id="L1157"><a href="#L1157" aria-label="1157행">1157</a></span>
+<span class="line" id="L1158"><a href="#L1158" aria-label="1158행">1158</a></span>
+<span class="line" id="L1159"><a href="#L1159" aria-label="1159행">1159</a>def set_mode(path: Path, args: argparse.Namespace) -&gt; int:</span>
+<span class="line" id="L1160"><a href="#L1160" aria-label="1160행">1160</a>    if not args.by or not args.reason:</span>
+<span class="line" id="L1161"><a href="#L1161" aria-label="1161행">1161</a>        print(&quot;[thread] mode --set requires --by and --reason&quot;, file=sys.stderr)</span>
+<span class="line" id="L1162"><a href="#L1162" aria-label="1162행">1162</a>        return 2</span>
+<span class="line" id="L1163"><a href="#L1163" aria-label="1163행">1163</a>    if args.expect_current_mode and args.expect_hash:</span>
+<span class="line" id="L1164"><a href="#L1164" aria-label="1164행">1164</a>        print(</span>
+<span class="line" id="L1165"><a href="#L1165" aria-label="1165행">1165</a>            &quot;[thread] mode --set accepts only one of --expect-current-mode or --expect-hash&quot;,</span>
+<span class="line" id="L1166"><a href="#L1166" aria-label="1166행">1166</a>            file=sys.stderr,</span>
+<span class="line" id="L1167"><a href="#L1167" aria-label="1167행">1167</a>        )</span>
+<span class="line" id="L1168"><a href="#L1168" aria-label="1168행">1168</a>        return 2</span>
+<span class="line" id="L1169"><a href="#L1169" aria-label="1169행">1169</a>    try:</span>
+<span class="line" id="L1170"><a href="#L1170" aria-label="1170행">1170</a>        setter = sanitize_mode_metadata(args.by, &quot;setter&quot;)</span>
+<span class="line" id="L1171"><a href="#L1171" aria-label="1171행">1171</a>        reason = sanitize_mode_metadata(args.reason, &quot;reason&quot;)</span>
+<span class="line" id="L1172"><a href="#L1172" aria-label="1172행">1172</a>    except ValueError as error:</span>
+<span class="line" id="L1173"><a href="#L1173" aria-label="1173행">1173</a>        print(f&quot;[thread] mode refused: {error}&quot;, file=sys.stderr)</span>
+<span class="line" id="L1174"><a href="#L1174" aria-label="1174행">1174</a>        return 2</span>
+<span class="line" id="L1175"><a href="#L1175" aria-label="1175행">1175</a></span>
+<span class="line" id="L1176"><a href="#L1176" aria-label="1176행">1176</a>    with mutation_lock(path):</span>
+<span class="line" id="L1177"><a href="#L1177" aria-label="1177행">1177</a>        raw = read_bytes(path)</span>
+<span class="line" id="L1178"><a href="#L1178" aria-label="1178행">1178</a>        ok, problems, _ = validate_raw(raw)</span>
+<span class="line" id="L1179"><a href="#L1179" aria-label="1179행">1179</a>        if not ok:</span>
+<span class="line" id="L1180"><a href="#L1180" aria-label="1180행">1180</a>            for problem in problems:</span>
+<span class="line" id="L1181"><a href="#L1181" aria-label="1181행">1181</a>                print(problem, file=sys.stderr)</span>
+<span class="line" id="L1182"><a href="#L1182" aria-label="1182행">1182</a>            return 2</span>
+<span class="line" id="L1183"><a href="#L1183" aria-label="1183행">1183</a>        try:</span>
+<span class="line" id="L1184"><a href="#L1184" aria-label="1184행">1184</a>            layout_before = thread_layout(raw)</span>
+<span class="line" id="L1185"><a href="#L1185" aria-label="1185행">1185</a>            current = mode_info(raw, reject_message_only_markers=True)</span>
+<span class="line" id="L1186"><a href="#L1186" aria-label="1186행">1186</a>        except ValueError as error:</span>
+<span class="line" id="L1187"><a href="#L1187" aria-label="1187행">1187</a>            print(f&quot;[thread] mode refused: {error}&quot;, file=sys.stderr)</span>
+<span class="line" id="L1188"><a href="#L1188" aria-label="1188행">1188</a>            return 2</span>
+<span class="line" id="L1189"><a href="#L1189" aria-label="1189행">1189</a></span>
+<span class="line" id="L1190"><a href="#L1190" aria-label="1190행">1190</a>        if current is None:</span>
+<span class="line" id="L1191"><a href="#L1191" aria-label="1191행">1191</a>            if args.expect_current_mode is not None or args.expect_hash is not None:</span>
+<span class="line" id="L1192"><a href="#L1192" aria-label="1192행">1192</a>                print(</span>
+<span class="line" id="L1193"><a href="#L1193" aria-label="1193행">1193</a>                    &quot;[thread] mode set refused: stale guard was provided but no mode block exists&quot;,</span>
+<span class="line" id="L1194"><a href="#L1194" aria-label="1194행">1194</a>                    file=sys.stderr,</span>
+<span class="line" id="L1195"><a href="#L1195" aria-label="1195행">1195</a>                )</span>
+<span class="line" id="L1196"><a href="#L1196" aria-label="1196행">1196</a>                return 5</span>
+<span class="line" id="L1197"><a href="#L1197" aria-label="1197행">1197</a>            if layout_before.pin is None:</span>
+<span class="line" id="L1198"><a href="#L1198" aria-label="1198행">1198</a>                print(</span>
+<span class="line" id="L1199"><a href="#L1199" aria-label="1199행">1199</a>                    &quot;[thread] mode set refused: markerless pinned context requires a dedicated migration&quot;,</span>
+<span class="line" id="L1200"><a href="#L1200" aria-label="1200행">1200</a>                    file=sys.stderr,</span>
+<span class="line" id="L1201"><a href="#L1201" aria-label="1201행">1201</a>                )</span>
+<span class="line" id="L1202"><a href="#L1202" aria-label="1202행">1202</a>                return 2</span>
+<span class="line" id="L1203"><a href="#L1203" aria-label="1203행">1203</a>        else:</span>
+<span class="line" id="L1204"><a href="#L1204" aria-label="1204행">1204</a>            if args.expect_current_mode is None and args.expect_hash is None:</span>
+<span class="line" id="L1205"><a href="#L1205" aria-label="1205행">1205</a>                print(</span>
+<span class="line" id="L1206"><a href="#L1206" aria-label="1206행">1206</a>                    &quot;[thread] mode set refused: existing block requires &quot;</span>
+<span class="line" id="L1207"><a href="#L1207" aria-label="1207행">1207</a>                    &quot;--expect-current-mode or --expect-hash&quot;,</span>
+<span class="line" id="L1208"><a href="#L1208" aria-label="1208행">1208</a>                    file=sys.stderr,</span>
+<span class="line" id="L1209"><a href="#L1209" aria-label="1209행">1209</a>                )</span>
+<span class="line" id="L1210"><a href="#L1210" aria-label="1210행">1210</a>                return 5</span>
+<span class="line" id="L1211"><a href="#L1211" aria-label="1211행">1211</a>            if args.expect_current_mode is not None and args.expect_current_mode != current.value:</span>
+<span class="line" id="L1212"><a href="#L1212" aria-label="1212행">1212</a>                print(</span>
+<span class="line" id="L1213"><a href="#L1213" aria-label="1213행">1213</a>                    f&quot;[thread] mode set refused: expected current mode &quot;</span>
+<span class="line" id="L1214"><a href="#L1214" aria-label="1214행">1214</a>                    f&quot;{args.expect_current_mode}, actual {current.value}&quot;,</span>
+<span class="line" id="L1215"><a href="#L1215" aria-label="1215행">1215</a>                    file=sys.stderr,</span>
+<span class="line" id="L1216"><a href="#L1216" aria-label="1216행">1216</a>                )</span>
+<span class="line" id="L1217"><a href="#L1217" aria-label="1217행">1217</a>                return 5</span>
+<span class="line" id="L1218"><a href="#L1218" aria-label="1218행">1218</a>            if args.expect_hash is not None and args.expect_hash != current.body_hash:</span>
+<span class="line" id="L1219"><a href="#L1219" aria-label="1219행">1219</a>                print(</span>
+<span class="line" id="L1220"><a href="#L1220" aria-label="1220행">1220</a>                    f&quot;[thread] mode set refused: expected hash {args.expect_hash}, &quot;</span>
+<span class="line" id="L1221"><a href="#L1221" aria-label="1221행">1221</a>                    f&quot;actual {current.body_hash}&quot;,</span>
+<span class="line" id="L1222"><a href="#L1222" aria-label="1222행">1222</a>                    file=sys.stderr,</span>
+<span class="line" id="L1223"><a href="#L1223" aria-label="1223행">1223</a>                )</span>
+<span class="line" id="L1224"><a href="#L1224" aria-label="1224행">1224</a>                return 5</span>
+<span class="line" id="L1225"><a href="#L1225" aria-label="1225행">1225</a></span>
+<span class="line" id="L1226"><a href="#L1226" aria-label="1226행">1226</a>        text = decode_utf8(raw)</span>
+<span class="line" id="L1227"><a href="#L1227" aria-label="1227행">1227</a>        newline = newline_sequence(text)</span>
+<span class="line" id="L1228"><a href="#L1228" aria-label="1228행">1228</a>        replacement_body = formatted_mode_body(args.set_mode, setter, reason, newline)</span>
+<span class="line" id="L1229"><a href="#L1229" aria-label="1229행">1229</a>        if layout_before.mode is None:</span>
+<span class="line" id="L1230"><a href="#L1230" aria-label="1230행">1230</a>            assert layout_before.pin is not None</span>
+<span class="line" id="L1231"><a href="#L1231" aria-label="1231행">1231</a>            block = formatted_mode_block(args.set_mode, setter, reason, newline)</span>
+<span class="line" id="L1232"><a href="#L1232" aria-label="1232행">1232</a>            insert_at = layout_before.pin.start</span>
+<span class="line" id="L1233"><a href="#L1233" aria-label="1233행">1233</a>            candidate_raw = raw[:insert_at] + block + raw[insert_at:]</span>
+<span class="line" id="L1234"><a href="#L1234" aria-label="1234행">1234</a>        else:</span>
+<span class="line" id="L1235"><a href="#L1235" aria-label="1235행">1235</a>            candidate_raw = (</span>
+<span class="line" id="L1236"><a href="#L1236" aria-label="1236행">1236</a>                raw[: layout_before.mode.body_start]</span>
+<span class="line" id="L1237"><a href="#L1237" aria-label="1237행">1237</a>                + replacement_body</span>
+<span class="line" id="L1238"><a href="#L1238" aria-label="1238행">1238</a>                + raw[layout_before.mode.body_end :]</span>
+<span class="line" id="L1239"><a href="#L1239" aria-label="1239행">1239</a>            )</span>
+<span class="line" id="L1240"><a href="#L1240" aria-label="1240행">1240</a></span>
+<span class="line" id="L1241"><a href="#L1241" aria-label="1241행">1241</a>        try:</span>
+<span class="line" id="L1242"><a href="#L1242" aria-label="1242행">1242</a>            layout_after = thread_layout(candidate_raw)</span>
+<span class="line" id="L1243"><a href="#L1243" aria-label="1243행">1243</a>            updated = mode_info(candidate_raw)</span>
+<span class="line" id="L1244"><a href="#L1244" aria-label="1244행">1244</a>        except ValueError as error:</span>
+<span class="line" id="L1245"><a href="#L1245" aria-label="1245행">1245</a>            print(f&quot;[thread] mode refused: {error}&quot;, file=sys.stderr)</span>
+<span class="line" id="L1246"><a href="#L1246" aria-label="1246행">1246</a>            return 3</span>
+<span class="line" id="L1247"><a href="#L1247" aria-label="1247행">1247</a>        if updated is None or updated.value != args.set_mode:</span>
+<span class="line" id="L1248"><a href="#L1248" aria-label="1248행">1248</a>            print(&quot;[thread] mode refused: candidate mode validation failed&quot;, file=sys.stderr)</span>
+<span class="line" id="L1249"><a href="#L1249" aria-label="1249행">1249</a>            return 3</span>
+<span class="line" id="L1250"><a href="#L1250" aria-label="1250행">1250</a>        pin_before = marker_block_bytes(raw, layout_before.pin)</span>
+<span class="line" id="L1251"><a href="#L1251" aria-label="1251행">1251</a>        pin_after = marker_block_bytes(candidate_raw, layout_after.pin)</span>
+<span class="line" id="L1252"><a href="#L1252" aria-label="1252행">1252</a>        messages_before = raw[layout_before.first_message :]</span>
+<span class="line" id="L1253"><a href="#L1253" aria-label="1253행">1253</a>        messages_after = candidate_raw[layout_after.first_message :]</span>
+<span class="line" id="L1254"><a href="#L1254" aria-label="1254행">1254</a>        if pin_after != pin_before:</span>
+<span class="line" id="L1255"><a href="#L1255" aria-label="1255행">1255</a>            print(&quot;[thread] mode refused: pinned bytes would change&quot;, file=sys.stderr)</span>
+<span class="line" id="L1256"><a href="#L1256" aria-label="1256행">1256</a>            return 3</span>
+<span class="line" id="L1257"><a href="#L1257" aria-label="1257행">1257</a>        if messages_after != messages_before:</span>
+<span class="line" id="L1258"><a href="#L1258" aria-label="1258행">1258</a>            print(&quot;[thread] mode refused: message bytes would change&quot;, file=sys.stderr)</span>
+<span class="line" id="L1259"><a href="#L1259" aria-label="1259행">1259</a>            return 3</span>
+<span class="line" id="L1260"><a href="#L1260" aria-label="1260행">1260</a>        ok, problems, _ = validate_raw(candidate_raw)</span>
+<span class="line" id="L1261"><a href="#L1261" aria-label="1261행">1261</a>        if not ok:</span>
+<span class="line" id="L1262"><a href="#L1262" aria-label="1262행">1262</a>            for problem in problems:</span>
+<span class="line" id="L1263"><a href="#L1263" aria-label="1263행">1263</a>                print(problem, file=sys.stderr)</span>
+<span class="line" id="L1264"><a href="#L1264" aria-label="1264행">1264</a>            return 3</span>
+<span class="line" id="L1265"><a href="#L1265" aria-label="1265행">1265</a>        atomic_write(path, candidate_raw)</span>
+<span class="line" id="L1266"><a href="#L1266" aria-label="1266행">1266</a></span>
+<span class="line" id="L1267"><a href="#L1267" aria-label="1267행">1267</a>    print(</span>
+<span class="line" id="L1268"><a href="#L1268" aria-label="1268행">1268</a>        with_awaiting(</span>
+<span class="line" id="L1269"><a href="#L1269" aria-label="1269행">1269</a>            f&quot;[thread] mode updated mode={updated.value} hash={updated.body_hash}&quot;,</span>
+<span class="line" id="L1270"><a href="#L1270" aria-label="1270행">1270</a>            decode_utf8(candidate_raw),</span>
+<span class="line" id="L1271"><a href="#L1271" aria-label="1271행">1271</a>        )</span>
+<span class="line" id="L1272"><a href="#L1272" aria-label="1272행">1272</a>    )</span>
+<span class="line" id="L1273"><a href="#L1273" aria-label="1273행">1273</a>    return 0</span>
+<span class="line" id="L1274"><a href="#L1274" aria-label="1274행">1274</a></span>
+<span class="line" id="L1275"><a href="#L1275" aria-label="1275행">1275</a></span>
+<span class="line" id="L1276"><a href="#L1276" aria-label="1276행">1276</a>def mode_command(path: Path, args: argparse.Namespace) -&gt; int:</span>
+<span class="line" id="L1277"><a href="#L1277" aria-label="1277행">1277</a>    if args.show:</span>
+<span class="line" id="L1278"><a href="#L1278" aria-label="1278행">1278</a>        return show_mode(path, args)</span>
+<span class="line" id="L1279"><a href="#L1279" aria-label="1279행">1279</a>    return set_mode(path, args)</span>
+<span class="line" id="L1280"><a href="#L1280" aria-label="1280행">1280</a></span>
+<span class="line" id="L1281"><a href="#L1281" aria-label="1281행">1281</a></span>
+<span class="line" id="L1282"><a href="#L1282" aria-label="1282행">1282</a>def build_parser() -&gt; argparse.ArgumentParser:</span>
+<span class="line" id="L1283"><a href="#L1283" aria-label="1283행">1283</a>    parser = ThreadArgumentParser(description=&quot;Operate a collaboration mailbox thread&quot;)</span>
+<span class="line" id="L1284"><a href="#L1284" aria-label="1284행">1284</a>    parser.add_argument(&quot;--version&quot;, action=&quot;version&quot;, version=TOOL_VERSION)</span>
+<span class="line" id="L1285"><a href="#L1285" aria-label="1285행">1285</a>    parser.add_argument(&quot;--thread&quot;, required=True, type=Path)</span>
+<span class="line" id="L1286"><a href="#L1286" aria-label="1286행">1286</a>    sub = parser.add_subparsers(dest=&quot;command&quot;, required=True)</span>
+<span class="line" id="L1287"><a href="#L1287" aria-label="1287행">1287</a></span>
+<span class="line" id="L1288"><a href="#L1288" aria-label="1288행">1288</a>    create = sub.add_parser(&quot;init&quot;)</span>
+<span class="line" id="L1289"><a href="#L1289" aria-label="1289행">1289</a>    create.add_argument(&quot;--title&quot;, default=&quot;Claude/Codex Collaboration Thread&quot;)</span>
+<span class="line" id="L1290"><a href="#L1290" aria-label="1290행">1290</a>    create.add_argument(&quot;--mode&quot;, choices=MODES, default=None)</span>
+<span class="line" id="L1291"><a href="#L1291" aria-label="1291행">1291</a>    sub.add_parser(&quot;validate&quot;)</span>
+<span class="line" id="L1292"><a href="#L1292" aria-label="1292행">1292</a>    opened = sub.add_parser(&quot;open&quot;)</span>
+<span class="line" id="L1293"><a href="#L1293" aria-label="1293행">1293</a>    opened_selection = opened.add_mutually_exclusive_group()</span>
+<span class="line" id="L1294"><a href="#L1294" aria-label="1294행">1294</a>    opened_selection.add_argument(</span>
+<span class="line" id="L1295"><a href="#L1295" aria-label="1295행">1295</a>        &quot;--all&quot;,</span>
+<span class="line" id="L1296"><a href="#L1296" aria-label="1296행">1296</a>        action=&quot;store_true&quot;,</span>
+<span class="line" id="L1297"><a href="#L1297" aria-label="1297행">1297</a>        help=&quot;include REVIEW and BLOCKED with OPEN; status selection may expand in a later version&quot;,</span>
+<span class="line" id="L1298"><a href="#L1298" aria-label="1298행">1298</a>    )</span>
+<span class="line" id="L1299"><a href="#L1299" aria-label="1299행">1299</a>    opened_selection.add_argument(</span>
+<span class="line" id="L1300"><a href="#L1300" aria-label="1300행">1300</a>        &quot;--awaiting&quot;,</span>
+<span class="line" id="L1301"><a href="#L1301" aria-label="1301행">1301</a>        action=&quot;store_true&quot;,</span>
+<span class="line" id="L1302"><a href="#L1302" aria-label="1302행">1302</a>        help=&quot;show reply-required messages with no explicit reply connection&quot;,</span>
+<span class="line" id="L1303"><a href="#L1303" aria-label="1303행">1303</a>    )</span>
+<span class="line" id="L1304"><a href="#L1304" aria-label="1304행">1304</a>    opened.add_argument(</span>
+<span class="line" id="L1305"><a href="#L1305" aria-label="1305행">1305</a>        &quot;--agent&quot;,</span>
+<span class="line" id="L1306"><a href="#L1306" aria-label="1306행">1306</a>        default=None,</span>
+<span class="line" id="L1307"><a href="#L1307" aria-label="1307행">1307</a>        help=&quot;with --awaiting, match this exact receiver token or ALL&quot;,</span>
+<span class="line" id="L1308"><a href="#L1308" aria-label="1308행">1308</a>    )</span>
+<span class="line" id="L1309"><a href="#L1309" aria-label="1309행">1309</a>    opened.add_argument(</span>
+<span class="line" id="L1310"><a href="#L1310" aria-label="1310행">1310</a>        &quot;--after-number&quot;,</span>
+<span class="line" id="L1311"><a href="#L1311" aria-label="1311행">1311</a>        type=int,</span>
+<span class="line" id="L1312"><a href="#L1312" aria-label="1312행">1312</a>        default=None,</span>
+<span class="line" id="L1313"><a href="#L1313" aria-label="1313행">1313</a>        help=&quot;with --awaiting, include only message numbers greater than this value&quot;,</span>
+<span class="line" id="L1314"><a href="#L1314" aria-label="1314행">1314</a>    )</span>
+<span class="line" id="L1315"><a href="#L1315" aria-label="1315행">1315</a>    sub.add_parser(&quot;next&quot;)</span>
+<span class="line" id="L1316"><a href="#L1316" aria-label="1316행">1316</a></span>
+<span class="line" id="L1317"><a href="#L1317" aria-label="1317행">1317</a>    intake_parser = sub.add_parser(</span>
+<span class="line" id="L1318"><a href="#L1318" aria-label="1318행">1318</a>        &quot;intake&quot;, help=&quot;validate and emit one bounded pinned/pending/recent snapshot&quot;</span>
+<span class="line" id="L1319"><a href="#L1319" aria-label="1319행">1319</a>    )</span>
+<span class="line" id="L1320"><a href="#L1320" aria-label="1320행">1320</a>    intake_parser.add_argument(&quot;--agent&quot;, default=&quot;CODEX&quot;)</span>
+<span class="line" id="L1321"><a href="#L1321" aria-label="1321행">1321</a>    intake_parser.add_argument(&quot;--limit&quot;, type=int, default=3)</span>
+<span class="line" id="L1322"><a href="#L1322" aria-label="1322행">1322</a>    intake_parser.add_argument(&quot;--recent&quot;, type=int, default=1)</span>
+<span class="line" id="L1323"><a href="#L1323" aria-label="1323행">1323</a>    intake_parser.add_argument(&quot;--body-chars&quot;, type=int, default=3000)</span>
+<span class="line" id="L1324"><a href="#L1324" aria-label="1324행">1324</a>    intake_parser.add_argument(&quot;--pinned-chars&quot;, type=int, default=2000)</span>
+<span class="line" id="L1325"><a href="#L1325" aria-label="1325행">1325</a>    intake_parser.add_argument(&quot;--no-pinned&quot;, action=&quot;store_true&quot;)</span>
+<span class="line" id="L1326"><a href="#L1326" aria-label="1326행">1326</a>    intake_parser.add_argument(</span>
+<span class="line" id="L1327"><a href="#L1327" aria-label="1327행">1327</a>        &quot;--known-pinned-hash&quot;,</span>
+<span class="line" id="L1328"><a href="#L1328" aria-label="1328행">1328</a>        default=None,</span>
+<span class="line" id="L1329"><a href="#L1329" aria-label="1329행">1329</a>        help=&quot;compare the current PINNED hash with a previously observed full SHA-256&quot;,</span>
+<span class="line" id="L1330"><a href="#L1330" aria-label="1330행">1330</a>    )</span>
+<span class="line" id="L1331"><a href="#L1331" aria-label="1331행">1331</a>    intake_parser.add_argument(</span>
+<span class="line" id="L1332"><a href="#L1332" aria-label="1332행">1332</a>        &quot;--known-last&quot;,</span>
+<span class="line" id="L1333"><a href="#L1333" aria-label="1333행">1333</a>        type=int,</span>
+<span class="line" id="L1334"><a href="#L1334" aria-label="1334행">1334</a>        default=None,</span>
+<span class="line" id="L1335"><a href="#L1335" aria-label="1335행">1335</a>        help=&quot;emit relevant messages after the previously observed last number&quot;,</span>
+<span class="line" id="L1336"><a href="#L1336" aria-label="1336행">1336</a>    )</span>
+<span class="line" id="L1337"><a href="#L1337" aria-label="1337행">1337</a></span>
+<span class="line" id="L1338"><a href="#L1338" aria-label="1338행">1338</a>    shown_message = sub.add_parser(&quot;show&quot;, help=&quot;print exactly one numbered message&quot;)</span>
+<span class="line" id="L1339"><a href="#L1339" aria-label="1339행">1339</a>    shown_message.add_argument(&quot;--number&quot;, type=int, required=True)</span>
+<span class="line" id="L1340"><a href="#L1340" aria-label="1340행">1340</a>    shown_message.add_argument(</span>
+<span class="line" id="L1341"><a href="#L1341" aria-label="1341행">1341</a>        &quot;--with-links&quot;,</span>
+<span class="line" id="L1342"><a href="#L1342" aria-label="1342행">1342</a>        action=&quot;store_true&quot;,</span>
+<span class="line" id="L1343"><a href="#L1343" aria-label="1343행">1343</a>        help=&quot;also print structured earlier reply targets&quot;,</span>
+<span class="line" id="L1344"><a href="#L1344" aria-label="1344행">1344</a>    )</span>
+<span class="line" id="L1345"><a href="#L1345" aria-label="1345행">1345</a>    shown_message.add_argument(&quot;--depth&quot;, type=int, default=3)</span>
+<span class="line" id="L1346"><a href="#L1346" aria-label="1346행">1346</a></span>
+<span class="line" id="L1347"><a href="#L1347" aria-label="1347행">1347</a>    change = sub.add_parser(&quot;resolve&quot;)</span>
+<span class="line" id="L1348"><a href="#L1348" aria-label="1348행">1348</a>    change.add_argument(&quot;--number&quot;, type=int, required=True)</span>
+<span class="line" id="L1349"><a href="#L1349" aria-label="1349행">1349</a>    change.add_argument(&quot;--status&quot;, choices=STATUSES[1:], required=True)</span>
+<span class="line" id="L1350"><a href="#L1350" aria-label="1350행">1350</a>    change.add_argument(&quot;--expect-mode&quot;, choices=MODES, default=None)</span>
+<span class="line" id="L1351"><a href="#L1351" aria-label="1351행">1351</a></span>
+<span class="line" id="L1352"><a href="#L1352" aria-label="1352행">1352</a>    add = sub.add_parser(&quot;append&quot;)</span>
+<span class="line" id="L1353"><a href="#L1353" aria-label="1353행">1353</a>    add.add_argument(&quot;--sender&quot;, default=&quot;CODEX&quot;)</span>
+<span class="line" id="L1354"><a href="#L1354" aria-label="1354행">1354</a>    add.add_argument(&quot;--receiver&quot;, default=&quot;CLAUDE/OWNER&quot;)</span>
+<span class="line" id="L1355"><a href="#L1355" aria-label="1355행">1355</a>    add.add_argument(&quot;--type&quot;, choices=TYPES, default=&quot;REPORT&quot;)</span>
+<span class="line" id="L1356"><a href="#L1356" aria-label="1356행">1356</a>    add.add_argument(&quot;--tag&quot;, required=True)</span>
+<span class="line" id="L1357"><a href="#L1357" aria-label="1357행">1357</a>    add.add_argument(&quot;--title&quot;, required=True)</span>
+<span class="line" id="L1358"><a href="#L1358" aria-label="1358행">1358</a>    add.add_argument(&quot;--target&quot;, default=&quot;Claude / Owner&quot;)</span>
+<span class="line" id="L1359"><a href="#L1359" aria-label="1359행">1359</a>    add.add_argument(&quot;--reply&quot;, choices=(&quot;Y&quot;, &quot;N&quot;), required=True, metavar=&quot;{Y,N}&quot;)</span>
+<span class="line" id="L1360"><a href="#L1360" aria-label="1360행">1360</a>    add.add_argument(&quot;--status&quot;, choices=STATUSES, default=&quot;OPEN&quot;)</span>
+<span class="line" id="L1361"><a href="#L1361" aria-label="1361행">1361</a>    add.add_argument(&quot;--date&quot;, default=None)</span>
+<span class="line" id="L1362"><a href="#L1362" aria-label="1362행">1362</a>    add.add_argument(&quot;--body-file&quot;, default=None)</span>
+<span class="line" id="L1363"><a href="#L1363" aria-label="1363행">1363</a>    add.add_argument(&quot;--body&quot;, default=None)</span>
+<span class="line" id="L1364"><a href="#L1364" aria-label="1364행">1364</a>    add.add_argument(&quot;--expect-last&quot;, type=int, default=None)</span>
+<span class="line" id="L1365"><a href="#L1365" aria-label="1365행">1365</a>    add.add_argument(&quot;--expect-mode&quot;, choices=MODES, default=None)</span>
+<span class="line" id="L1366"><a href="#L1366" aria-label="1366행">1366</a>    add.add_argument(</span>
+<span class="line" id="L1367"><a href="#L1367" aria-label="1367행">1367</a>        &quot;--in-reply-to&quot;,</span>
+<span class="line" id="L1368"><a href="#L1368" aria-label="1368행">1368</a>        default=None,</span>
+<span class="line" id="L1369"><a href="#L1369" aria-label="1369행">1369</a>        help=&quot;comma-separated earlier message numbers, for example 222,223&quot;,</span>
+<span class="line" id="L1370"><a href="#L1370" aria-label="1370행">1370</a>    )</span>
+<span class="line" id="L1371"><a href="#L1371" aria-label="1371행">1371</a>    add.add_argument(</span>
+<span class="line" id="L1372"><a href="#L1372" aria-label="1372행">1372</a>        &quot;--artifact&quot;,</span>
+<span class="line" id="L1373"><a href="#L1373" aria-label="1373행">1373</a>        action=&quot;append&quot;,</span>
+<span class="line" id="L1374"><a href="#L1374" aria-label="1374행">1374</a>        default=None,</span>
+<span class="line" id="L1375"><a href="#L1375" aria-label="1375행">1375</a>        help=&quot;artifact path or URL; requires --in-reply-to&quot;,</span>
+<span class="line" id="L1376"><a href="#L1376" aria-label="1376행">1376</a>    )</span>
+<span class="line" id="L1377"><a href="#L1377" aria-label="1377행">1377</a></span>
+<span class="line" id="L1378"><a href="#L1378" aria-label="1378행">1378</a>    pinned = sub.add_parser(&quot;pin&quot;)</span>
+<span class="line" id="L1379"><a href="#L1379" aria-label="1379행">1379</a>    pinned.add_argument(&quot;--show-hash&quot;, action=&quot;store_true&quot;)</span>
+<span class="line" id="L1380"><a href="#L1380" aria-label="1380행">1380</a>    pinned.add_argument(&quot;--expect-hash&quot;, default=None)</span>
+<span class="line" id="L1381"><a href="#L1381" aria-label="1381행">1381</a>    pinned.add_argument(&quot;--body-file&quot;, default=None)</span>
+<span class="line" id="L1382"><a href="#L1382" aria-label="1382행">1382</a>    pinned.add_argument(&quot;--body&quot;, default=None)</span>
+<span class="line" id="L1383"><a href="#L1383" aria-label="1383행">1383</a>    pinned.add_argument(&quot;--expect-mode&quot;, choices=MODES, default=None)</span>
+<span class="line" id="L1384"><a href="#L1384" aria-label="1384행">1384</a></span>
+<span class="line" id="L1385"><a href="#L1385" aria-label="1385행">1385</a>    mode_parser = sub.add_parser(&quot;mode&quot;)</span>
+<span class="line" id="L1386"><a href="#L1386" aria-label="1386행">1386</a>    mode_action = mode_parser.add_mutually_exclusive_group(required=True)</span>
+<span class="line" id="L1387"><a href="#L1387" aria-label="1387행">1387</a>    mode_action.add_argument(&quot;--show&quot;, action=&quot;store_true&quot;)</span>
+<span class="line" id="L1388"><a href="#L1388" aria-label="1388행">1388</a>    mode_action.add_argument(&quot;--set&quot;, dest=&quot;set_mode&quot;, choices=MODES)</span>
+<span class="line" id="L1389"><a href="#L1389" aria-label="1389행">1389</a>    mode_parser.add_argument(&quot;--by&quot;, default=None)</span>
+<span class="line" id="L1390"><a href="#L1390" aria-label="1390행">1390</a>    mode_parser.add_argument(&quot;--reason&quot;, default=None)</span>
+<span class="line" id="L1391"><a href="#L1391" aria-label="1391행">1391</a>    mode_parser.add_argument(&quot;--expect-current-mode&quot;, choices=MODES, default=None)</span>
+<span class="line" id="L1392"><a href="#L1392" aria-label="1392행">1392</a>    mode_parser.add_argument(&quot;--expect-hash&quot;, default=None)</span>
+<span class="line" id="L1393"><a href="#L1393" aria-label="1393행">1393</a>    return parser</span>
+<span class="line" id="L1394"><a href="#L1394" aria-label="1394행">1394</a></span>
+<span class="line" id="L1395"><a href="#L1395" aria-label="1395행">1395</a></span>
+<span class="line" id="L1396"><a href="#L1396" aria-label="1396행">1396</a>def main() -&gt; int:</span>
+<span class="line" id="L1397"><a href="#L1397" aria-label="1397행">1397</a>    try:</span>
+<span class="line" id="L1398"><a href="#L1398" aria-label="1398행">1398</a>        sys.stdout.reconfigure(encoding=&quot;utf-8&quot;, line_buffering=True)</span>
+<span class="line" id="L1399"><a href="#L1399" aria-label="1399행">1399</a>        sys.stderr.reconfigure(encoding=&quot;utf-8&quot;, line_buffering=True)</span>
+<span class="line" id="L1400"><a href="#L1400" aria-label="1400행">1400</a>    except Exception:</span>
+<span class="line" id="L1401"><a href="#L1401" aria-label="1401행">1401</a>        pass</span>
+<span class="line" id="L1402"><a href="#L1402" aria-label="1402행">1402</a>    args = build_parser().parse_args()</span>
+<span class="line" id="L1403"><a href="#L1403" aria-label="1403행">1403</a>    path = args.thread.resolve()</span>
+<span class="line" id="L1404"><a href="#L1404" aria-label="1404행">1404</a>    if args.command == &quot;init&quot;:</span>
+<span class="line" id="L1405"><a href="#L1405" aria-label="1405행">1405</a>        return init_thread(path, args.title, args.mode)</span>
+<span class="line" id="L1406"><a href="#L1406" aria-label="1406행">1406</a>    if args.command == &quot;validate&quot;:</span>
+<span class="line" id="L1407"><a href="#L1407" aria-label="1407행">1407</a>        ok, problems, last = validate(path)</span>
+<span class="line" id="L1408"><a href="#L1408" aria-label="1408행">1408</a>        text = read_text(path) if path.exists() else &quot;&quot;</span>
+<span class="line" id="L1409"><a href="#L1409" aria-label="1409행">1409</a>        if ok:</span>
+<span class="line" id="L1410"><a href="#L1410" aria-label="1410행">1410</a>            count = len(parse_headers(text))</span>
+<span class="line" id="L1411"><a href="#L1411" aria-label="1411행">1411</a>            raw = read_bytes(path)</span>
+<span class="line" id="L1412"><a href="#L1412" aria-label="1412행">1412</a>            info = mode_info(raw)</span>
+<span class="line" id="L1413"><a href="#L1413" aria-label="1413행">1413</a>            mode_label = info.value if info is not None else &quot;UNDECLARED&quot;</span>
+<span class="line" id="L1414"><a href="#L1414" aria-label="1414행">1414</a>            print(</span>
+<span class="line" id="L1415"><a href="#L1415" aria-label="1415행">1415</a>                with_awaiting(</span>
+<span class="line" id="L1416"><a href="#L1416" aria-label="1416행">1416</a>                    f&quot;[thread] ok messages={count} last=#{last:04d} &quot;</span>
+<span class="line" id="L1417"><a href="#L1417" aria-label="1417행">1417</a>                    f&quot;{newline_summary(text)} mode={mode_label}&quot;,</span>
+<span class="line" id="L1418"><a href="#L1418" aria-label="1418행">1418</a>                    text,</span>
+<span class="line" id="L1419"><a href="#L1419" aria-label="1419행">1419</a>                )</span>
+<span class="line" id="L1420"><a href="#L1420" aria-label="1420행">1420</a>            )</span>
+<span class="line" id="L1421"><a href="#L1421" aria-label="1421행">1421</a>            return 0</span>
+<span class="line" id="L1422"><a href="#L1422" aria-label="1422행">1422</a>        for problem in problems:</span>
+<span class="line" id="L1423"><a href="#L1423" aria-label="1423행">1423</a>            print(problem, file=sys.stderr)</span>
+<span class="line" id="L1424"><a href="#L1424" aria-label="1424행">1424</a>        if path.exists():</span>
+<span class="line" id="L1425"><a href="#L1425" aria-label="1425행">1425</a>            print(f&quot;[thread] {newline_summary(text)}&quot;, file=sys.stderr)</span>
+<span class="line" id="L1426"><a href="#L1426" aria-label="1426행">1426</a>        return 1</span>
+<span class="line" id="L1427"><a href="#L1427" aria-label="1427행">1427</a>    if args.command == &quot;open&quot;:</span>
+<span class="line" id="L1428"><a href="#L1428" aria-label="1428행">1428</a>        text = read_text(path)</span>
+<span class="line" id="L1429"><a href="#L1429" aria-label="1429행">1429</a>        if args.awaiting:</span>
+<span class="line" id="L1430"><a href="#L1430" aria-label="1430행">1430</a>            awaiting = awaiting_reply_messages(text)</span>
+<span class="line" id="L1431"><a href="#L1431" aria-label="1431행">1431</a>            if args.after_number is not None and args.after_number &lt; 0:</span>
+<span class="line" id="L1432"><a href="#L1432" aria-label="1432행">1432</a>                print(</span>
+<span class="line" id="L1433"><a href="#L1433" aria-label="1433행">1433</a>                    &quot;[thread] open refused: --after-number must be 0 or greater&quot;,</span>
+<span class="line" id="L1434"><a href="#L1434" aria-label="1434행">1434</a>                    file=sys.stderr,</span>
+<span class="line" id="L1435"><a href="#L1435" aria-label="1435행">1435</a>                )</span>
+<span class="line" id="L1436"><a href="#L1436" aria-label="1436행">1436</a>                return 2</span>
+<span class="line" id="L1437"><a href="#L1437" aria-label="1437행">1437</a>            awaiting = [</span>
+<span class="line" id="L1438"><a href="#L1438" aria-label="1438행">1438</a>                message</span>
+<span class="line" id="L1439"><a href="#L1439" aria-label="1439행">1439</a>                for message in awaiting</span>
+<span class="line" id="L1440"><a href="#L1440" aria-label="1440행">1440</a>                if receiver_matches(message.receiver, args.agent)</span>
+<span class="line" id="L1441"><a href="#L1441" aria-label="1441행">1441</a>                and (</span>
+<span class="line" id="L1442"><a href="#L1442" aria-label="1442행">1442</a>                    args.after_number is None</span>
+<span class="line" id="L1443"><a href="#L1443" aria-label="1443행">1443</a>                    or message.number &gt; args.after_number</span>
+<span class="line" id="L1444"><a href="#L1444" aria-label="1444행">1444</a>                )</span>
+<span class="line" id="L1445"><a href="#L1445" aria-label="1445행">1445</a>            ]</span>
+<span class="line" id="L1446"><a href="#L1446" aria-label="1446행">1446</a>            if args.agent is not None or args.after_number is not None:</span>
+<span class="line" id="L1447"><a href="#L1447" aria-label="1447행">1447</a>                after_label = (</span>
+<span class="line" id="L1448"><a href="#L1448" aria-label="1448행">1448</a>                    f&quot;#{args.after_number:04d}&quot;</span>
+<span class="line" id="L1449"><a href="#L1449" aria-label="1449행">1449</a>                    if args.after_number is not None</span>
+<span class="line" id="L1450"><a href="#L1450" aria-label="1450행">1450</a>                    else &quot;NONE&quot;</span>
+<span class="line" id="L1451"><a href="#L1451" aria-label="1451행">1451</a>                )</span>
+<span class="line" id="L1452"><a href="#L1452" aria-label="1452행">1452</a>                print(</span>
+<span class="line" id="L1453"><a href="#L1453" aria-label="1453행">1453</a>                    f&quot;[thread] awaiting agent={args.agent or &#x27;ALL&#x27;} &quot;</span>
+<span class="line" id="L1454"><a href="#L1454" aria-label="1454행">1454</a>                    f&quot;after={after_label} matched={len(awaiting)}&quot;</span>
+<span class="line" id="L1455"><a href="#L1455" aria-label="1455행">1455</a>                )</span>
+<span class="line" id="L1456"><a href="#L1456" aria-label="1456행">1456</a>            if not awaiting:</span>
+<span class="line" id="L1457"><a href="#L1457" aria-label="1457행">1457</a>                print(with_awaiting(&quot;[thread] no awaiting reply messages&quot;, text))</span>
+<span class="line" id="L1458"><a href="#L1458" aria-label="1458행">1458</a>            for message in awaiting:</span>
+<span class="line" id="L1459"><a href="#L1459" aria-label="1459행">1459</a>                print(</span>
+<span class="line" id="L1460"><a href="#L1460" aria-label="1460행">1460</a>                    with_awaiting(</span>
+<span class="line" id="L1461"><a href="#L1461" aria-label="1461행">1461</a>                        f&quot;#{message.number:04d} · {message.sender} → &quot;</span>
+<span class="line" id="L1462"><a href="#L1462" aria-label="1462행">1462</a>                        f&quot;{message.receiver} · {message.title}&quot;,</span>
+<span class="line" id="L1463"><a href="#L1463" aria-label="1463행">1463</a>                        text,</span>
+<span class="line" id="L1464"><a href="#L1464" aria-label="1464행">1464</a>                    )</span>
+<span class="line" id="L1465"><a href="#L1465" aria-label="1465행">1465</a>                )</span>
+<span class="line" id="L1466"><a href="#L1466" aria-label="1466행">1466</a>            return 0</span>
+<span class="line" id="L1467"><a href="#L1467" aria-label="1467행">1467</a>        if args.agent is not None or args.after_number is not None:</span>
+<span class="line" id="L1468"><a href="#L1468" aria-label="1468행">1468</a>            print(</span>
+<span class="line" id="L1469"><a href="#L1469" aria-label="1469행">1469</a>                &quot;[thread] open refused: --agent and --after-number require --awaiting&quot;,</span>
+<span class="line" id="L1470"><a href="#L1470" aria-label="1470행">1470</a>                file=sys.stderr,</span>
+<span class="line" id="L1471"><a href="#L1471" aria-label="1471행">1471</a>            )</span>
+<span class="line" id="L1472"><a href="#L1472" aria-label="1472행">1472</a>            return 2</span>
+<span class="line" id="L1473"><a href="#L1473" aria-label="1473행">1473</a>        statuses = PENDING_STATUSES if args.all else (&quot;OPEN&quot;,)</span>
+<span class="line" id="L1474"><a href="#L1474" aria-label="1474행">1474</a>        pending = messages_with_status(path, statuses)</span>
+<span class="line" id="L1475"><a href="#L1475" aria-label="1475행">1475</a>        if not pending:</span>
+<span class="line" id="L1476"><a href="#L1476" aria-label="1476행">1476</a>            label = &quot;pending&quot; if args.all else &quot;OPEN&quot;</span>
+<span class="line" id="L1477"><a href="#L1477" aria-label="1477행">1477</a>            print(with_awaiting(f&quot;[thread] no {label} messages&quot;, text))</span>
+<span class="line" id="L1478"><a href="#L1478" aria-label="1478행">1478</a>        for number, status_value, header in pending:</span>
+<span class="line" id="L1479"><a href="#L1479" aria-label="1479행">1479</a>            print(with_awaiting(f&quot;#{number:04d} [{status_value}] {header}&quot;, text))</span>
+<span class="line" id="L1480"><a href="#L1480" aria-label="1480행">1480</a>        return 0</span>
+<span class="line" id="L1481"><a href="#L1481" aria-label="1481행">1481</a>    if args.command == &quot;intake&quot;:</span>
+<span class="line" id="L1482"><a href="#L1482" aria-label="1482행">1482</a>        return intake(path, args)</span>
+<span class="line" id="L1483"><a href="#L1483" aria-label="1483행">1483</a>    if args.command == &quot;show&quot;:</span>
+<span class="line" id="L1484"><a href="#L1484" aria-label="1484행">1484</a>        return show_message(path, args.number, args.with_links, args.depth)</span>
+<span class="line" id="L1485"><a href="#L1485" aria-label="1485행">1485</a>    if args.command == &quot;next&quot;:</span>
+<span class="line" id="L1486"><a href="#L1486" aria-label="1486행">1486</a>        ok, problems, last = validate(path)</span>
+<span class="line" id="L1487"><a href="#L1487" aria-label="1487행">1487</a>        structural_problems = [</span>
+<span class="line" id="L1488"><a href="#L1488" aria-label="1488행">1488</a>            problem for problem in problems if not problem.startswith(&quot;mixed line endings:&quot;)</span>
+<span class="line" id="L1489"><a href="#L1489" aria-label="1489행">1489</a>        ]</span>
+<span class="line" id="L1490"><a href="#L1490" aria-label="1490행">1490</a>        if structural_problems:</span>
+<span class="line" id="L1491"><a href="#L1491" aria-label="1491행">1491</a>            for problem in structural_problems:</span>
+<span class="line" id="L1492"><a href="#L1492" aria-label="1492행">1492</a>                print(problem, file=sys.stderr)</span>
+<span class="line" id="L1493"><a href="#L1493" aria-label="1493행">1493</a>            return 1</span>
+<span class="line" id="L1494"><a href="#L1494" aria-label="1494행">1494</a>        if not ok:</span>
+<span class="line" id="L1495"><a href="#L1495" aria-label="1495행">1495</a>            print(</span>
+<span class="line" id="L1496"><a href="#L1496" aria-label="1496행">1496</a>                &quot;[thread] warning: mixed newlines detected; read-only next is allowed, &quot;</span>
+<span class="line" id="L1497"><a href="#L1497" aria-label="1497행">1497</a>                &quot;mutation commands will refuse&quot;,</span>
+<span class="line" id="L1498"><a href="#L1498" aria-label="1498행">1498</a>                file=sys.stderr,</span>
+<span class="line" id="L1499"><a href="#L1499" aria-label="1499행">1499</a>            )</span>
+<span class="line" id="L1500"><a href="#L1500" aria-label="1500행">1500</a>        print(f&quot;{last + 1:04d}&quot;)</span>
+<span class="line" id="L1501"><a href="#L1501" aria-label="1501행">1501</a>        return 0</span>
+<span class="line" id="L1502"><a href="#L1502" aria-label="1502행">1502</a>    if args.command == &quot;resolve&quot;:</span>
+<span class="line" id="L1503"><a href="#L1503" aria-label="1503행">1503</a>        return resolve(path, args.number, args.status, args.expect_mode)</span>
+<span class="line" id="L1504"><a href="#L1504" aria-label="1504행">1504</a>    if args.command == &quot;pin&quot;:</span>
+<span class="line" id="L1505"><a href="#L1505" aria-label="1505행">1505</a>        return pin(path, args)</span>
+<span class="line" id="L1506"><a href="#L1506" aria-label="1506행">1506</a>    if args.command == &quot;mode&quot;:</span>
+<span class="line" id="L1507"><a href="#L1507" aria-label="1507행">1507</a>        return mode_command(path, args)</span>
+<span class="line" id="L1508"><a href="#L1508" aria-label="1508행">1508</a>    return append(path, args)</span>
+<span class="line" id="L1509"><a href="#L1509" aria-label="1509행">1509</a></span>
+<span class="line" id="L1510"><a href="#L1510" aria-label="1510행">1510</a></span>
+<span class="line" id="L1511"><a href="#L1511" aria-label="1511행">1511</a>if __name__ == &quot;__main__&quot;:</span>
+<span class="line" id="L1512"><a href="#L1512" aria-label="1512행">1512</a>    try:</span>
+<span class="line" id="L1513"><a href="#L1513" aria-label="1513행">1513</a>        raise SystemExit(main())</span>
+<span class="line" id="L1514"><a href="#L1514" aria-label="1514행">1514</a>    except UnicodeDecodeError as error:</span>
+<span class="line" id="L1515"><a href="#L1515" aria-label="1515행">1515</a>        print(</span>
+<span class="line" id="L1516"><a href="#L1516" aria-label="1516행">1516</a>            &quot;[thread] invalid UTF-8 bytes detected; original file was not changed. &quot;</span>
+<span class="line" id="L1517"><a href="#L1517" aria-label="1517행">1517</a>            f&quot;({error})&quot;,</span>
+<span class="line" id="L1518"><a href="#L1518" aria-label="1518행">1518</a>            file=sys.stderr,</span>
+<span class="line" id="L1519"><a href="#L1519" aria-label="1519행">1519</a>        )</span>
+<span class="line" id="L1520"><a href="#L1520" aria-label="1520행">1520</a>        raise SystemExit(4)</span>
+<span class="line" id="L1521"><a href="#L1521" aria-label="1521행">1521</a>    except (TimeoutError, ValueError) as error:</span>
+<span class="line" id="L1522"><a href="#L1522" aria-label="1522행">1522</a>        print(f&quot;[thread] safety check failed: {error}; original file was not changed.&quot;, file=sys.stderr)</span>
+<span class="line" id="L1523"><a href="#L1523" aria-label="1523행">1523</a>        raise SystemExit(4)</span></code></pre></main></html>

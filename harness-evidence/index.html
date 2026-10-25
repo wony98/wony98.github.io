@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>AI 에이전트 협업 하네스 | 코드와 검증 근거</title><link rel="stylesheet" href="evidence.css"></head>
+<body><main>
+<a href="../index.html#agent-work">← 포트폴리오로 돌아가기</a>
+<p class="meta">검토용 로컬 사본 · operate-collaboration-thread 0.7.0 · 2026.10.24</p>
+<h1>AI 에이전트 협업 하네스<br>코드와 검증 근거</h1>
+<p class="intro">최신 회신을 놓친 채 답장을 추가하거나 검토 요청이 빠지는 문제에 대응해 공유 스레드 운영 스킬을 확장했습니다. 요청 상태를 조회하고, 기록을 바꾸기 전에 번호·모드·해시를 대조하는 Python 도구입니다.</p>
+<nav class="links" aria-label="하네스 근거"><a href="code.html">검사 도구 코드</a><a href="tests.html">회귀 테스트 코드</a><a href="#verification">검증 결과</a><a href="README.md">구성·재실행 안내</a></nav>
+<h2>어떤 조건을 검사하나요?</h2>
+<div class="table-wrap"><table><thead><tr><th scope="col">확인할 동작</th><th scope="col">구현</th></tr></thead><tbody>
+<tr><th scope="row">미회신 요청 조회</th><td>답변 필요 여부와 명시적 회신 연결로 대기 항목을 찾습니다. <a href="code.html#L602">코드 602행</a></td></tr>
+<tr><th scope="row">최신 번호 대조</th><td>읽을 때 확인한 마지막 번호를 전달하고, 작성 시점 번호와 다르면 추가를 거부합니다. <a href="code.html#L954">비교문 954행</a> / <a href="code.html#L933">함수 전체 933행</a></td></tr>
+<tr><th scope="row">작업 모드 대조</th><td>기록에 선언된 LOCAL/GIT 모드와 호출자가 전달한 기대 모드를 비교합니다. <a href="code.html#L856">코드 856행</a></td></tr>
+<tr><th scope="row">기존 기록 보존</th><td>도구 경유 변경에 파일 잠금을 걸고, 고정 내용 해시와 메시지 보존을 확인한 뒤 임시 파일을 교체합니다. <a href="code.html#L711">잠금·교체</a> / <a href="code.html#L1042">해시·메시지 검사</a></td></tr>
+</tbody></table></div>
+<h2 id="verification">검증 결과</h2>
+<p><b>2026.10.23 설치 환경: 회귀 테스트 36개 통과.</b> 별도 실패 조건 4건에서는 기록 변경이 거부되고 원본이 유지됐습니다. <a href="verification-20261023.json">당시 실행 요약</a></p>
+<p>공유용 사본의 재실행 결과는 <a href="verification-20261024.json">2026.10.24 기록</a>에 통과·건너뜀·실패 수와 실행 명령을 나눠 남겼습니다. 개인 환경의 Claude 연결 문서는 제외했으므로 해당 문서 버전 확인 1건은 건너뜁니다.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">별도 실패 조건</th><th scope="col">확인 방법</th></tr></thead><tbody>
+<tr><td>오래된 마지막 메시지 번호</td><td>실제 1번 기록에 기대 번호 0 전달 → 종료코드 5, 원본 해시 동일</td></tr>
+<tr><td>선언과 다른 작업 모드</td><td>LOCAL 기록에 GIT 전달 → 종료코드 5, 원본 해시 동일</td></tr>
+<tr><td>오래된 고정 내용 해시</td><td>현재 내용과 다른 해시 전달 → 종료코드 5, 원본 해시 동일</td></tr>
+<tr><td>혼합 줄바꿈</td><td>LF·CRLF 혼합 기록에 추가 요청 → 종료코드 2, 원본 해시 동일</td></tr>
+</tbody></table></div>
+<p><a href="check_guards.py">실패 조건 재현 코드</a> · <a href="guards-20261024.json">4건 재실행 상세 결과</a> · <a href="regression-20261024.txt">회귀 테스트 실행 로그</a></p>
+<h2 id="healtheat-proof">HealthEat 평가 재검증에 적용</h2>
+<p>원본 보존과 단계별 완료 기준을 정해 구현·독립 검토·승인 요청을 이 스킬의 공유 스레드로 관리했습니다. 평가 입력 검사에서 라벨 오기 1건을 발견해 정정하고, 저장 가중치로 1장 시험 후 33장을 별도로 실행했습니다. 라벨 오류는 스레드 도구 자체가 아니라 프로젝트의 입력 검사와 자료 대조에서 발견했습니다.</p>
+<p>과거 저장 예측의 정정값은 24/47, 별도 실행값은 25/47입니다. 모델·입력·설정 해시와 결과, 최초 실패와 후속 검증을 분리해 남겼습니다.</p>
+<nav class="links" aria-label="HealthEat 적용 근거"><a href="https://github.com/wony98/pill_detection/blob/6daac3b96ef949f479b1820bcda2e5ed69fef1c9/experiments/forward_eval_20261025/README.md" target="_blank" rel="noopener noreferrer">실행·MLflow 근거</a><a href="https://github.com/wony98/pill_detection/blob/6daac3b96ef949f479b1820bcda2e5ed69fef1c9/docs/errata_label_v2_20261024/README.md" target="_blank" rel="noopener noreferrer">라벨 정오표</a><a href="https://github.com/wony98/pill_detection/blob/6daac3b96ef949f479b1820bcda2e5ed69fef1c9/experiments/checkpoint_eval/forward.py" target="_blank" rel="noopener noreferrer">프로젝트 검증 코드</a><a href="../index.html#agent-healtheat-title">적용 과정</a></nav>
+<h2>담당 범위와 재실행</h2>
+<p class="intro">저는 반복된 협업 문제를 재사용 스킬로 옮기자는 방향과 적용 범위, 승인 기준을 정했습니다. 구현에는 Codex를 활용했고 Claude의 검토 결과와 대조해 최종 적용을 승인했습니다. 이 자료는 이후 개선을 포함한 현재 버전의 코드입니다.</p>
+<pre><code>python -B skill/scripts/test_thread_mailbox.py -v
+python -B check_guards.py</code></pre>
+<p>Python 표준 라이브러리만 필요하며, 테스트는 임시 폴더에 만든 합성 기록으로 실행합니다. 내부 대화 원문은 포함하지 않았습니다. <a href="source-manifest.json">원본 사본의 파일별 SHA-256</a></p>
+<details><summary>검사 범위와 사본 안내</summary>
+<p><code>--expect-last</code>는 스킬 사용 절차에서 전달하도록 정한 선택 인자입니다. 이를 생략한 호출의 번호 검사는 보장하지 않습니다. 미회신 조회는 상대가 실제로 읽었다는 확인이 아니며, 이 도구가 Git·네트워크 명령을 차단하지는 않습니다. 표준 형식과 다른 기존 스레드에는 별도 호환 처리가 필요합니다.</p>
+<p>원본 코드에서 별도 라이선스 선언은 확인하지 못해 새 재배포 라이선스를 임의로 부여하지 않았습니다. 현재는 로컬 검토용이며 공개 배포하지 않았습니다. <a href="README.md">전체 안내</a></p>
+</details></main></body></html>

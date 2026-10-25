@@ -1,0 +1,42 @@
+test_agent_examples_list_every_receiver_token (__main__.ThreadMailboxRegressionTests.test_agent_examples_list_every_receiver_token)
+`--agent <...>` 예시가 실제 토큰 하나라도 빠뜨리면 실패한다. ... ok
+test_append_long_body_is_always_refused (__main__.ThreadMailboxRegressionTests.test_append_long_body_is_always_refused) ... ok
+test_append_requires_explicit_reply_without_mutating_thread (__main__.ThreadMailboxRegressionTests.test_append_requires_explicit_reply_without_mutating_thread) ... ok
+test_append_stdout_remains_backward_compatible (__main__.ThreadMailboxRegressionTests.test_append_stdout_remains_backward_compatible) ... ok
+test_artifact_requires_and_records_reply_target (__main__.ThreadMailboxRegressionTests.test_artifact_requires_and_records_reply_target) ... ok
+test_awaiting_does_not_block_mutation_commands (__main__.ThreadMailboxRegressionTests.test_awaiting_does_not_block_mutation_commands) ... ok
+test_awaiting_uses_explicit_links_not_status_or_freeform_mentions (__main__.ThreadMailboxRegressionTests.test_awaiting_uses_explicit_links_not_status_or_freeform_mentions) ... ok
+test_claude_pointer_absence_is_skipped_by_check (__main__.ThreadMailboxRegressionTests.test_claude_pointer_absence_is_skipped_by_check) ... ok
+test_claude_pointer_matches_helper_version_when_present (__main__.ThreadMailboxRegressionTests.test_claude_pointer_matches_helper_version_when_present) ... skipped 'Claude pointer is not installed'
+test_claude_pointer_mismatch_fails (__main__.ThreadMailboxRegressionTests.test_claude_pointer_mismatch_fails) ... ok
+test_concurrent_mode_set_has_one_winner (__main__.ThreadMailboxRegressionTests.test_concurrent_mode_set_has_one_winner) ... ok
+test_done_is_terminal_but_review_does_not_imply_a_reply (__main__.ThreadMailboxRegressionTests.test_done_is_terminal_but_review_does_not_imply_a_reply) ... ok
+test_expect_mode_four_conditions_for_append (__main__.ThreadMailboxRegressionTests.test_expect_mode_four_conditions_for_append) ... ok
+test_helper_version_is_0_7_0 (__main__.ThreadMailboxRegressionTests.test_helper_version_is_0_7_0) ... ok
+test_in_reply_to_records_structured_metadata_and_clears_awaiting (__main__.ThreadMailboxRegressionTests.test_in_reply_to_records_structured_metadata_and_clears_awaiting) ... ok
+test_in_reply_to_rejects_future_missing_and_duplicate_numbers (__main__.ThreadMailboxRegressionTests.test_in_reply_to_rejects_future_missing_and_duplicate_numbers) ... ok
+test_init_mode_is_optional_and_case_sensitive (__main__.ThreadMailboxRegressionTests.test_init_mode_is_optional_and_case_sensitive) ... ok
+test_inline_body_crlf_does_not_create_stray_cr (__main__.ThreadMailboxRegressionTests.test_inline_body_crlf_does_not_create_stray_cr) ... ok
+test_intake_combines_mode_pinned_pending_and_bounded_body (__main__.ThreadMailboxRegressionTests.test_intake_combines_mode_pinned_pending_and_bounded_body) ... ok
+test_intake_known_last_boundaries_and_all_statuses (__main__.ThreadMailboxRegressionTests.test_intake_known_last_boundaries_and_all_statuses) ... ok
+test_intake_known_last_pages_all_exact_agent_messages_in_order (__main__.ThreadMailboxRegressionTests.test_intake_known_last_pages_all_exact_agent_messages_in_order) ... ok
+test_intake_reports_pinned_change_and_latest_each_pending_status (__main__.ThreadMailboxRegressionTests.test_intake_reports_pinned_change_and_latest_each_pending_status) ... ok
+test_legacy_exact_processed_message_line_is_compatible (__main__.ThreadMailboxRegressionTests.test_legacy_exact_processed_message_line_is_compatible) ... ok
+test_malformed_mode_inputs_are_rejected (__main__.ThreadMailboxRegressionTests.test_malformed_mode_inputs_are_rejected) ... ok
+test_mode_command_rejects_markers_only_in_message_body (__main__.ThreadMailboxRegressionTests.test_mode_command_rejects_markers_only_in_message_body) ... ok
+test_mode_metadata_hygiene (__main__.ThreadMailboxRegressionTests.test_mode_metadata_hygiene) ... ok
+test_mode_set_rejects_stale_hash (__main__.ThreadMailboxRegressionTests.test_mode_set_rejects_stale_hash) ... ok
+test_mode_show_and_set_round_trip (__main__.ThreadMailboxRegressionTests.test_mode_show_and_set_round_trip) ... ok
+test_open_awaiting_filters_exact_agent_and_after_number (__main__.ThreadMailboxRegressionTests.test_open_awaiting_filters_exact_agent_and_after_number) ... ok
+test_open_awaiting_format_and_mutual_exclusion (__main__.ThreadMailboxRegressionTests.test_open_awaiting_format_and_mutual_exclusion) ... ok
+test_pin_and_mode_preserve_each_other_and_messages (__main__.ThreadMailboxRegressionTests.test_pin_and_mode_preserve_each_other_and_messages) ... ok
+test_read_only_awaiting_checks_preserve_legacy_message_bytes (__main__.ThreadMailboxRegressionTests.test_read_only_awaiting_checks_preserve_legacy_message_bytes) ... ok
+test_removed_terms_and_old_version_are_absent (__main__.ThreadMailboxRegressionTests.test_removed_terms_and_old_version_are_absent) ... ok
+test_resolve_and_pin_require_expected_mode (__main__.ThreadMailboxRegressionTests.test_resolve_and_pin_require_expected_mode) ... ok
+test_show_prints_one_complete_message_only (__main__.ThreadMailboxRegressionTests.test_show_prints_one_complete_message_only) ... ok
+test_show_with_links_follows_structured_prior_chain (__main__.ThreadMailboxRegressionTests.test_show_with_links_follows_structured_prior_chain) ... ok
+
+----------------------------------------------------------------------
+Ran 36 tests in 42.388s
+
+OK (skipped=1)

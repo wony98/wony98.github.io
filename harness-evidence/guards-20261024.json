@@ -1,0 +1,48 @@
+{
+  "executed_at": "2026-10-24T05:39:58.498740+00:00",
+  "helper_sha256": "69a40b3fd2c153d50bee86b02ae2b172e68479e5aa93cb5926ff49733c912664",
+  "fixture_checks": [
+    {
+      "case": "stale_last_number",
+      "expected_exit_code": 5,
+      "exit_code": 5,
+      "before_sha256": "b472e699363ecf365427d8ccca2aedec72cbe38388a38a2c823c1afff0b70249",
+      "after_sha256": "b472e699363ecf365427d8ccca2aedec72cbe38388a38a2c823c1afff0b70249",
+      "unchanged": true,
+      "passed": true,
+      "message": "[thread] mode=LOCAL\n[thread] append refused: expected last #0000, actual last #0001; reread before retrying"
+    },
+    {
+      "case": "wrong_declared_mode",
+      "expected_exit_code": 5,
+      "exit_code": 5,
+      "before_sha256": "b472e699363ecf365427d8ccca2aedec72cbe38388a38a2c823c1afff0b70249",
+      "after_sha256": "b472e699363ecf365427d8ccca2aedec72cbe38388a38a2c823c1afff0b70249",
+      "unchanged": true,
+      "passed": true,
+      "message": "[thread] append refused: expected mode GIT, declared mode LOCAL"
+    },
+    {
+      "case": "stale_pinned_hash",
+      "expected_exit_code": 5,
+      "exit_code": 5,
+      "before_sha256": "b472e699363ecf365427d8ccca2aedec72cbe38388a38a2c823c1afff0b70249",
+      "after_sha256": "b472e699363ecf365427d8ccca2aedec72cbe38388a38a2c823c1afff0b70249",
+      "unchanged": true,
+      "passed": true,
+      "message": "[thread] mode=LOCAL\n[thread] pin refused: expected hash 0000000000000000000000000000000000000000000000000000000000000000, actual hash 9c5c728b05ad6fdb606899c05782fd4c6e0f1367d335ae59d4bc2b5f26e8b55e"
+    },
+    {
+      "case": "mixed_line_endings",
+      "expected_exit_code": 2,
+      "exit_code": 2,
+      "before_sha256": "b94b47cc99b40e9cacf7c46429051706151466ae63f07a7a2d1dfcc79703c403",
+      "after_sha256": "b94b47cc99b40e9cacf7c46429051706151466ae63f07a7a2d1dfcc79703c403",
+      "unchanged": true,
+      "passed": true,
+      "message": "mixed line endings: crlf=1, lf_only=24"
+    }
+  ],
+  "real_threads_modified": false,
+  "installed_skills_modified": false
+}

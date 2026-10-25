@@ -1,0 +1,72 @@
+{
+  "snapshot_date": "2026-10-24",
+  "helper_version": "0.7.0",
+  "files": [
+    {
+      "file": "skill/SKILL.md",
+      "sha256": "71a70ba8205353d86161cc69cfd13d7b8f5bcad192dfc1106967e689967a4c28",
+      "bytes": 9544,
+      "unchanged_copy": true
+    },
+    {
+      "file": "skill/agents/openai.yaml",
+      "sha256": "7883fcdf2406fff96f2e6ae8108dfe8bd07ca3140cd3af21c76410a6311fb171",
+      "bytes": 329,
+      "unchanged_copy": true
+    },
+    {
+      "file": "skill/templates/thread-header.md",
+      "sha256": "c2066d3ab10e0fc9d2f306dec90fbf365b503a688e0b51b947d30ef4b67d2f53",
+      "bytes": 366,
+      "unchanged_copy": true
+    },
+    {
+      "file": "skill/references/modes.md",
+      "sha256": "15e6dfc01f7cdf9e50b784275a92e4bbbf0ea2a78f7f75efebcb2f2996a3ecfc",
+      "bytes": 4937,
+      "unchanged_copy": true
+    },
+    {
+      "file": "skill/references/operating-rules.md",
+      "sha256": "307aa57ef97017b1296df7611d2e50120c8e36fd1fd142efffbd018a13d3927d",
+      "bytes": 1260,
+      "unchanged_copy": true
+    },
+    {
+      "file": "skill/references/platform-pitfalls.md",
+      "sha256": "0ee6f68b2b9bfea4ccc93a6f580ccfd00b13dd83665be21c88578ae206bd5009",
+      "bytes": 841,
+      "unchanged_copy": true
+    },
+    {
+      "file": "skill/references/verification-discipline.md",
+      "sha256": "96345c7b119c9edb76de2a0c212f5ce0ffff2127d91f0b0a7c7c76849ea74113",
+      "bytes": 1346,
+      "unchanged_copy": true
+    },
+    {
+      "file": "skill/scripts/thread_mailbox.py",
+      "sha256": "69a40b3fd2c153d50bee86b02ae2b172e68479e5aa93cb5926ff49733c912664",
+      "bytes": 57338,
+      "unchanged_copy": true
+    },
+    {
+      "file": "skill/scripts/test_thread_mailbox.py",
+      "sha256": "f3a491bceb8922e783bd4beb4e20930b5780ec6425f7a82e33dc1a8e17934b58",
+      "bytes": 47510,
+      "unchanged_copy": true
+    },
+    {
+      "file": "verification-20261023.json",
+      "sha256": "9e11cc5e1b29d1ec765dd80a8647bbe8cb605024c503f2834c53ac7871898822",
+      "unchanged_copy": true,
+      "kind": "historical_summary_not_a_new_execution"
+    }
+  ],
+  "excluded": [
+    "private mailbox history",
+    "personal Claude pointer",
+    "cache and environment files"
+  ],
+  "license_note": "No license declaration found in this local skill; no new redistribution license assigned."
+}
