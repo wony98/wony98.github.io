@@ -2,7 +2,7 @@
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>AI 에이전트 협업 하네스 | 코드와 검증 근거</title><link rel="stylesheet" href="evidence.css"></head>
 <body><main>
 <a href="../index.html#agent-work">← 포트폴리오로 돌아가기</a>
-<p class="meta">검토용 로컬 사본 · operate-collaboration-thread 0.7.0 · 2026.10.24</p>
+<p class="meta">공개 근거 사본 · operate-collaboration-thread 0.7.0 · 원본 고정 2026.10.24</p>
 <h1>AI 에이전트 협업 하네스<br>코드와 검증 근거</h1>
 <p class="intro">최신 회신을 놓친 채 답장을 추가하거나 검토 요청이 빠지는 문제에 대응해 공유 스레드 운영 스킬을 확장했습니다. 요청 상태를 조회하고, 기록을 바꾸기 전에 번호·모드·해시를 대조하는 Python 도구입니다.</p>
 <nav class="links" aria-label="하네스 근거"><a href="code.html">검사 도구 코드</a><a href="tests.html">회귀 테스트 코드</a><a href="#verification">검증 결과</a><a href="README.md">구성·재실행 안내</a></nav>
@@ -23,10 +23,14 @@
 <tr><td>혼합 줄바꿈</td><td>LF·CRLF 혼합 기록에 추가 요청 → 종료코드 2, 원본 해시 동일</td></tr>
 </tbody></table></div>
 <p><a href="check_guards.py">실패 조건 재현 코드</a> · <a href="guards-20261024.json">4건 재실행 상세 결과</a> · <a href="regression-20261024.txt">회귀 테스트 실행 로그</a></p>
-<h2 id="healtheat-proof">HealthEat 평가 재검증에 적용</h2>
+<section id="healtheat-status" aria-labelledby="healtheat-proof">
+<h2 id="healtheat-proof">HealthEat 평가 근거와 검토 상태</h2>
+<p><strong>검토·공개 완료: 2026.10.25.</strong> 라벨 정정과 별도 재추론 기록은 교차검토 및 작성자 확인을 거쳐 공개했고, 이력서·포트폴리오에 반영했습니다. <a href="https://github.com/wony98/pill_detection/pull/2" target="_blank" rel="noopener noreferrer">평가 근거 공개 PR #2</a> · <a href="https://github.com/wony98/pill_detection/pull/3" target="_blank" rel="noopener noreferrer">설명 문서 반영 PR #3</a></p>
+<p>아래 정오표 원본의 ‘로컬 검토용’, ‘승인 전 반영하지 않음’은 작성 당시 상태를 보존한 문구입니다. 현재의 승인 대기를 뜻하지 않습니다. 원본 라벨·예측·정오표와 실패 기록은 수정하지 않았습니다.</p>
 <p>원본 보존과 단계별 완료 기준을 정해 구현·독립 검토·승인 요청을 이 스킬의 공유 스레드로 관리했습니다. 평가 입력 검사에서 라벨 오기 1건을 발견해 정정하고, 저장 가중치로 1장 시험 후 33장을 별도로 실행했습니다. 라벨 오류는 스레드 도구 자체가 아니라 프로젝트의 입력 검사와 자료 대조에서 발견했습니다.</p>
-<p>과거 저장 예측의 정정값은 24/47, 별도 실행값은 25/47입니다. 모델·입력·설정 해시와 결과, 최초 실패와 후속 검증을 분리해 남겼습니다.</p>
-<nav class="links" aria-label="HealthEat 적용 근거"><a href="https://github.com/wony98/pill_detection/blob/6daac3b96ef949f479b1820bcda2e5ed69fef1c9/experiments/forward_eval_20261025/README.md" target="_blank" rel="noopener noreferrer">실행·MLflow 근거</a><a href="https://github.com/wony98/pill_detection/blob/6daac3b96ef949f479b1820bcda2e5ed69fef1c9/docs/errata_label_v2_20261024/README.md" target="_blank" rel="noopener noreferrer">라벨 정오표</a><a href="https://github.com/wony98/pill_detection/blob/6daac3b96ef949f479b1820bcda2e5ed69fef1c9/experiments/checkpoint_eval/forward.py" target="_blank" rel="noopener noreferrer">프로젝트 검증 코드</a><a href="../index.html#agent-healtheat-title">적용 과정</a></nav>
+<p>과거 v4 저장 예측을 정정된 라벨로 재채점한 값은 24/47입니다. 보관한 v4 가중치를 별도로 재추론한 값은 25/47이며, 같은 실행을 재현했다는 뜻은 아닙니다. 두 기록 모두 모델·점수 기준 선택에 사용한 사진 33장·알약 47개를 평가했습니다.</p>
+<nav class="links" aria-label="HealthEat 적용 근거"><a href="https://github.com/wony98/pill_detection/blob/6daac3b96ef949f479b1820bcda2e5ed69fef1c9/experiments/forward_eval_20261025/README.md" target="_blank" rel="noopener noreferrer">실행·MLflow 근거</a><a href="https://github.com/wony98/pill_detection/blob/6daac3b96ef949f479b1820bcda2e5ed69fef1c9/docs/errata_label_v2_20261024/README.md" target="_blank" rel="noopener noreferrer">정오표 해설</a><a href="https://github.com/wony98/pill_detection/blob/6daac3b96ef949f479b1820bcda2e5ed69fef1c9/docs/errata_label_v2_20261024/%EC%A0%95%EC%98%A4%ED%91%9C.md" target="_blank" rel="noopener noreferrer">정오표 원본(당시 기록)</a><a href="https://github.com/wony98/pill_detection/blob/6daac3b96ef949f479b1820bcda2e5ed69fef1c9/experiments/checkpoint_eval/forward.py" target="_blank" rel="noopener noreferrer">프로젝트 검증 코드</a><a href="../index.html#agent-healtheat-title">적용 과정</a></nav>
+</section>
 <h2>담당 범위와 재실행</h2>
 <p class="intro">저는 반복된 협업 문제를 재사용 스킬로 옮기자는 방향과 적용 범위, 승인 기준을 정했습니다. 구현에는 Codex를 활용했고 Claude의 검토 결과와 대조해 최종 적용을 승인했습니다. 이 자료는 이후 개선을 포함한 현재 버전의 코드입니다.</p>
 <pre><code>python -B skill/scripts/test_thread_mailbox.py -v
@@ -34,5 +38,5 @@ python -B check_guards.py</code></pre>
 <p>Python 표준 라이브러리만 필요하며, 테스트는 임시 폴더에 만든 합성 기록으로 실행합니다. 내부 대화 원문은 포함하지 않았습니다. <a href="source-manifest.json">원본 사본의 파일별 SHA-256</a></p>
 <details><summary>검사 범위와 사본 안내</summary>
 <p><code>--expect-last</code>는 스킬 사용 절차에서 전달하도록 정한 선택 인자입니다. 이를 생략한 호출의 번호 검사는 보장하지 않습니다. 미회신 조회는 상대가 실제로 읽었다는 확인이 아니며, 이 도구가 Git·네트워크 명령을 차단하지는 않습니다. 표준 형식과 다른 기존 스레드에는 별도 호환 처리가 필요합니다.</p>
-<p>원본 코드에서 별도 라이선스 선언은 확인하지 못해 새 재배포 라이선스를 임의로 부여하지 않았습니다. 현재는 로컬 검토용이며 공개 배포하지 않았습니다. <a href="README.md">전체 안내</a></p>
+<p>원본 코드에서 별도 라이선스 선언은 확인하지 못해 새 재배포 라이선스를 임의로 부여하지 않았습니다. 2026.10.25 작성자 확인을 거쳐 공개한 고정 사본입니다. <a href="README.md">전체 안내</a></p>
 </details></main></body></html>
