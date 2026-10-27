@@ -17,7 +17,7 @@
 <main id="main">
 <section aria-labelledby="intro-title" class="hero">
 <div>
-<div class="hero-byline"><figure class="hero-portrait"><img alt="노승원 증명사진" decoding="async" height="1422" src="assets/noh-seungwon-portrait.png" width="1106"/></figure><p class="eyebrow">포트폴리오 2026</p></div><h1 id="intro-title">문제를 푸는 방법을 탐구하고,<br/>아이디어를 구현으로 옮기는<br/><span>AI 엔지니어 노승원입니다.</span></h1><p class="intro">쉽게 풀리지 않는 문제를 만나면 관련 자료와 사례를 찾아보고, 여러 방법을 시도하며 해결책을 찾습니다. 예상과 다른 결과가 나오면 원본 자료와 판단 근거를 다시 살펴보며 다음 실험을 정합니다. 동료와 함께 고민하고 각자의 강점을 살려, 실제로 쓸 수 있는 결과물을 완성하는 개발을 지향합니다.</p><p class="contact-email"><a href="mailto:pagestone98@gmail.com">pagestone98@gmail.com</a></p><p class="contact-email contact-blog"><a href="https://nohseungwon98.tistory.com/" rel="noopener noreferrer" target="_blank">nohseungwon98.tistory.com ↗</a></p></div>
+<div class="hero-byline"><figure class="hero-portrait"><img alt="노승원 증명사진" decoding="async" height="1422" src="assets/noh-seungwon-portrait.png" width="1106"/></figure><p class="eyebrow">포트폴리오 2026</p></div><h1 id="intro-title">아이디어를 코드로 옮기고,<br/>결과를 끝까지 검증하는<br/><span>AI 엔지니어 노승원입니다.</span></h1><p class="intro">어려운 문제일수록 원인을 찾을 때까지 원본 자료와 판단 근거를 다시 확인하고, 확인한 내용으로 다음 실험을 정합니다. 동료와 함께 고민하고 각자의 강점을 살려, 실제로 쓸 수 있는 결과물을 완성하는 개발을 지향합니다.</p><p class="contact-email"><a href="mailto:pagestone98@gmail.com">pagestone98@gmail.com</a></p><p class="contact-email contact-blog"><a href="https://nohseungwon98.tistory.com/" rel="noopener noreferrer" target="_blank">nohseungwon98.tistory.com ↗</a></p></div>
 <div class="hero-side">
 <aside class="hero-note"><span class="note-label">주요 개발 경험</span><p><strong>문서 검색과 근거 구성</strong><br/>질문에 맞는 문서를 찾고, 출처가 붙은 답변용 근거로 정리했습니다.</p><p><strong>모델 실험과 평가</strong><br/>실사용 사진과 경기 이전 데이터를 바탕으로 모델을 비교·평가했습니다.</p><p><strong>API 개발과 팀 협업</strong><br/>편집 API를 배포하고 모바일(iOS) 업로드 오류까지 고치며, 기능별 요청·응답 계약을 팀과 맞췄습니다.</p><div class="tags"><span>FastAPI</span><span>Python</span><span>PyTorch</span><span>RAG</span></div></aside>
 </div>
@@ -193,7 +193,7 @@
 <div><h4>자막 수정과 얼굴 블러</h4><p>생성된 자막은 사용자가 수정할 수 있습니다. 블러는 가장 큰 얼굴 1명에 적용하며, 다중 얼굴 블러와 TTS는 MVP에서 완성하지 못했습니다.</p></div>
 <div><h4>서비스 통합과 배포</h4><p>PM으로서 기능별 요청·응답 계약을 팀과 먼저 합의하고, 역할별 병렬·순차 작업을 구분해 통합 순서를 설계했습니다.</p><p>변경된 서버만 재시작하고, 배포 실패는 GitHub 이슈로 알리도록 구성했습니다.</p></div>
 </div>
-<section class="project-result"><h3 class="block-label">프로젝트 결과</h3><p>세 기능을 웹서비스로 통합해 GCP에서 실행하고 미용인 사용자 테스트를 진행했습니다. 설정과 업로드 때문에 숏폼 제작을 중단하는 문제를 확인해 기본값 생성과 모바일 사용 흐름을 보완했습니다. 수정 후 완주율은 다시 측정하지 못했습니다.</p><p>블로그의 2단계 작성·검수 실험은 10개 시술 시나리오의 LLM 내부 평가에서 80.6점에서 94.5점으로 높아졌습니다(100점 만점). 사용자 만족도나 실제 제작 시간의 개선을 측정한 점수는 아닙니다.</p></section><section aria-labelledby="salon-evidence-title" class="outcome">
+<section class="project-result"><h3 class="block-label">프로젝트 결과</h3><p>세 기능을 웹서비스로 통합해 GCP에서 실행하고 미용인 사용자 테스트를 진행했습니다. 설정과 업로드 때문에 숏폼 제작을 중단하는 문제를 확인해 기본값 생성과 모바일 사용 흐름을 보완했습니다. 수정 후 완주율은 다시 측정하지 못했습니다.</p><p>블로그의 2단계 작성·검수 실험은 10개 시술 시나리오를 대상으로 LLM-as-a-Judge 방식으로 내부 평가했습니다. 자체 평가 기준은 사실 확인(25점)·시술 논리(30점)·어조 및 현실성(25점)·형식 준수(20점)이며, 점수는 80.6 → 94.5점(100점 만점)으로 높아졌습니다. 사용자 만족도나 실제 제작 시간의 개선을 측정한 점수는 아닙니다.</p></section><section aria-labelledby="salon-evidence-title" class="outcome">
 <h3 class="block-label">평가 결과와 조건</h3>
 <div class="nums">
 <div><span class="small-label">엔진/API 격리 테스트</span><p class="n">92<span>건</span></p><p>8월 22일의 구현 검증 기록입니다. 사용자 테스트(8월 18~19일) 이후의 수치입니다.</p></div>
