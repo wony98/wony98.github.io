@@ -1,4 +1,28 @@
 /* Approved agent-working-style draft, scoped to its portfolio section. */
+/* 2026.10.29: accepted resume overview; all selectors stay in this section. */
+.agent-work .harness-overview-intro{max-width:84ch;margin:0 0 28px}
+.agent-work .harness-overview-table{width:100%;table-layout:fixed;border-collapse:collapse;margin:0 0 32px;font-size:14px;line-height:1.8}
+.agent-work .harness-overview-table .function-col{width:17%}
+.agent-work .harness-overview-table .skill-col{width:28%}
+.agent-work .harness-overview-table .role-col{width:55%}
+.agent-work .harness-overview-table th,.agent-work .harness-overview-table td{padding:15px 16px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line);word-break:keep-all;overflow-wrap:anywhere}
+.agent-work .harness-overview-table thead th{background:var(--wash);border-top:1px solid var(--ink);font-size:13px}
+.agent-work .harness-overview-table td:first-child{font-weight:600}
+.agent-work .harness-overview-table td:nth-child(2){color:var(--blue)}
+.agent-work .harness-overview-table tbody tr:last-child{background:transparent;color:inherit}
+.agent-work .harness-details{border-top:1px solid var(--ink);border-bottom:1px solid var(--line)}
+.agent-work .harness-details>summary{padding:22px 0;cursor:pointer;font-size:17px;font-weight:600}
+.agent-work .harness-detail-body{padding:14px 0 30px}
+@media(max-width:600px){
+ .agent-work .harness-overview-table,.agent-work .harness-overview-table tbody,.agent-work .harness-overview-table tr,.agent-work .harness-overview-table td{display:block;width:100%}
+ .agent-work .harness-overview-table colgroup{display:none}
+ .agent-work .harness-overview-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+ .agent-work .harness-overview-table tr{padding:16px 0;border-top:1px solid var(--line)}
+ .agent-work .harness-overview-table td{padding:4px 0;border:0;font-size:14px;line-height:1.8}
+ .agent-work .harness-overview-table td:first-child{font-size:16px;padding:0 0 5px}
+ .agent-work .harness-overview-table td:nth-child(2){font-size:13px}
+ .agent-work .harness-overview-table td:nth-child(3)::before{content:"역할";display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
+}
 .approach .how-list .agent-jump { padding: 14px 0 0; margin-top: 4px; border-top: 1px solid var(--line); }
 .approach .how-list .agent-jump::before { display: none; }
 .agent-jump a, .agent-case-link { color: var(--blue); text-underline-offset: 4px; }

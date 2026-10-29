@@ -13,7 +13,7 @@
 <link href="agent-work.css" rel="stylesheet"/></head>
 <body class="editorial-design">
 <a class="skip" href="#main">본문으로 이동</a>
-<header class="site-header"><a class="identity" href="#main">노승원<span>AI Engineer</span></a><nav aria-label="주 메뉴"><a href="#projects">프로젝트</a><a href="#approach">작업 방식</a><a href="#skills">사용 기술</a><a href="#agent-work">에이전트 활용</a><a href="https://github.com/wony98" rel="noopener noreferrer" target="_blank">GitHub ↗</a></nav></header>
+<header class="site-header"><a class="identity" href="#main">노승원<span>AI Engineer</span></a><nav aria-label="주 메뉴"><a href="#projects">프로젝트</a><a href="#approach">작업 방식</a><a href="#skills">사용 기술</a><a href="#agent-work">AI 하네스</a><a href="https://github.com/wony98" rel="noopener noreferrer" target="_blank">GitHub ↗</a></nav></header>
 <main id="main">
 <section aria-labelledby="intro-title" class="hero">
 <div>
@@ -27,7 +27,7 @@
 <li><b>조건을 바꿔 가며 같은 기준으로 비교합니다.</b>모델 설정이나 검색 방식을 바꾸면 같은 평가셋으로 결과를 다시 재고, 기준에 못 미치면 확장을 멈춥니다.</li>
 <li><b>결과가 예상과 다르면 원문과 원자료로 돌아갑니다.</b>자동 평가 결과나 모델 출력이 예상과 다르면 정답지·원문·입력 자료를 직접 대조합니다. 최종 판단은 사람이 근거를 확인한 뒤 내립니다.</li>
 <li><b>같은 문제가 다시 생겼을 때 바로 풀 수 있게 기록합니다.</b>예측 당시의 입력과 설정, 실패 사례를 남겨 관련 작업이나 재발 시 원인 추적에 드는 시간을 줄입니다.</li>
-<li class="agent-jump"><a href="#agent-work">에이전트와 일하는 방식 · 스킬 구조와 적용 사례 <span aria-hidden="true">↘</span></a></li>
+<li class="agent-jump"><a href="#agent-work">AI 에이전트 하네스 · 구성과 적용 사례 <span aria-hidden="true">↘</span></a></li>
 </ul></div></section><section aria-labelledby="skills-title" class="skills" id="skills"><h2 id="skills-title">사용한 기술</h2><div class="tool-rows"><div><h3>모델과 데이터</h3><p>Albumentations, LightGBM, MMDetection, NumPy, pandas, Python, PyTorch</p></div><div><h3>검색과 서비스</h3><p>BM25, Caddy, Chroma, FastAPI, FFmpeg, GCP, Kiwi, Linux, OpenAI API, RRF</p></div><div><h3>화면·API 연동</h3><p>React, TypeScript</p></div><div><h3>협업 규칙</h3><p>SalonCutAI에서는 팀원들과 feat, fix, docs 등의 커밋 메시지 규칙을 정해 변경 내용을 구분했습니다.</p></div><div><h3>코드 관리</h3><p>기능별 브랜치에서 작업하고, Pull Request로 통합 브랜치에 합친 뒤 최종 변경 사항을 main에 반영했습니다. SalonCutAI에서는 dev를 통합 브랜치로 사용했습니다.</p></div><div><h3>배포 확인</h3><p>SalonCutAI에서는 CI/CD 배포 실패 시 GitHub 이슈가 자동으로 생성되도록 구성된 알림을 통해 실패 내역을 확인했습니다.</p></div><div><h3>개발과 학습에 사용한 도구</h3><p>Claude, Codex, Docker, Docker Compose, Git, GitHub, Hugging Face Transformers, LangChain, LangGraph, MLflow, ONNX, PEFT/LoRA, scikit-learn, Streamlit</p></div></div></section></div>
 <section aria-labelledby="tl-title" class="timeline">
 <div class="tl-head"><p class="eyebrow" id="tl-title">2026년 타임라인</p></div>
@@ -409,21 +409,18 @@
 </div></details>
 </article>
 <section aria-labelledby="agent-work-title" class="agent-work" id="agent-work">
-  <header class="agent-heading">
-    <p class="eyebrow">협업과 개발 도구</p>
-    <h2 id="agent-work-title">에이전트와 일하는 방식</h2>
-  </header>
-  <section aria-labelledby="agent-problem-title" class="agent-intro">
+<header class="agent-heading"><p class="eyebrow">협업과 개발 도구</p><h2 id="agent-work-title">Codex·Claude Code 기반 AI 에이전트 하네스 구성·확장</h2></header><p class="harness-overview-intro">Codex·Claude Code 두 AI 에이전트가 요청을 빠뜨리지 않고 서로의 결과를 검증하도록, 기존 실행 환경 위에 구성한 작업 환경(하네스)입니다.</p><table class="harness-overview-table"><colgroup><col class="function-col"/><col class="skill-col"/><col class="role-col"/></colgroup><thead><tr><th scope="col">기능</th><th scope="col">스킬·도구</th><th scope="col">역할</th></tr></thead><tbody><tr><td data-label="기능">협업·요청 관리</td><td data-label="스킬·도구">operate-collaboration-thread</td><td data-label="역할">메시지·회신·상태 관리. Python으로 미회신 조회, 기록 전 최신 메시지 번호·작업 모드 검사와 동시 변경 잠금, 고정 지침 갱신 시 해시 대조</td></tr><tr><td data-label="기능">요구사항 정리</td><td data-label="스킬·도구">requirements-interview</td><td data-label="역할">목표·범위·완료 기준을 한 번에 질문 하나씩 물어 확인됨·결정 필요·보류로 구분</td></tr><tr><td data-label="기능">계획 수립·합의</td><td data-label="스킬·도구">oh-my-claudecode, oh-my-codex</td><td data-label="역할">심층 인터뷰로 모호한 요구를 명세로 정리하고 설계·비판 검토를 거친 작업 계획안 작성</td></tr><tr><td data-label="기능">작업 이어가기</td><td data-label="스킬·도구">project-continuity</td><td data-label="역할">파일·실행 기록을 기준으로 완료·미완료 작업을 구분하고 다음 작업 인계</td></tr><tr><td data-label="기능">독립 교차검토</td><td data-label="스킬·도구">cross-agent-review</td><td data-label="역할">버전을 고정한 대상을 독립 검토하고 근거 대조 후 의견 수렴</td></tr><tr><td data-label="기능">코드 탐색</td><td data-label="스킬·도구">Serena</td><td data-label="역할">외부 도구 연결(MCP)로 함수·클래스 정의와 참조를 찾아 필요한 코드만 읽음</td></tr><tr><td data-label="기능">코드 변경 품질</td><td data-label="스킬·도구">review-ready-change</td><td data-label="역할">관련 변경 단위 분리, 오류 원인 보존, 변경 이유·영향·검증 결과 설명</td></tr><tr><td data-label="기능">테스트 주도 개발</td><td data-label="스킬·도구">tdd</td><td data-label="역할">실패 테스트 확인 → 최소 구현 → 테스트를 유지하며 리팩터링</td></tr><tr><td data-label="기능">실행 결과 검증</td><td data-label="스킬·도구">verify</td><td data-label="역할">실행 근거로 완료 판단, 확인·추정·미확인 구분</td></tr><tr><td data-label="기능">산출물 검수</td><td data-label="스킬·도구">verify-deliverables</td><td data-label="역할">파일 누락·데이터 구조·원본 수치·재현성·민감정보 검수</td></tr><tr><td data-label="기능">글 품질 검수</td><td data-label="스킬·도구">no-ai-slop</td><td data-label="역할">문서 초안의 상투 표현·과장·AI식 문장 패턴을 찾아 고치고 글쓴이의 어투는 유지</td></tr><tr><td data-label="기능">파이프라인 운영</td><td data-label="스킬·도구">operate-pipeline</td><td data-label="역할">입력·출력 형식 확인, 작은 단계부터 실행, 명령·종료 코드·산출물 기록</td></tr><tr><td data-label="기능">도구 도입 검토</td><td data-label="스킬·도구">review-agent-tool-safety</td><td data-label="역할">플러그인·스킬·외부 도구 설치 전 공식 출처·권한·데이터 전송·제거 방법 검토</td></tr><tr><td data-label="기능">프로세스 정리</td><td data-label="스킬·도구">cleanup-owned-processes</td><td data-label="역할">작업이 띄운 서버·브라우저 프로세스만 기록해 정리하고 기존·공유 프로세스는 제외</td></tr></tbody></table>
+<details class="harness-details"><summary>스레드 스킬 확장과 검증·적용 사례</summary><div class="harness-detail-body">  <section aria-labelledby="agent-problem-title" class="agent-intro">
     <h3 id="agent-problem-title">협업 중 반복된 문제를<br/> 재사용 스킬로 구성</h3>
     <div class="agent-prose">
       <p>RFPilot에서 시작한 Claude·Codex 협업을 SalonCutAI에서도 이어가면서, 최신 회신을 확인하지 않고 답장을 추가하거나 검토 대기 항목을 놓치는 문제가 생겼습니다. 보완한 규칙이 프로젝트 문서에만 남아 다른 작업으로 넘어가면 다시 설명해야 하는 문제도 있었습니다.</p>
-      <p>저는 이 운영 방식을 다른 프로젝트에서도 쓰도록 정리하자고 요청했습니다. 에이전트가 제안한 규칙을 검토해 적용 범위와 사람이 승인해야 할 작업을 확정한 뒤 구현을 승인했습니다. Codex의 구현과 Claude의 검토를 거쳐 기존 <code>operate-collaboration-thread</code> 스킬을 확장했습니다. 판단이 필요한 검토·승인 절차는 문서로 정리하고, 번호·모드·파일 보존처럼 기계적으로 확인할 수 있는 조건은 Python 도구가 검사하도록 구성했습니다.</p>
+      <p>제가 맡은 부분은 재사용할 작업 범위와 사람이 승인해야 할 기준을 정하고, 구현·검토 결과를 확인하는 일이었습니다. Codex의 구현과 Claude의 검토를 거쳐 기존 <code>operate-collaboration-thread</code> 스킬을 확장했습니다. 판단이 필요한 검토·승인 절차는 문서로 정리하고, 번호·모드·파일 보존처럼 기계적으로 확인할 수 있는 조건은 Python 도구가 검사하도록 구성했습니다.</p>
     </div>
   </section>
   <section aria-labelledby="agent-structure-title" class="agent-structure">
     <div class="agent-structure-copy">
       <h3 id="agent-structure-title">스킬의 주요 구성</h3>
-      <p class="agent-caption">아래는 이후 개선을 포함한 현재 구성입니다.</p>
+      <p class="agent-caption">아래는 공개한 0.7.0 스레드 스킬 사본의 구성입니다.</p>
       <p>Codex 쪽에 정본을 두고, Claude 쪽에는 정본의 경로와 기대 버전을 가리키는 문서만 뒀습니다. 두 사본을 따로 고치면서 규칙이 달라지는 일을 피하려는 선택입니다.</p>
     </div>
     <div class="agent-files" aria-label="스킬 파일 구조">
@@ -455,7 +452,7 @@
   <p class="agent-boundary">번호·모드·파일 보존 조건은 도구가 검사합니다. 실제 병합이나 배포의 승인 여부는 제가 판단하며, 스레드 도구가 모든 외부 명령을 차단하는 보안 장치는 아닙니다.</p>
   <section aria-labelledby="agent-tests-title" class="agent-tests">
     <h3 id="agent-tests-title">실패 조건 검증</h3>
-    <p>현재 버전 0.7.0의 스킬 자체 회귀 테스트 36개가 통과했습니다. 별도 시험 기록에서도 오래된 마지막 번호, 다른 작업 모드, 오래된 고정 내용 해시, 혼합 줄바꿈을 각각 입력했을 때 변경이 거부되고 원본이 유지됐습니다. 이는 2026년 10월 23일의 검사 결과입니다. 공유용 사본의 재실행 결과는 아래 근거 페이지에 따로 정리했습니다.</p>
+    <p>2026.10.23에 검증한 <code>operate-collaboration-thread</code> 0.7.0은 회귀 테스트 <strong>36개</strong>를 통과했습니다. 별도 실패 조건 <strong>4건</strong>(오래된 마지막 번호, 다른 작업 모드, 오래된 고정 내용 해시, 혼합 줄바꿈)에서는 변경 거부와 원본 유지를 확인했습니다. 공유용 사본의 재실행 결과는 근거 페이지에서 당시 결과와 구분했습니다.</p>
     <p class="agent-evidence-links"><a href="harness-evidence/index.html">코드와 검증 근거 보기 ↗</a> · <a href="harness-evidence/code.html">검사 도구 코드</a> · <a href="harness-evidence/index.html#verification">테스트 결과</a></p>
   </section>
   <section aria-labelledby="agent-mlb-title" class="agent-example">
@@ -463,19 +460,17 @@
       <h3 id="agent-mlb-title">MLB에 적용한 구현과 교차검토</h3>
       <a class="agent-case-link" href="#mlb">MLB 프로젝트 보기 <span aria-hidden="true">↗</span></a>
     </div>
-    <div class="agent-prose">
-      <p>연구 종료 후인 2026년 10월에는 MLB의 MLflow 재실험도 구현과 검토를 나눠 진행했습니다. 별도 검토 에이전트가 학습 입력과 병합 코드를 대조해, 경기 행이 <strong>12,122개에서 12,149개로 늘어나는 문제</strong>를 발견했습니다.</p>
-      <p>구현 에이전트가 중복 키 처리와 병합 후 행 수 검사를 보완해 다시 실행했고, 검토 에이전트가 경기 행 <strong>12,122개 유지</strong>와 실행 코드 기록을 확인했습니다. 실패한 결과는 이력으로 남기고 재검증한 결과를 공개 자료에 반영했습니다. 스킬에 정한 절차로 요청과 회신, 검증 근거를 기록했으며, 데이터 오류 자체는 검토 에이전트의 코드·데이터 대조에서 발견됐습니다.</p>
-    </div>
+    <div class="agent-prose"><p>2026년 10월 MLB의 MLflow 재실험에서 검토 에이전트가 코드와 데이터를 대조해 중복 키 병합으로 경기 행이 <strong>12,122개에서 12,149개로 늘어난 문제</strong>를 발견했습니다. 구현 에이전트가 중복 키 처리와 행 수 검사를 보완했고, 검토 에이전트가 <strong>12,122개 유지</strong>를 확인했습니다. 스레드에는 요청·회신·검증 근거를 남겼으며, 데이터 오류는 코드·데이터 대조로 찾았습니다.</p></div>
   </section>
 <section class="agent-example" aria-labelledby="agent-healtheat-title" id="agent-healtheat">
 <div><h3 id="agent-healtheat-title">HealthEat 평가 기록을 다시 검증한 과정</h3><a class="agent-case-link" href="#healtheat">HealthEat 프로젝트 보기 ↗</a></div>
 <div class="agent-prose">
-<p>과거 평가 JSON에는 사용한 가중치의 정보가 없어, 어떤 설정과 모델에서 나온 결과인지 확인하기 어려웠습니다. 저는 원본 보존 범위와 단계별 완료 기준을 정하고, 공유 스레드에 구현·검토 요청과 승인 기록을 남겼습니다.</p>
+<p>과거 평가 JSON에는 사용한 가중치의 정보가 없어, 어떤 설정과 모델에서 나온 결과인지 확인하기 어려웠습니다. 제가 맡은 부분은 원본 보존 범위와 단계별 완료 기준을 정하고, 공유 스레드에 구현·검토 요청과 승인 기록을 남기는 일이었습니다.</p>
 <p>Codex가 입력 검사와 재추론·채점 도구를 구현하고 Claude가 코드·자료·결과를 별도로 대조했습니다. 입력 검사에서 한 사진의 정답 박스 2개가 실제와 다른 약품 번호로 표시된 것을 찾아, 원본을 보존한 GT v2와 정오표를 만들었습니다.</p>
 <p>보관한 v4 가중치로 1장 시험 후 33장을 별도로 재추론했습니다. Windows DLL 정책으로 MLflow 기록이 차단돼, 보안 설정을 유지한 별도 Ubuntu 환경에서 저장·조회를 검증했습니다. 입력·설정·가중치 해시와 결과를 기록하고, 과거 저장 예측의 재채점 24/47과 별도 재추론 25/47을 구분했습니다. Windows 실패 기록도 보존했습니다.</p>
 <a class="agent-case-link" href="https://github.com/wony98/pill_detection/blob/6daac3b96ef949f479b1820bcda2e5ed69fef1c9/experiments/forward_eval_20261025/README.md" target="_blank" rel="noopener noreferrer">실행·검증 근거 ↗</a> · <a class="agent-case-link" href="https://github.com/wony98/pill_detection/blob/6daac3b96ef949f479b1820bcda2e5ed69fef1c9/experiments/checkpoint_eval/forward.py" target="_blank" rel="noopener noreferrer">평가 도구 코드 ↗</a>
 </div></section>
+</div></details>
 </section>
 <section aria-labelledby="background-title" class="background" id="background"><h2 id="background-title">교육과 이전 경험</h2><details class="technical"><summary>교육·학력, 경력, 자격증</summary><div class="details-body"><h4 class="history-k">교육·학력</h4><dl class="history"><dt>2026.02.05–08.31</dt><dd>코드잇 스프린트 AI 엔지니어 10기 수료 (1,250시간)</dd><dt>2017.02</dt><dd>금촌고등학교 인문계 졸업</dd></dl><h4 class="history-k">경력 (비개발 직무)</h4><dl class="history"><dt>2024.12–2025.07</dt><dd>CU 선정송이점 점주 / 매출·재고·직원 관리, 근무 매뉴얼 정리</dd><dt>2020.10–2022.03</dt><dd>CK푸드원 물류팀장 / 배차·납품 일정, 재고·창고, 매출·명세서 관리, 팀원 2명</dd></dl><h4 class="history-k">자격증</h4><dl class="history"><dt>2018.03</dt><dd>1종 보통 운전면허</dd></dl></div></details></section>
 </main>
